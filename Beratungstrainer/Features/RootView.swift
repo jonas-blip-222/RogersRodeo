@@ -1,4 +1,5 @@
 import SwiftUI
+import ImageIO
 import TrainerCore
 
 enum Palette {
@@ -88,9 +89,8 @@ struct RootView: View {
                 Spacer()
                 Image(systemName: "sparkle").font(.caption)
             }.foregroundStyle(.secondary).padding(.horizontal, 24).padding(.top, 24)
-            Image(model.homePortrait.imageName, bundle: AppResources.bundle)
-                .resizable().scaledToFit().frame(height: 230).padding(.top, 4)
-                .accessibilityLabel("Cartoonporträt: \(model.homePortrait.name)")
+            PortraitIllustration(portrait: model.homePortrait)
+                .frame(height: 230).padding(.top, 4)
             Text(model.homePortrait.name).font(.subheadline.weight(.semibold)).multilineTextAlignment(.center).padding(.horizontal, 20).padding(.top, 4)
             Text(model.homePortrait.approach).font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.center).padding(.horizontal, 20).padding(.top, 5)
             Text(model.homePortrait.headline)
@@ -158,6 +158,25 @@ struct RootView: View {
                     .overlay(RoundedRectangle(cornerRadius: 20).stroke(Palette.line)).disabled(model.busy)
             }
             Label("Nur auf diesem Gerät gespeichert", systemImage: "lock").font(.caption).foregroundStyle(.secondary)
+        }
+    }
+}
+
+struct PortraitIllustration: View {
+    let portrait: HomePortrait
+    static func loadImage(named name: String) -> CGImage? {
+        guard let url = AppResources.bundle.url(forResource: name, withExtension: "png"),
+              let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
+        return CGImageSourceCreateImageAtIndex(source, 0, nil)
+    }
+    var body: some View {
+        if let image = Self.loadImage(named: portrait.imageName) {
+            Image(decorative: image, scale: 1).resizable().scaledToFit()
+                .accessibilityLabel("Cartoonporträt: \(portrait.name)")
+                .accessibilityHidden(false)
+        } else {
+            Label("Porträt konnte nicht geladen werden", systemImage: "photo")
+                .font(.caption).foregroundStyle(.secondary)
         }
     }
 }

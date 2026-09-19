@@ -5,6 +5,10 @@ import Testing
 @Test @MainActor func portraitPoolContainsResourcesAndRotationSurvivesRestart() throws {
     let pool = try HomePortrait.loadPool()
     #expect(pool.count >= 4)
+    for portrait in pool {
+        let image = try #require(PortraitIllustration.loadImage(named: portrait.imageName))
+        #expect(image.width > 0 && image.height > 0)
+    }
     let domain = "PortraitTests.\(UUID().uuidString)"
     let defaults = try #require(UserDefaults(suiteName: domain))
     defer { defaults.removePersistentDomain(forName: domain) }
