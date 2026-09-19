@@ -2,6 +2,8 @@
 
 Auf Wunsch des Nutzers wegen knapper werdender Nutzung gesichert. Keine weitere Arbeit im Hintergrund vorgesehen.
 
+Nachtrag: Der Code-Stand `caaceff` hat sämtliche GitHub-Actions-Prüfungen bestanden. Die neue Mac-Demo wurde als `RogersRodeo-Monochrom.app` im lokalen outputs-Ordner verpackt und geöffnet. Die Startseite lädt das Carl-Rogers-Porträt und die neue Navigation. Die gemeinsame gestalterische Abnahme mit dem Nutzer steht noch aus; kein iPhone-Sichttest durchgeführt.
+
 ## Neue Oberfläche
 
 - Schwarz-weiße Gestaltung mit hellen Karten, klarer Typografie und getrennten Bereichen „Entdecken“ und „Meine Gespräche“.
@@ -22,8 +24,8 @@ Auf Wunsch des Nutzers wegen knapper werdender Nutzung gesichert. Keine weitere 
 
 ## Nächste Sitzung
 
-1. GitHub-Actions-Ergebnis dieses Zwischenstands prüfen und eventuelle Buildfehler beheben.
-2. Neue Mac-Demo verpacken und öffnen; die zuvor bereitgestellte RogersRodeo.app enthält noch die alte Oberfläche. Startseite, alle Motive, Verlauf und Gespräch visuell prüfen.
+1. Rückmeldung des Nutzers zur geöffneten Oberfläche aufnehmen. GitHub-Actions-Prüfungen für den UI-Code-Stand waren erfolgreich.
+2. Die aktuelle lokale Demo heißt RogersRodeo-Monochrom.app; RogersRodeo.app enthält noch die alte Oberfläche. Weitere Motive, Verlauf, Gespräch und kleine Ansichten visuell prüfen.
 3. Xcode-MCP-Verbindung und Simulator mit dem jetzt vorhandenen Xcode 27 prüfen. Die neue Lizenz/SDK-Version allein belegt noch keinen funktionierenden Simulatorzugriff.
 4. MI-Feedback-Entscheidung gemeinsam fortsetzen: LLM für kontextbezogene Analyse, geprüfte Inhalte und deterministische Auswahl für Hinweise; freie Umformulierungen optional. Das ist bisher ein Vorschlag, keine implementierte Feedback-KI.
 5. Danach echte lokale LLM-Anbindung. Direkte MLX-Anbindung und FoundationModels-Brücke noch gegeneinander abwägen; kein Modell als freigegeben behandeln.
