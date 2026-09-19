@@ -1,0 +1,580 @@
+{
+  "schemaVersion": 1,
+  "rulesVersion": "0.1",
+  "purpose": "Synthetische Eingaben für den Reducer, keine fachlichen Referenzklassifikationen.",
+  "cases": [
+    {
+      "id": "neutral_open_question",
+      "before": {
+        "openness": 3,
+        "closedQuestionStreak": 0,
+        "disclosedFactIDs": [],
+        "recentCredits": []
+      },
+      "currentInput": "Was ist Ihnen wichtig?",
+      "clientContext": [],
+      "analysis": {
+        "segments": [
+          {
+            "quote": "Was ist Ihnen wichtig?",
+            "code": "offene_frage",
+            "isUncertain": false,
+            "supportingClientQuote": null
+          }
+        ]
+      },
+      "expectedAfterReduction": {
+        "openness": 3,
+        "closedQuestionStreak": 0,
+        "disclosedFactIDs": [],
+        "recentCredits": [
+          null
+        ]
+      }
+    },
+    {
+      "id": "supported_reflection",
+      "before": {
+        "openness": 3,
+        "closedQuestionStreak": 0,
+        "disclosedFactIDs": [],
+        "recentCredits": []
+      },
+      "currentInput": "Sie möchten Sarah nicht verlieren.",
+      "clientContext": [
+        "Ich will Sarah nicht verlieren."
+      ],
+      "analysis": {
+        "segments": [
+          {
+            "quote": "Sie möchten Sarah nicht verlieren.",
+            "code": "komplexe_reflexion",
+            "isUncertain": false,
+            "supportingClientQuote": "Ich will Sarah nicht verlieren."
+          }
+        ]
+      },
+      "expectedAfterReduction": {
+        "openness": 4,
+        "closedQuestionStreak": 0,
+        "disclosedFactIDs": [],
+        "recentCredits": [
+          "komplexe_reflexion"
+        ]
+      }
+    },
+    {
+      "id": "repeated_credit",
+      "before": {
+        "openness": 5,
+        "closedQuestionStreak": 0,
+        "disclosedFactIDs": [],
+        "recentCredits": [
+          "autonomie_betonen",
+          null
+        ]
+      },
+      "currentInput": "Sie entscheiden selbst.",
+      "clientContext": [],
+      "analysis": {
+        "segments": [
+          {
+            "quote": "Sie entscheiden selbst.",
+            "code": "autonomie_betonen",
+            "isUncertain": false,
+            "supportingClientQuote": null
+          }
+        ]
+      },
+      "expectedAfterReduction": {
+        "openness": 5,
+        "closedQuestionStreak": 0,
+        "disclosedFactIDs": [],
+        "recentCredits": [
+          "autonomie_betonen",
+          null,
+          null
+        ]
+      }
+    },
+    {
+      "id": "expired_credit",
+      "before": {
+        "openness": 5,
+        "closedQuestionStreak": 0,
+        "disclosedFactIDs": [],
+        "recentCredits": [
+          null,
+          null,
+          null
+        ]
+      },
+      "currentInput": "Sie entscheiden selbst.",
+      "clientContext": [],
+      "analysis": {
+        "segments": [
+          {
+            "quote": "Sie entscheiden selbst.",
+            "code": "autonomie_betonen",
+            "isUncertain": false,
+            "supportingClientQuote": null
+          }
+        ]
+      },
+      "expectedAfterReduction": {
+        "openness": 6,
+        "closedQuestionStreak": 0,
+        "disclosedFactIDs": [],
+        "recentCredits": [
+          null,
+          null,
+          "autonomie_betonen"
+        ]
+      }
+    },
+    {
+      "id": "negative_wins",
+      "before": {
+        "openness": 5,
+        "closedQuestionStreak": 0,
+        "disclosedFactIDs": [],
+        "recentCredits": []
+      },
+      "currentInput": "Sie entscheiden selbst. Sie sind aber unehrlich.",
+      "clientContext": [],
+      "analysis": {
+        "segments": [
+          {
+            "quote": "Sie entscheiden selbst.",
+            "code": "autonomie_betonen",
+            "isUncertain": false,
+            "supportingClientQuote": null
+          },
+          {
+            "quote": "Sie sind aber unehrlich.",
+            "code": "konfrontation",
+            "isUncertain": false,
+            "supportingClientQuote": null
+          }
+        ]
+      },
+      "expectedAfterReduction": {
+        "openness": 3,
+        "closedQuestionStreak": 0,
+        "disclosedFactIDs": [],
+        "recentCredits": [
+          null
+        ]
+      }
+    },
+    {
+      "id": "three_closed_in_one_turn",
+      "before": {
+        "openness": 3,
+        "closedQuestionStreak": 0,
+        "disclosedFactIDs": [],
+        "recentCredits": []
+      },
+      "currentInput": "Trinken Sie freitags? Auch samstags? Auch sonntags?",
+      "clientContext": [],
+      "analysis": {
+        "segments": [
+          {
+            "quote": "Trinken Sie freitags?",
+            "code": "geschlossene_frage",
+            "isUncertain": false,
+            "supportingClientQuote": null
+          },
+          {
+            "quote": "Auch samstags?",
+            "code": "geschlossene_frage",
+            "isUncertain": false,
+            "supportingClientQuote": null
+          },
+          {
+            "quote": "Auch sonntags?",
+            "code": "geschlossene_frage",
+            "isUncertain": false,
+            "supportingClientQuote": null
+          }
+        ]
+      },
+      "expectedAfterReduction": {
+        "openness": 2,
+        "closedQuestionStreak": 3,
+        "disclosedFactIDs": [],
+        "recentCredits": [
+          null
+        ]
+      }
+    },
+    {
+      "id": "closed_across_turns",
+      "before": {
+        "openness": 3,
+        "closedQuestionStreak": 2,
+        "disclosedFactIDs": [],
+        "recentCredits": [
+          null,
+          null
+        ]
+      },
+      "currentInput": "Auch samstags?",
+      "clientContext": [],
+      "analysis": {
+        "segments": [
+          {
+            "quote": "Auch samstags?",
+            "code": "geschlossene_frage",
+            "isUncertain": false,
+            "supportingClientQuote": null
+          }
+        ]
+      },
+      "expectedAfterReduction": {
+        "openness": 2,
+        "closedQuestionStreak": 3,
+        "disclosedFactIDs": [],
+        "recentCredits": [
+          null,
+          null,
+          null
+        ]
+      }
+    },
+    {
+      "id": "threshold_then_reset",
+      "before": {
+        "openness": 4,
+        "closedQuestionStreak": 2,
+        "disclosedFactIDs": [],
+        "recentCredits": []
+      },
+      "currentInput": "Auch samstags? Wie erleben Sie das? Ist das neu?",
+      "clientContext": [],
+      "analysis": {
+        "segments": [
+          {
+            "quote": "Auch samstags?",
+            "code": "geschlossene_frage",
+            "isUncertain": false,
+            "supportingClientQuote": null
+          },
+          {
+            "quote": "Wie erleben Sie das?",
+            "code": "offene_frage",
+            "isUncertain": false,
+            "supportingClientQuote": null
+          },
+          {
+            "quote": "Ist das neu?",
+            "code": "geschlossene_frage",
+            "isUncertain": false,
+            "supportingClientQuote": null
+          }
+        ]
+      },
+      "expectedAfterReduction": {
+        "openness": 3,
+        "closedQuestionStreak": 1,
+        "disclosedFactIDs": [],
+        "recentCredits": [
+          null
+        ]
+      }
+    },
+    {
+      "id": "uncertain_is_not_punished",
+      "before": {
+        "openness": 3,
+        "closedQuestionStreak": 2,
+        "disclosedFactIDs": [],
+        "recentCredits": []
+      },
+      "currentInput": "Das sehen Sie so.",
+      "clientContext": [],
+      "analysis": {
+        "segments": [
+          {
+            "quote": "Das sehen Sie so.",
+            "code": "konfrontation",
+            "isUncertain": true,
+            "supportingClientQuote": null
+          }
+        ]
+      },
+      "expectedAfterReduction": {
+        "openness": 3,
+        "closedQuestionStreak": 0,
+        "disclosedFactIDs": [],
+        "recentCredits": [
+          null
+        ]
+      }
+    },
+    {
+      "id": "analysis_unavailable",
+      "before": {
+        "openness": 4,
+        "closedQuestionStreak": 2,
+        "disclosedFactIDs": [],
+        "recentCredits": [
+          "autonomie_betonen"
+        ]
+      },
+      "currentInput": "Das ist mein Beitrag.",
+      "clientContext": [],
+      "analysis": null,
+      "expectedAfterReduction": {
+        "openness": 4,
+        "closedQuestionStreak": 0,
+        "disclosedFactIDs": [],
+        "recentCredits": [
+          "autonomie_betonen",
+          null
+        ]
+      }
+    },
+    {
+      "id": "upper_bound_records_credit",
+      "before": {
+        "openness": 10,
+        "closedQuestionStreak": 0,
+        "disclosedFactIDs": [],
+        "recentCredits": []
+      },
+      "currentInput": "Sie entscheiden selbst.",
+      "clientContext": [],
+      "analysis": {
+        "segments": [
+          {
+            "quote": "Sie entscheiden selbst.",
+            "code": "autonomie_betonen",
+            "isUncertain": false,
+            "supportingClientQuote": null
+          }
+        ]
+      },
+      "expectedAfterReduction": {
+        "openness": 10,
+        "closedQuestionStreak": 0,
+        "disclosedFactIDs": [],
+        "recentCredits": [
+          "autonomie_betonen"
+        ]
+      }
+    },
+    {
+      "id": "lower_bound",
+      "before": {
+        "openness": 1,
+        "closedQuestionStreak": 0,
+        "disclosedFactIDs": [],
+        "recentCredits": []
+      },
+      "currentInput": "Sie sind unehrlich.",
+      "clientContext": [],
+      "analysis": {
+        "segments": [
+          {
+            "quote": "Sie sind unehrlich.",
+            "code": "konfrontation",
+            "isUncertain": false,
+            "supportingClientQuote": null
+          }
+        ]
+      },
+      "expectedAfterReduction": {
+        "openness": 0,
+        "closedQuestionStreak": 0,
+        "disclosedFactIDs": [],
+        "recentCredits": [
+          null
+        ]
+      }
+    },
+    {
+      "id": "known_fact_retained",
+      "before": {
+        "openness": 6,
+        "closedQuestionStreak": 0,
+        "disclosedFactIDs": [
+          "lukas.vater"
+        ],
+        "recentCredits": []
+      },
+      "currentInput": "Das sind Ausreden.",
+      "clientContext": [],
+      "analysis": {
+        "segments": [
+          {
+            "quote": "Das sind Ausreden.",
+            "code": "konfrontation",
+            "isUncertain": false,
+            "supportingClientQuote": null
+          }
+        ]
+      },
+      "expectedAfterReduction": {
+        "openness": 4,
+        "closedQuestionStreak": 0,
+        "disclosedFactIDs": [
+          "lukas.vater"
+        ],
+        "recentCredits": [
+          null
+        ]
+      }
+    },
+    {
+      "id": "one_bonus_only",
+      "before": {
+        "openness": 3,
+        "closedQuestionStreak": 0,
+        "disclosedFactIDs": [],
+        "recentCredits": []
+      },
+      "currentInput": "Sie entscheiden selbst. Darf ich Ihnen etwas dazu anbieten?",
+      "clientContext": [],
+      "analysis": {
+        "segments": [
+          {
+            "quote": "Sie entscheiden selbst.",
+            "code": "autonomie_betonen",
+            "isUncertain": false,
+            "supportingClientQuote": null
+          },
+          {
+            "quote": "Darf ich Ihnen etwas dazu anbieten?",
+            "code": "zusammenarbeit_suchen",
+            "isUncertain": false,
+            "supportingClientQuote": null
+          }
+        ]
+      },
+      "expectedAfterReduction": {
+        "openness": 4,
+        "closedQuestionStreak": 0,
+        "disclosedFactIDs": [],
+        "recentCredits": [
+          "autonomie_betonen"
+        ]
+      }
+    },
+    {
+      "id": "reflection_without_support",
+      "before": {
+        "openness": 3,
+        "closedQuestionStreak": 0,
+        "disclosedFactIDs": [],
+        "recentCredits": []
+      },
+      "currentInput": "Sie möchten Sarah nicht verlieren.",
+      "clientContext": [],
+      "analysis": {
+        "segments": [
+          {
+            "quote": "Sie möchten Sarah nicht verlieren.",
+            "code": "komplexe_reflexion",
+            "isUncertain": false,
+            "supportingClientQuote": null
+          }
+        ]
+      },
+      "expectedAfterReduction": {
+        "openness": 3,
+        "closedQuestionStreak": 0,
+        "disclosedFactIDs": [],
+        "recentCredits": [
+          null
+        ]
+      }
+    },
+    {
+      "id": "uncertain_breaks_question_streak",
+      "before": {
+        "openness": 4,
+        "closedQuestionStreak": 2,
+        "disclosedFactIDs": [],
+        "recentCredits": []
+      },
+      "currentInput": "Das ist so? Ist das neu?",
+      "clientContext": [],
+      "analysis": {
+        "segments": [
+          {
+            "quote": "Das ist so?",
+            "code": "geschlossene_frage",
+            "isUncertain": true,
+            "supportingClientQuote": null
+          },
+          {
+            "quote": "Ist das neu?",
+            "code": "geschlossene_frage",
+            "isUncertain": false,
+            "supportingClientQuote": null
+          }
+        ]
+      },
+      "expectedAfterReduction": {
+        "openness": 4,
+        "closedQuestionStreak": 1,
+        "disclosedFactIDs": [],
+        "recentCredits": [
+          null
+        ]
+      }
+    },
+    {
+      "id": "empty_analysis",
+      "before": {
+        "openness": 4,
+        "closedQuestionStreak": 2,
+        "disclosedFactIDs": [],
+        "recentCredits": []
+      },
+      "currentInput": "Das ist mein Beitrag.",
+      "clientContext": [],
+      "analysis": {
+        "segments": []
+      },
+      "expectedAfterReduction": {
+        "openness": 4,
+        "closedQuestionStreak": 0,
+        "disclosedFactIDs": [],
+        "recentCredits": [
+          null
+        ]
+      }
+    },
+    {
+      "id": "advice_penalty",
+      "before": {
+        "openness": 4,
+        "closedQuestionStreak": 0,
+        "disclosedFactIDs": [],
+        "recentCredits": []
+      },
+      "currentInput": "Sie sollten damit aufhören.",
+      "clientContext": [],
+      "analysis": {
+        "segments": [
+          {
+            "quote": "Sie sollten damit aufhören.",
+            "code": "ratschlag_ohne_erlaubnis",
+            "isUncertain": false,
+            "supportingClientQuote": null
+          }
+        ]
+      },
+      "expectedAfterReduction": {
+        "openness": 3,
+        "closedQuestionStreak": 0,
+        "disclosedFactIDs": [],
+        "recentCredits": [
+          null
+        ]
+      }
+    }
+  ]
+}

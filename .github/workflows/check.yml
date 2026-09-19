@@ -1,0 +1,21 @@
+name: Prüfen
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  core-and-storage:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Core und Speicher
+        run: |
+          swift test --package-path Packages/TrainerCore
+          swift test --package-path Packages/TrainerStorage
+      - name: Inhaltscompiler
+        run: |
+          python3 -m venv .venv
+          .venv/bin/pip install -r Tools/requirements.txt
+          .venv/bin/python -m unittest discover -s Tools -p 'test_*.py'
+          .venv/bin/python Tools/compile_content.py --allow-drafts --check
+      - name: App für macOS kompilieren
+        run: xcodebuild -project Beratungstrainer.xcodeproj -scheme Beratungstrainer -configuration Debug -destination 'generic/platform=macOS' CODE_SIGNING_ALLOWED=NO build
