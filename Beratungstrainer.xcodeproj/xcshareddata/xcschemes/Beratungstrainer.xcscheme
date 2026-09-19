@@ -14,7 +14,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "C4D085208F121BCD663699AE"
+               BlueprintIdentifier = "7372A36B1F4A9416009080C6"
                BuildableName = "Beratungstrainer.app"
                BlueprintName = "Beratungstrainer"
                ReferencedContainer = "container:Beratungstrainer.xcodeproj">
@@ -30,7 +30,7 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "C4D085208F121BCD663699AE"
+            BlueprintIdentifier = "7372A36B1F4A9416009080C6"
             BuildableName = "Beratungstrainer.app"
             BlueprintName = "Beratungstrainer"
             ReferencedContainer = "container:Beratungstrainer.xcodeproj">
@@ -53,7 +53,7 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "C4D085208F121BCD663699AE"
+            BlueprintIdentifier = "7372A36B1F4A9416009080C6"
             BuildableName = "Beratungstrainer.app"
             BlueprintName = "Beratungstrainer"
             ReferencedContainer = "container:Beratungstrainer.xcodeproj">
@@ -70,7 +70,7 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "C4D085208F121BCD663699AE"
+            BlueprintIdentifier = "7372A36B1F4A9416009080C6"
             BuildableName = "Beratungstrainer.app"
             BlueprintName = "Beratungstrainer"
             ReferencedContainer = "container:Beratungstrainer.xcodeproj">

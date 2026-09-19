@@ -13,7 +13,7 @@ Dir.glob(File.join(root, 'Beratungstrainer/**/*.swift')).sort.each do |path|
   ref = sources.new_file(path.delete_prefix(File.join(root, 'Beratungstrainer/')))
   target.source_build_phase.add_file_reference(ref)
 end
-Dir.glob(File.join(root, 'Beratungstrainer/Resources/Content/*')).sort.each do |path|
+Dir.glob(File.join(root, 'Beratungstrainer/Resources/**/*')).select { |path| File.file?(path) }.sort.each do |path|
   ref = sources.new_file(path.delete_prefix(File.join(root, 'Beratungstrainer/')))
   target.resources_build_phase.add_file_reference(ref)
 end

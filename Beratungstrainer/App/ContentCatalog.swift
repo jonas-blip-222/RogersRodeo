@@ -2,6 +2,17 @@ import CryptoKit
 import Foundation
 import TrainerCore
 
+enum AppResources {
+    static var bundle: Bundle {
+        #if SWIFT_PACKAGE
+        Bundle.main.url(forResource: "RogersRodeo_TrainerDesktop", withExtension: "bundle")
+            .flatMap { Bundle(url: $0) } ?? Bundle.module
+        #else
+        Bundle.main
+        #endif
+    }
+}
+
 struct ContentCatalog: Decodable {
     let schemaVersion: Int
     let scenarios: [ScenarioDefinition]
@@ -9,12 +20,7 @@ struct ContentCatalog: Decodable {
     let tips: [Tip]
 
     static func load() throws -> (catalog: Self, hash: String) {
-        #if SWIFT_PACKAGE
-        let bundle = Bundle.main.url(forResource: "RogersRodeo_TrainerDesktop", withExtension: "bundle")
-            .flatMap { Bundle(url: $0) } ?? Bundle.module
-        #else
-        let bundle = Bundle.main
-        #endif
+        let bundle = AppResources.bundle
         guard let url = bundle.url(forResource: "catalog", withExtension: "json"),
               let hashURL = bundle.url(forResource: "catalog", withExtension: "sha256") else { throw TrainerFailure.artifactInvalid }
         let data = try Data(contentsOf: url)

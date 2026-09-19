@@ -17,12 +17,18 @@ import TrainerStorage
     var showReview = false
     var showHints = true
     var showFinishConfirmation = false
+    var homePortrait: HomePortrait
+    @ObservationIgnored private let portraitRotation: HomePortraitRotation
+    @ObservationIgnored private var wasInBackground = false
     @ObservationIgnored private var task: Task<Void, Never>?
     @ObservationIgnored private var operation: UUID?
 
     init() throws {
         let content = try ContentCatalog.load()
         catalog = content.catalog; contentHash = content.hash
+        let rotation = HomePortraitRotation(pool: try HomePortrait.loadPool())
+        portraitRotation = rotation
+        homePortrait = rotation.next()
         let root: URL
         #if DEBUG
         if let path = ProcessInfo.processInfo.environment["ROGERS_RODEO_TEST_STORAGE"] {
@@ -137,5 +143,10 @@ import TrainerStorage
         do { try repository.delete(id: id); if session?.id == id { session = nil; input = "" }; refresh() }
         catch { failure(error) }
     }
-    func background() async { await cancel(); saveDraft() }
+    func foreground() {
+        guard wasInBackground else { return }
+        wasInBackground = false
+        homePortrait = portraitRotation.next()
+    }
+    func background() async { wasInBackground = true; await cancel(); saveDraft() }
 }

@@ -2,14 +2,16 @@ import SwiftUI
 import TrainerCore
 
 enum Palette {
-    static let accent = Color(red: 0.12, green: 0.38, blue: 0.34)
-    static let background = Color(red: 0.97, green: 0.96, blue: 0.93)
-    static let ink = Color(red: 0.13, green: 0.20, blue: 0.19)
+    static let accent = Color(white: 0.07)
+    static let background = Color(white: 0.965)
+    static let ink = Color(white: 0.07)
+    static let line = Color.black.opacity(0.09)
 }
 
 struct RootView: View {
     @Bindable var model: AppModel
     @State private var deletion: UUID?
+    @State private var showingHistory = false
     var body: some View {
         NavigationStack {
             Group {
@@ -38,64 +40,125 @@ struct RootView: View {
             } message: { Text("Dein noch nicht gesendeter Text wird verworfen.") }
         }
         #if os(macOS)
-        .frame(minWidth: 440, idealWidth: 600, minHeight: 640)
+        .frame(minWidth: 390, idealWidth: 540, minHeight: 700)
         #endif
     }
 
     private var home: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 28) {
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("ROGERS RODEO").font(.caption.weight(.bold)).tracking(3).foregroundStyle(Palette.accent)
-                    Text("Gespräche üben.\nRaum geben.").font(.largeTitle.weight(.semibold))
-                    Text("Ein ruhiger Ort, um Zuhören, Nachfragen und Reflektieren auszuprobieren.").foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 24) {
+                HStack(alignment: .center) {
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text("Rogers Rodeo").font(.title2.weight(.bold)).tracking(-0.8)
+                        Text("Raum für gute Gespräche.").font(.subheadline).foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Image(systemName: "quote.bubble").font(.title3)
+                        .frame(width: 46, height: 46).background(.white, in: Circle())
+                        .overlay(Circle().stroke(Palette.line)).accessibilityHidden(true)
                 }
-                DemoNotice()
-                ForEach(model.catalog.scenarios, id: \.id) { scenario in
-                    VStack(alignment: .leading, spacing: 18) {
-                        HStack(spacing: 14) {
-                            Text(String(scenario.name.prefix(1))).font(.title.weight(.medium)).frame(width: 58, height: 58)
-                                .background(Palette.accent.opacity(0.12), in: Circle()).accessibilityHidden(true)
-                            VStack(alignment: .leading, spacing: 5) {
-                                Text("\(scenario.name), \(scenario.age)").font(.title2.weight(.semibold))
-                                Text("Motivierende Gesprächsführung").font(.subheadline).foregroundStyle(.secondary)
-                            }
-                        }
-                        Text("„Meine Freundin übertreibt.“").font(.title3.weight(.medium))
-                        Text("Lukas kommt auf Druck seiner Partnerin. Übe, eine Beziehung aufzubauen und Ambivalenz zu erkunden.")
-                        Label("Textgespräch · bis zu 20 Gesprächsrunden", systemImage: "text.bubble").font(.footnote).foregroundStyle(.secondary)
-                        Button { model.start(scenario) } label: {
-                            HStack { Text(model.busy ? "Wird vorbereitet …" : "Demo-Gespräch starten"); Spacer(); Image(systemName: "arrow.right") }.padding(.vertical, 7)
-                        }.buttonStyle(.borderedProminent).disabled(model.busy)
-                        Text("Fiktive Figur · fachlicher Entwurf").font(.caption).foregroundStyle(.secondary)
-                    }.padding(24).background(.white, in: RoundedRectangle(cornerRadius: 24))
+                HStack(spacing: 4) {
+                    sectionButton("Entdecken", selected: !showingHistory) { showingHistory = false }
+                    sectionButton("Meine Gespräche", selected: showingHistory) { showingHistory = true }
+                }.padding(5).background(.white, in: Capsule()).overlay(Capsule().stroke(Palette.line))
+                if showingHistory {
+                    history
+                } else {
+                    portraitCard
+                    ForEach(model.catalog.scenarios, id: \.id) { scenario in practiceCard(scenario) }
+                    DemoNotice()
                 }
                 if let error = model.errorMessage { ErrorNotice(text: error) }
-                VStack(alignment: .leading, spacing: 14) {
-                    HStack { Text("Deine Gespräche").font(.title3.weight(.semibold)); Spacer(); Text("Nur auf diesem Gerät").font(.caption).foregroundStyle(.secondary) }
-                    if model.history.isEmpty {
-                        Text("Hier findest du später deine begonnenen und abgeschlossenen Übungen.").foregroundStyle(.secondary).padding(.vertical, 8)
-                    }
-                    ForEach(model.history, id: \.id) { item in
-                        HStack {
-                            Button { model.open(item.id) } label: {
-                                HStack {
-                                    Image(systemName: item.status == .active ? "bubble.left" : "checkmark.bubble").font(.title3)
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text(item.scenarioName).font(.headline)
-                                        Text(item.startedAt, format: .dateTime.day().month().hour().minute()).font(.caption).foregroundStyle(.secondary)
-                                    }
-                                    Spacer()
-                                    Text(item.status == .active ? "Fortsetzen" : "Ansehen").font(.subheadline)
-                                }.contentShape(Rectangle())
-                            }.buttonStyle(.plain)
-                            Button("Löschen", systemImage: "trash", role: .destructive) { deletion = item.id }
-                                .labelStyle(.iconOnly).buttonStyle(.borderless).padding(.leading, 12)
-                        }.padding(18).background(.white.opacity(0.8), in: RoundedRectangle(cornerRadius: 16)).disabled(model.busy)
-                    }
-                }
-            }.padding(24).frame(maxWidth: 680).frame(maxWidth: .infinity)
+            }.padding(24).frame(maxWidth: 560).frame(maxWidth: .infinity)
         }.navigationTitle("")
+    }
+
+    private func sectionButton(_ title: String, selected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title).font(.subheadline.weight(.medium)).frame(maxWidth: .infinity).padding(.vertical, 11)
+                .foregroundStyle(selected ? .white : Palette.ink)
+                .background(selected ? Palette.ink : .clear, in: Capsule())
+        }.buttonStyle(.plain).accessibilityAddTraits(selected ? .isSelected : [])
+    }
+
+    private var portraitCard: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Text("DIE HALTUNG DAHINTER").font(.caption2.weight(.semibold)).tracking(1.7)
+                Spacer()
+                Image(systemName: "sparkle").font(.caption)
+            }.foregroundStyle(.secondary).padding(.horizontal, 24).padding(.top, 24)
+            Image(model.homePortrait.imageName, bundle: AppResources.bundle)
+                .resizable().scaledToFit().frame(height: 230).padding(.top, 4)
+                .accessibilityLabel("Cartoonporträt: \(model.homePortrait.name)")
+            Text(model.homePortrait.name).font(.subheadline.weight(.semibold)).multilineTextAlignment(.center).padding(.horizontal, 20).padding(.top, 4)
+            Text(model.homePortrait.approach).font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.center).padding(.horizontal, 20).padding(.top, 5)
+            Text(model.homePortrait.headline)
+                .font(.system(.largeTitle, design: .serif).weight(.semibold)).tracking(-1)
+                .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 20).padding(.horizontal, 20)
+            Text(model.homePortrait.caption)
+                .font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.center).padding(.horizontal, 20).padding(.top, 12).padding(.bottom, 26)
+        }.frame(maxWidth: .infinity).background(.white, in: RoundedRectangle(cornerRadius: 28))
+            .overlay(RoundedRectangle(cornerRadius: 28).stroke(Palette.line))
+            .shadow(color: .black.opacity(0.025), radius: 16, y: 8)
+    }
+
+    private func practiceCard(_ scenario: ScenarioDefinition) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Text("DEIN ÜBUNGSRAUM").font(.caption2.weight(.semibold)).tracking(1.7)
+                Spacer()
+                Text("TEXT · DEMO").font(.caption2.weight(.medium))
+            }.foregroundStyle(.secondary)
+            Text("\(scenario.name), \(scenario.age)").font(.title2.weight(.semibold)).tracking(-0.5)
+            Text("„Meine Freundin übertreibt.“").font(.headline)
+            Text("Motivierende Gesprächsführung üben – mit einem Gegenüber, das noch nicht überzeugt ist.")
+                .font(.subheadline).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            Button { model.start(scenario) } label: {
+                HStack { Text(model.busy ? "Wird vorbereitet …" : "Demo-Gespräch starten"); Spacer(); Image(systemName: "arrow.up.right") }
+                    .font(.subheadline.weight(.semibold)).padding(.horizontal, 20).padding(.vertical, 17)
+                    .foregroundStyle(.white).background(Palette.ink, in: Capsule())
+            }.buttonStyle(.plain).disabled(model.busy)
+            Text("Fiktive Figur · bis zu 20 Runden · fachlicher Entwurf")
+                .font(.caption).foregroundStyle(.secondary)
+        }.padding(24).background(.white, in: RoundedRectangle(cornerRadius: 24))
+            .overlay(RoundedRectangle(cornerRadius: 24).stroke(Palette.line))
+    }
+
+    private var history: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Deine Gespräche").font(.title2.weight(.semibold))
+            Text("Ein Gedanke, den du wieder aufgreifen möchtest?").font(.subheadline).foregroundStyle(.secondary)
+            if model.history.isEmpty {
+                VStack(spacing: 14) {
+                    Image(systemName: "bubble.left.and.bubble.right").font(.largeTitle)
+                    Text("Hier ist noch Raum.").font(.headline)
+                    Text("Deine begonnenen und abgeschlossenen Übungen findest du später hier.")
+                        .font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                }.frame(maxWidth: .infinity).padding(32).background(.white, in: RoundedRectangle(cornerRadius: 24))
+            }
+            ForEach(model.history, id: \.id) { item in
+                HStack {
+                    Button { model.open(item.id) } label: {
+                        HStack(spacing: 14) {
+                            Image(systemName: item.status == .active ? "bubble.left" : "checkmark.bubble").font(.title3)
+                            VStack(alignment: .leading, spacing: 5) {
+                                Text(item.scenarioName).font(.headline)
+                                Text(item.startedAt, format: .dateTime.day().month().hour().minute()).font(.caption).foregroundStyle(.secondary)
+                                Text(item.status == .active ? "Fortsetzen" : "Rückblick ansehen").font(.caption.weight(.medium))
+                            }
+                            Spacer()
+                            Image(systemName: "arrow.up.right")
+                        }.contentShape(Rectangle())
+                    }.buttonStyle(.plain)
+                    Button("Löschen", systemImage: "trash") { deletion = item.id }
+                        .labelStyle(.iconOnly).buttonStyle(.borderless).padding(.leading, 12)
+                }.padding(20).background(.white, in: RoundedRectangle(cornerRadius: 20))
+                    .overlay(RoundedRectangle(cornerRadius: 20).stroke(Palette.line)).disabled(model.busy)
+            }
+            Label("Nur auf diesem Gerät gespeichert", systemImage: "lock").font(.caption).foregroundStyle(.secondary)
+        }
     }
 }
 
@@ -103,10 +166,11 @@ struct DemoNotice: View {
     var body: some View {
         Label {
             Text("Demo mit festen Antworten. Noch keine KI und keine fachliche Bewertung.")
-        } icon: { Image(systemName: "hammer") }
-            .font(.footnote).foregroundStyle(Palette.accent).padding(14)
+        } icon: { Image(systemName: "info.circle") }
+            .font(.footnote).foregroundStyle(.secondary).padding(14)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Palette.accent.opacity(0.07), in: RoundedRectangle(cornerRadius: 14))
+            .background(.white.opacity(0.7), in: RoundedRectangle(cornerRadius: 14))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Palette.line))
     }
 }
 
@@ -114,8 +178,9 @@ struct ErrorNotice: View {
     let text: String
     var body: some View {
         Label(text, systemImage: "exclamationmark.circle").font(.subheadline)
-            .foregroundStyle(.red).padding(14).frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.red.opacity(0.05), in: RoundedRectangle(cornerRadius: 12))
+            .foregroundStyle(Palette.ink).padding(14).frame(maxWidth: .infinity, alignment: .leading)
+            .background(.white, in: RoundedRectangle(cornerRadius: 12))
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Palette.ink.opacity(0.4)))
             .accessibilityAddTraits(.updatesFrequently)
     }
 }

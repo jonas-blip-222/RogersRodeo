@@ -1,0 +1,34 @@
+[
+  {
+    "id": "carl-rogers",
+    "name": "Carl Rogers",
+    "approach": "Personzentrierte Gesprächsführung",
+    "imageName": "carl-rogers-portrait",
+    "headline": "Erst verstehen.\nDann weiterfragen.",
+    "caption": "Zuhören lässt sich üben."
+  },
+  {
+    "id": "steve-de-shazer",
+    "name": "Steve de Shazer",
+    "approach": "Lösungsfokussierte Gesprächsführung",
+    "imageName": "steve-de-shazer-portrait",
+    "headline": "Kleine Schritte.\nNeue Möglichkeiten.",
+    "caption": "Raum für das, was schon gelingt."
+  },
+  {
+    "id": "mara-selvini-palazzoli",
+    "name": "Mara Selvini Palazzoli",
+    "approach": "Systemische Perspektiven",
+    "imageName": "mara-selvini-palazzoli-portrait",
+    "headline": "Anders fragen.\nMehr entdecken.",
+    "caption": "Ein Gespräch. Viele Perspektiven."
+  },
+  {
+    "id": "miller-rollnick",
+    "name": "William R. Miller & Stephen Rollnick",
+    "approach": "Motivierende Gesprächsführung",
+    "imageName": "miller-rollnick-portrait",
+    "headline": "Veränderung beginnt\nim Gespräch.",
+    "caption": "Ambivalenz verstehen. Eigene Gründe erkunden."
+  }
+]

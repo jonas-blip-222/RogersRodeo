@@ -2,11 +2,14 @@
 
 Native Übungs-App für Gesprächsführung in der Drogenberatung. Der erste Stand enthält eine **ausprobierbare Text-Demo mit festen Antworten**, noch keine KI. Die Figur Lukas und das MI-Lernschema sind fachliche Entwürfe.
 
+Aktueller Zwischenstand und nächste Schritte: [Übergabe](Documentation/UEBERGABE.md).
+
 ## Vorhanden
 
 - SwiftUI: Figur auswählen, Gespräch führen, Entwürfe sichern, Sitzungen fortsetzen und abschließen, Verlauf und Rückblick.
 - Ausschließlich lokale SwiftData-Speicherung; kein Konto, Server oder CloudKit.
 - Markdown-Protokoll speichern oder ausdrücklich teilen.
+- Schwarz-weiße Startseite mit vier wechselnden Cartoon-Motiven; Porträts bleiben aus dem Gespräch ausgeblendet.
 - Getesteter Regelkern: verborgene Offenheit, segmentbezogene Regeln, Faktenfreigabe, Wiederholungsschutz und Ausgabevalidierung.
 - Abbruch, verspätete Modellantworten, Speicherfehler und idempotente Übernahme vollständiger Runden.
 - Ein gemeinsamer, deterministisch erzeugter Inhaltskatalog mit SHA-256-Prüfung.
@@ -41,6 +44,7 @@ Die geplante FoundationModels/MLX-Brücke erfordert einen noch ausstehenden Inte
 ```sh
 swift test --package-path Packages/TrainerCore
 swift test --package-path Packages/TrainerStorage
+swift test
 python3 -m venv .venv
 .venv/bin/pip install -r Tools/requirements.txt
 .venv/bin/python -m unittest discover -s Tools -p 'test_*.py'

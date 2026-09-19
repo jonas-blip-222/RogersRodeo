@@ -19,6 +19,7 @@ import SwiftUI
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .background, let model { Task { await model.background() } }
+            if phase == .active { model?.foreground() }
         }
     }
 }

@@ -8,5 +8,6 @@ let package = Package(
     products: [.executable(name: "RogersRodeo", targets: ["TrainerDesktop"])],
     dependencies: [.package(path: "Packages/TrainerCore"), .package(path: "Packages/TrainerStorage")],
     targets: [.executableTarget(name: "TrainerDesktop", dependencies: ["TrainerCore", "TrainerStorage"],
-        path: "Beratungstrainer", resources: [.process("Resources/Content")])],
+        path: "Beratungstrainer", resources: [.process("Resources/Content"), .process("Resources/Illustrations")]),
+        .testTarget(name: "TrainerPresentationTests", dependencies: ["TrainerDesktop"], path: "Tests/TrainerPresentationTests")],
     swiftLanguageModes: [.v6])

@@ -7,103 +7,121 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		09BFDBE3AAE3D6B684A1F084 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A4D82FC33EA2CCDECB7B9E1 /* AppModel.swift */; };
-		0F66417AD26C7FAA53534CBE /* TrainerStorage in Frameworks */ = {isa = PBXBuildFile; productRef = B9CD496CA5F6CCA02E1C6C6D /* TrainerStorage */; };
-		249ADD6792FA9E4D5E3560DB /* catalog.json in Resources */ = {isa = PBXBuildFile; fileRef = E248E6F87F0C3AB80858DF47 /* catalog.json */; };
-		46AA66EF1C95E048E8B8FFB0 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62DB4FE514511431DE8DAE7C /* RootView.swift */; };
-		6430E96FD4D63CE8940C69F9 /* ConversationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74548E5AADB57AFC048A0E25 /* ConversationView.swift */; };
-		744790C12489581EBC177821 /* TrainerCore in Frameworks */ = {isa = PBXBuildFile; productRef = 8F6B29520ECCDB583F0DAC2E /* TrainerCore */; };
-		7C28699CA7818C00C44CFC44 /* ReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82084AF9985A837E21C8E0E0 /* ReviewView.swift */; };
-		CB1F3EBE919D0E811D3767F5 /* catalog.sha256 in Resources */ = {isa = PBXBuildFile; fileRef = 1EFD458B62B0A95AFB91C643 /* catalog.sha256 */; };
-		E07FA6335EE7B752967840D1 /* ContentCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B04187C6A4A502F0D6CBEC6 /* ContentCatalog.swift */; };
-		F50D12F122A428661ECEE9C1 /* BeratungstrainerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37DF0234989F35E1A7B3E313 /* BeratungstrainerApp.swift */; };
+		074B54979631582CCF0A34F1 /* mara-selvini-palazzoli-portrait.png in Resources */ = {isa = PBXBuildFile; fileRef = F15D9ABC0D155C02F5DC1882 /* mara-selvini-palazzoli-portrait.png */; };
+		230BE019244FDFB0866CFF28 /* ContentCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45A28C6A1D742F894A341DE0 /* ContentCatalog.swift */; };
+		2C767AD11124B9D8D780080D /* steve-de-shazer-portrait.png in Resources */ = {isa = PBXBuildFile; fileRef = 72E353BF7BCA14436FC6D8E0 /* steve-de-shazer-portrait.png */; };
+		30691896CA0482D585E54863 /* miller-rollnick-portrait.png in Resources */ = {isa = PBXBuildFile; fileRef = 085EE1AD734443E3BF53848C /* miller-rollnick-portrait.png */; };
+		516F61E5FC6A9197839A76DD /* ConversationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE819A33C0C64E8ABCDC77B6 /* ConversationView.swift */; };
+		586732108FAB5CF36BCF58C0 /* ReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE2C7DC1CACEB6DAA7EEE587 /* ReviewView.swift */; };
+		6F9C4BB24D26139BA7C3D26E /* TrainerCore in Frameworks */ = {isa = PBXBuildFile; productRef = 29E2CE8DA52B59CC09323D6F /* TrainerCore */; };
+		7DE0F1712BF3071326A3BC96 /* BeratungstrainerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 930A6D5AC75935B037C92EB9 /* BeratungstrainerApp.swift */; };
+		8288F189E6086CDECAB774E0 /* catalog.json in Resources */ = {isa = PBXBuildFile; fileRef = 95FA5CF31E1C52BC16CBFE5A /* catalog.json */; };
+		8A653D230C25DFFB4A090AD0 /* carl-rogers-portrait.png in Resources */ = {isa = PBXBuildFile; fileRef = 72275EF00659F0E076116D1E /* carl-rogers-portrait.png */; };
+		92C35A9010522129BA9D0B6B /* portrait-pool.json in Resources */ = {isa = PBXBuildFile; fileRef = 339E11100040D61CB8B33015 /* portrait-pool.json */; };
+		A9D3DB7B77F52F37388825EC /* HomePortrait.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D5AAA5F4FE7B4E5136D841B /* HomePortrait.swift */; };
+		ADFA0D6172641CA57B9762D5 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9411690D95CE510B79684F29 /* RootView.swift */; };
+		BA0650855BB1AB972EC21CD4 /* catalog.sha256 in Resources */ = {isa = PBXBuildFile; fileRef = 3591402605D4EB5C2DFF6A80 /* catalog.sha256 */; };
+		CC31A3E46E0B5EBD871E4A79 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A09DB7D8B0DACF0DF5548EC /* AppModel.swift */; };
+		FE58A947ED89308035C18C43 /* TrainerStorage in Frameworks */ = {isa = PBXBuildFile; productRef = CA98A43EC3343B5EED7A7DD6 /* TrainerStorage */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		0A4D82FC33EA2CCDECB7B9E1 /* AppModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AppModel.swift; path = App/AppModel.swift; sourceTree = "<group>"; };
-		1EFD458B62B0A95AFB91C643 /* catalog.sha256 */ = {isa = PBXFileReference; includeInIndex = 1; name = catalog.sha256; path = Resources/Content/catalog.sha256; sourceTree = "<group>"; };
-		37DF0234989F35E1A7B3E313 /* BeratungstrainerApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = BeratungstrainerApp.swift; path = App/BeratungstrainerApp.swift; sourceTree = "<group>"; };
-		62DB4FE514511431DE8DAE7C /* RootView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = RootView.swift; path = Features/RootView.swift; sourceTree = "<group>"; };
-		74548E5AADB57AFC048A0E25 /* ConversationView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ConversationView.swift; path = Features/ConversationView.swift; sourceTree = "<group>"; };
-		7B04187C6A4A502F0D6CBEC6 /* ContentCatalog.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ContentCatalog.swift; path = App/ContentCatalog.swift; sourceTree = "<group>"; };
-		82084AF9985A837E21C8E0E0 /* ReviewView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ReviewView.swift; path = Features/ReviewView.swift; sourceTree = "<group>"; };
-		83540A2F7742A53EC80EDDDE /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
-		E0B6D48A0F63F12479CAAA67 /* Beratungstrainer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Beratungstrainer.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		E248E6F87F0C3AB80858DF47 /* catalog.json */ = {isa = PBXFileReference; includeInIndex = 1; name = catalog.json; path = Resources/Content/catalog.json; sourceTree = "<group>"; };
+		085EE1AD734443E3BF53848C /* miller-rollnick-portrait.png */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = image.png; name = "miller-rollnick-portrait.png"; path = "Resources/Illustrations/miller-rollnick-portrait.png"; sourceTree = "<group>"; };
+		1D5AAA5F4FE7B4E5136D841B /* HomePortrait.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = HomePortrait.swift; path = App/HomePortrait.swift; sourceTree = "<group>"; };
+		26916C550A2EEEAE53CFC3A8 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		339E11100040D61CB8B33015 /* portrait-pool.json */ = {isa = PBXFileReference; includeInIndex = 1; name = "portrait-pool.json"; path = "Resources/Illustrations/portrait-pool.json"; sourceTree = "<group>"; };
+		3591402605D4EB5C2DFF6A80 /* catalog.sha256 */ = {isa = PBXFileReference; includeInIndex = 1; name = catalog.sha256; path = Resources/Content/catalog.sha256; sourceTree = "<group>"; };
+		45A28C6A1D742F894A341DE0 /* ContentCatalog.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ContentCatalog.swift; path = App/ContentCatalog.swift; sourceTree = "<group>"; };
+		67E2EA882FCAC12CC82CA10B /* Beratungstrainer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Beratungstrainer.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		6A09DB7D8B0DACF0DF5548EC /* AppModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AppModel.swift; path = App/AppModel.swift; sourceTree = "<group>"; };
+		72275EF00659F0E076116D1E /* carl-rogers-portrait.png */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = image.png; name = "carl-rogers-portrait.png"; path = "Resources/Illustrations/carl-rogers-portrait.png"; sourceTree = "<group>"; };
+		72E353BF7BCA14436FC6D8E0 /* steve-de-shazer-portrait.png */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = image.png; name = "steve-de-shazer-portrait.png"; path = "Resources/Illustrations/steve-de-shazer-portrait.png"; sourceTree = "<group>"; };
+		930A6D5AC75935B037C92EB9 /* BeratungstrainerApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = BeratungstrainerApp.swift; path = App/BeratungstrainerApp.swift; sourceTree = "<group>"; };
+		9411690D95CE510B79684F29 /* RootView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = RootView.swift; path = Features/RootView.swift; sourceTree = "<group>"; };
+		95FA5CF31E1C52BC16CBFE5A /* catalog.json */ = {isa = PBXFileReference; includeInIndex = 1; name = catalog.json; path = Resources/Content/catalog.json; sourceTree = "<group>"; };
+		DE2C7DC1CACEB6DAA7EEE587 /* ReviewView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ReviewView.swift; path = Features/ReviewView.swift; sourceTree = "<group>"; };
+		F15D9ABC0D155C02F5DC1882 /* mara-selvini-palazzoli-portrait.png */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = image.png; name = "mara-selvini-palazzoli-portrait.png"; path = "Resources/Illustrations/mara-selvini-palazzoli-portrait.png"; sourceTree = "<group>"; };
+		FE819A33C0C64E8ABCDC77B6 /* ConversationView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ConversationView.swift; path = Features/ConversationView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		9E85950DAD2E52BA53920DA9 /* Frameworks */ = {
+		87AFC323B5738845F3F90FCE /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				744790C12489581EBC177821 /* TrainerCore in Frameworks */,
-				0F66417AD26C7FAA53534CBE /* TrainerStorage in Frameworks */,
+				6F9C4BB24D26139BA7C3D26E /* TrainerCore in Frameworks */,
+				FE58A947ED89308035C18C43 /* TrainerStorage in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		03847BFADD9C90487368BB4C /* iOS */ = {
+		41A9EB2E7171BD40C34C5CFA = {
 			isa = PBXGroup;
 			children = (
-				83540A2F7742A53EC80EDDDE /* Foundation.framework */,
+				5395F2575084522618D05E39 /* Products */,
+				F2D7897D2E20678B3E062E89 /* Frameworks */,
+				F7A04655E9AC9B560B038AAC /* Beratungstrainer */,
+			);
+			sourceTree = "<group>";
+		};
+		5395F2575084522618D05E39 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				67E2EA882FCAC12CC82CA10B /* Beratungstrainer.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		850AB62A5E59964E8D6C4948 /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				26916C550A2EEEAE53CFC3A8 /* Foundation.framework */,
 			);
 			name = iOS;
 			sourceTree = "<group>";
 		};
-		410892926658BDFA25EB6A6B /* Frameworks */ = {
+		F2D7897D2E20678B3E062E89 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				03847BFADD9C90487368BB4C /* iOS */,
+				850AB62A5E59964E8D6C4948 /* iOS */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		6E4D69C6E094ED87282B4B11 = {
+		F7A04655E9AC9B560B038AAC /* Beratungstrainer */ = {
 			isa = PBXGroup;
 			children = (
-				B4FD6C6C1DDA28162892CE34 /* Products */,
-				410892926658BDFA25EB6A6B /* Frameworks */,
-				82DE46E68EA4AD834BB2C975 /* Beratungstrainer */,
-			);
-			sourceTree = "<group>";
-		};
-		82DE46E68EA4AD834BB2C975 /* Beratungstrainer */ = {
-			isa = PBXGroup;
-			children = (
-				0A4D82FC33EA2CCDECB7B9E1 /* AppModel.swift */,
-				37DF0234989F35E1A7B3E313 /* BeratungstrainerApp.swift */,
-				7B04187C6A4A502F0D6CBEC6 /* ContentCatalog.swift */,
-				74548E5AADB57AFC048A0E25 /* ConversationView.swift */,
-				82084AF9985A837E21C8E0E0 /* ReviewView.swift */,
-				62DB4FE514511431DE8DAE7C /* RootView.swift */,
-				E248E6F87F0C3AB80858DF47 /* catalog.json */,
-				1EFD458B62B0A95AFB91C643 /* catalog.sha256 */,
+				6A09DB7D8B0DACF0DF5548EC /* AppModel.swift */,
+				930A6D5AC75935B037C92EB9 /* BeratungstrainerApp.swift */,
+				45A28C6A1D742F894A341DE0 /* ContentCatalog.swift */,
+				1D5AAA5F4FE7B4E5136D841B /* HomePortrait.swift */,
+				FE819A33C0C64E8ABCDC77B6 /* ConversationView.swift */,
+				DE2C7DC1CACEB6DAA7EEE587 /* ReviewView.swift */,
+				9411690D95CE510B79684F29 /* RootView.swift */,
+				95FA5CF31E1C52BC16CBFE5A /* catalog.json */,
+				3591402605D4EB5C2DFF6A80 /* catalog.sha256 */,
+				72275EF00659F0E076116D1E /* carl-rogers-portrait.png */,
+				F15D9ABC0D155C02F5DC1882 /* mara-selvini-palazzoli-portrait.png */,
+				085EE1AD734443E3BF53848C /* miller-rollnick-portrait.png */,
+				339E11100040D61CB8B33015 /* portrait-pool.json */,
+				72E353BF7BCA14436FC6D8E0 /* steve-de-shazer-portrait.png */,
 			);
 			name = Beratungstrainer;
 			path = Beratungstrainer;
 			sourceTree = "<group>";
 		};
-		B4FD6C6C1DDA28162892CE34 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				E0B6D48A0F63F12479CAAA67 /* Beratungstrainer.app */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		C4D085208F121BCD663699AE /* Beratungstrainer */ = {
+		7372A36B1F4A9416009080C6 /* Beratungstrainer */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 9B139FEBCBA84263A922A3B1 /* Build configuration list for PBXNativeTarget "Beratungstrainer" */;
+			buildConfigurationList = AB3BDED6CED39CBBD2C65977 /* Build configuration list for PBXNativeTarget "Beratungstrainer" */;
 			buildPhases = (
-				0ABDC73F4DDA5B9356116B3F /* Sources */,
-				9E85950DAD2E52BA53920DA9 /* Frameworks */,
-				1A5A155B1D8C29177EFF86FD /* Resources */,
+				800EEDC9FC0752C4DAE09553 /* Sources */,
+				87AFC323B5738845F3F90FCE /* Frameworks */,
+				AEED05468E76A6850C8094F6 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -111,23 +129,23 @@
 			);
 			name = Beratungstrainer;
 			packageProductDependencies = (
-				8F6B29520ECCDB583F0DAC2E /* TrainerCore */,
-				B9CD496CA5F6CCA02E1C6C6D /* TrainerStorage */,
+				29E2CE8DA52B59CC09323D6F /* TrainerCore */,
+				CA98A43EC3343B5EED7A7DD6 /* TrainerStorage */,
 			);
 			productName = Beratungstrainer;
-			productReference = E0B6D48A0F63F12479CAAA67 /* Beratungstrainer.app */;
+			productReference = 67E2EA882FCAC12CC82CA10B /* Beratungstrainer.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		C8EA8D0B97EA85161D1FEF9C /* Project object */ = {
+		DBD267DBBC258928B6E04AE3 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 1600;
 				LastUpgradeCheck = 1600;
 			};
-			buildConfigurationList = 1FC3F750C2CC9A3796423792 /* Build configuration list for PBXProject "Beratungstrainer" */;
+			buildConfigurationList = 4415D178C1DD8904C61B32F3 /* Build configuration list for PBXProject "Beratungstrainer" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -135,52 +153,89 @@
 				en,
 				Base,
 			);
-			mainGroup = 6E4D69C6E094ED87282B4B11;
+			mainGroup = 41A9EB2E7171BD40C34C5CFA;
 			minimizedProjectReferenceProxies = 0;
 			packageReferences = (
-				47A6CD0CC9CC1E4D8831DEA7 /* XCLocalSwiftPackageReference "TrainerCore" */,
-				CB576DCB0C3DBDA8692795F3 /* XCLocalSwiftPackageReference "TrainerStorage" */,
+				617479A14B57413D52EE71CD /* XCLocalSwiftPackageReference "TrainerCore" */,
+				685771AB7CD5849CD774C639 /* XCLocalSwiftPackageReference "TrainerStorage" */,
 			);
 			preferredProjectObjectVersion = 77;
-			productRefGroup = B4FD6C6C1DDA28162892CE34 /* Products */;
+			productRefGroup = 5395F2575084522618D05E39 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				C4D085208F121BCD663699AE /* Beratungstrainer */,
+				7372A36B1F4A9416009080C6 /* Beratungstrainer */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		1A5A155B1D8C29177EFF86FD /* Resources */ = {
+		AEED05468E76A6850C8094F6 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				249ADD6792FA9E4D5E3560DB /* catalog.json in Resources */,
-				CB1F3EBE919D0E811D3767F5 /* catalog.sha256 in Resources */,
+				8288F189E6086CDECAB774E0 /* catalog.json in Resources */,
+				BA0650855BB1AB972EC21CD4 /* catalog.sha256 in Resources */,
+				8A653D230C25DFFB4A090AD0 /* carl-rogers-portrait.png in Resources */,
+				074B54979631582CCF0A34F1 /* mara-selvini-palazzoli-portrait.png in Resources */,
+				30691896CA0482D585E54863 /* miller-rollnick-portrait.png in Resources */,
+				92C35A9010522129BA9D0B6B /* portrait-pool.json in Resources */,
+				2C767AD11124B9D8D780080D /* steve-de-shazer-portrait.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		0ABDC73F4DDA5B9356116B3F /* Sources */ = {
+		800EEDC9FC0752C4DAE09553 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				09BFDBE3AAE3D6B684A1F084 /* AppModel.swift in Sources */,
-				F50D12F122A428661ECEE9C1 /* BeratungstrainerApp.swift in Sources */,
-				E07FA6335EE7B752967840D1 /* ContentCatalog.swift in Sources */,
-				6430E96FD4D63CE8940C69F9 /* ConversationView.swift in Sources */,
-				7C28699CA7818C00C44CFC44 /* ReviewView.swift in Sources */,
-				46AA66EF1C95E048E8B8FFB0 /* RootView.swift in Sources */,
+				CC31A3E46E0B5EBD871E4A79 /* AppModel.swift in Sources */,
+				7DE0F1712BF3071326A3BC96 /* BeratungstrainerApp.swift in Sources */,
+				230BE019244FDFB0866CFF28 /* ContentCatalog.swift in Sources */,
+				A9D3DB7B77F52F37388825EC /* HomePortrait.swift in Sources */,
+				516F61E5FC6A9197839A76DD /* ConversationView.swift in Sources */,
+				586732108FAB5CF36BCF58C0 /* ReviewView.swift in Sources */,
+				ADFA0D6172641CA57B9762D5 /* RootView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		4103A9C1563432A6BF1BBEA3 /* Release */ = {
+		8A186302DB957C340AFE5084 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_USER_SELECTED_FILES = readwrite;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Rogers Rodeo";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = de.rogersrodeo.beratungstrainer;
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		9906DE80826FBBB67B7ADF15 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -235,69 +290,7 @@
 			};
 			name = Release;
 		};
-		7A6BD23162AF95A9A12BFA56 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CLANG_ENABLE_OBJC_WEAK = NO;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				ENABLE_APP_SANDBOX = YES;
-				ENABLE_USER_SELECTED_FILES = readwrite;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Rogers Rodeo";
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 0.1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = de.rogersrodeo.beratungstrainer;
-				SDKROOT = iphoneos;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
-				SUPPORTS_MACCATALYST = NO;
-				SWIFT_STRICT_CONCURRENCY = complete;
-				SWIFT_VERSION = 6.0;
-				TARGETED_DEVICE_FAMILY = 1;
-				VALIDATE_PRODUCT = YES;
-			};
-			name = Release;
-		};
-		E00F4F4B35BAB97FA13DE501 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CLANG_ENABLE_OBJC_WEAK = NO;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				ENABLE_APP_SANDBOX = YES;
-				ENABLE_USER_SELECTED_FILES = readwrite;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Rogers Rodeo";
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 0.1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = de.rogersrodeo.beratungstrainer;
-				SDKROOT = iphoneos;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
-				SUPPORTS_MACCATALYST = NO;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
-				SWIFT_STRICT_CONCURRENCY = complete;
-				SWIFT_VERSION = 6.0;
-				TARGETED_DEVICE_FAMILY = 1;
-			};
-			name = Debug;
-		};
-		E047A1B48DB1AF63C98F8E7C /* Debug */ = {
+		CD41EAB76B891A917D52A1CA /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -359,23 +352,54 @@
 			};
 			name = Debug;
 		};
+		EBB921B77F7DF3F6C94E916B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_USER_SELECTED_FILES = readwrite;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Rogers Rodeo";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = de.rogersrodeo.beratungstrainer;
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		1FC3F750C2CC9A3796423792 /* Build configuration list for PBXProject "Beratungstrainer" */ = {
+		4415D178C1DD8904C61B32F3 /* Build configuration list for PBXProject "Beratungstrainer" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				E047A1B48DB1AF63C98F8E7C /* Debug */,
-				4103A9C1563432A6BF1BBEA3 /* Release */,
+				CD41EAB76B891A917D52A1CA /* Debug */,
+				9906DE80826FBBB67B7ADF15 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		9B139FEBCBA84263A922A3B1 /* Build configuration list for PBXNativeTarget "Beratungstrainer" */ = {
+		AB3BDED6CED39CBBD2C65977 /* Build configuration list for PBXNativeTarget "Beratungstrainer" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				7A6BD23162AF95A9A12BFA56 /* Release */,
-				E00F4F4B35BAB97FA13DE501 /* Debug */,
+				8A186302DB957C340AFE5084 /* Release */,
+				EBB921B77F7DF3F6C94E916B /* Debug */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -383,28 +407,28 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		47A6CD0CC9CC1E4D8831DEA7 /* XCLocalSwiftPackageReference "TrainerCore" */ = {
+		617479A14B57413D52EE71CD /* XCLocalSwiftPackageReference "TrainerCore" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/TrainerCore;
 		};
-		CB576DCB0C3DBDA8692795F3 /* XCLocalSwiftPackageReference "TrainerStorage" */ = {
+		685771AB7CD5849CD774C639 /* XCLocalSwiftPackageReference "TrainerStorage" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/TrainerStorage;
 		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		8F6B29520ECCDB583F0DAC2E /* TrainerCore */ = {
+		29E2CE8DA52B59CC09323D6F /* TrainerCore */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 47A6CD0CC9CC1E4D8831DEA7 /* XCLocalSwiftPackageReference "TrainerCore" */;
+			package = 617479A14B57413D52EE71CD /* XCLocalSwiftPackageReference "TrainerCore" */;
 			productName = TrainerCore;
 		};
-		B9CD496CA5F6CCA02E1C6C6D /* TrainerStorage */ = {
+		CA98A43EC3343B5EED7A7DD6 /* TrainerStorage */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = CB576DCB0C3DBDA8692795F3 /* XCLocalSwiftPackageReference "TrainerStorage" */;
+			package = 685771AB7CD5849CD774C639 /* XCLocalSwiftPackageReference "TrainerStorage" */;
 			productName = TrainerStorage;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
-	rootObject = C8EA8D0B97EA85161D1FEF9C /* Project object */;
+	rootObject = DBD267DBBC258928B6E04AE3 /* Project object */;
 }

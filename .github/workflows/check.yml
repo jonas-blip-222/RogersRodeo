@@ -11,6 +11,7 @@ jobs:
         run: |
           swift test --package-path Packages/TrainerCore
           swift test --package-path Packages/TrainerStorage
+          swift test
       - name: Inhaltscompiler
         run: |
           python3 -m venv .venv
