@@ -55,13 +55,43 @@ einer verteilten App ist nicht geheim.
   lokale Verarbeitung. Diese Aussagen müssen angepasst werden, bevor die Cloud-Anbindung
   benutzbar ist. Eine App, die Text an einen Dienst sendet, darf nicht weiter „vollständig lokal"
   versprechen.
-- Datenschutz: Beratungsäußerungen verlassen das Gerät. Nur Anbieterrouten ohne Datenspeicherung
-  verwenden. Sobald Kolleg:innen mitüben, sind es deren Äußerungen; `~/Developer/AGENTS.md`
-  verbietet Klienten- und Mandatsdaten in Prompts und Logs, und eine Beratungsübung verleitet
-  dazu, echtes Fallmaterial einzutippen. Ein Hinweis in der App ist vorzusehen.
+- Datenschutz: Beratungsäußerungen verlassen das Gerät. Zur Anbieterwahl siehe E02, die diesen
+  Punkt am 29.09.2026 neu geregelt hat. Unverändert gilt: `~/Developer/AGENTS.md` verbietet
+  Klienten- und Mandatsdaten in Prompts und Logs, und eine Beratungsübung verleitet dazu, echtes
+  Fallmaterial einzutippen. Ein Hinweis in der App ist vorzusehen.
 - Offline-Betrieb entfällt. Verhalten ohne Netz, bei Zeitüberschreitung und bei Fehlern der
   Gegenseite muss definiert werden; die Speicherinvarianten des Coordinators gelten unverändert.
 - Das Deployment-Target ist neu zu bestimmen. Ohne MLX und ohne FoundationModels-Brücke gibt es
   keinen technischen Grund mehr für iOS 27, womit iPhone 14 und 15 leichter erreichbar werden.
 - Der fachlich geprüfte Referenzsatz aus dem Bauplan (60 Einzelbeispiele, fünf je Code) fehlt
   weiterhin. Er wird durch diese Entscheidung nicht ersetzt.
+
+## E02 · Keine Beschränkung auf Anbieter ohne Datenspeicherung
+
+**Datum:** 29.09.2026 · **Entschieden von:** Jonas · **Status:** beschlossen
+
+Anfragen werden ohne `provider.data_collection: "deny"` gestellt. OpenRouter darf frei routen,
+auch an Anbieter, die übermittelte Daten speichern oder für eigenes Training verwenden dürfen.
+
+**Begründung.** Die geübten Gespräche sind fiktiv: Die Figur Lukas ist erfunden, und die
+Äußerungen der übenden Person sind ihr eigenes Übungsmaterial, keine Klientendaten. Funktionalität
+und Antwortqualität haben nach Jonas' Abwägung Vorrang vor der strengeren Einstellung.
+
+**Auslösender Befund.** Mit der Beschränkung bediente durchgängig nur ein einziger Anbieter die
+Anfragen (Reka). Der Auswertungslauf blieb nach 13 von 28 Aufrufen stehen. Ein einzelner
+zulässiger Anbieter bedeutet keine Ausweichmöglichkeit; die Beschränkung war damit die
+wahrscheinliche Ursache des Stillstands. Ob das tatsächlich der Grund war, ist noch nicht belegt.
+
+**Was das ersetzt.** Den Punkt „Nur Anbieterrouten ohne Datenspeicherung verwenden" aus den
+offenen Folgen von E01.
+
+**Grenzen dieser Entscheidung.** Sie gilt für fiktives Übungsmaterial. Sie ist **keine** Freigabe
+für echte Klienten- oder Mandatsdaten; das Verbot aus `~/Developer/AGENTS.md` bleibt unberührt.
+Sobald Kolleg:innen mitüben, sind es deren Äußerungen, und eine Beratungsübung verleitet dazu,
+echtes Fallmaterial einzutippen. Die Abwägung ist dann erneut zu treffen, und ein Hinweis in der
+App bleibt vorgesehen.
+
+**Folge für die Umsetzung.** Der Swift-Adapter braucht unabhängig davon Zeitüberschreitung,
+begrenzte Wiederholungen und eine verständliche Fehlermeldung statt einer hängenden Oberfläche.
+Der tatsächlich verwendete Anbieter wird je Aufruf protokolliert, weil Struktur- und Zitattreue
+zwischen Anbietern abweichen können.
