@@ -29,7 +29,7 @@ import TrainerCore
             var values = URLResourceValues(); values.isExcludedFromBackup = true
             try directory.setResourceValues(values)
             #if os(iOS)
-            try FileManager.default.setAttributes([.protectionKey: FileProtectionType.complete], atPath: directory.path)
+            try FileManager.default.setAttributes([.protectionKey: FileProtectionType.complete], ofItemAtPath: directory.path)
             #endif
         }
         let schema = Schema([StoredSession.self])
