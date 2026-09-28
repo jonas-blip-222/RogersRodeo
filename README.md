@@ -4,6 +4,10 @@ Native Übungs-App für Gesprächsführung in der Drogenberatung. Der erste Stan
 
 Aktueller Zwischenstand und nächste Schritte: [Übergabe](Documentation/UEBERGABE.md).
 
+Fachliche und architektonische Grundlage: [Bauplan v0.1](Documentation/Bauplan-v0.1/README.md) und der
+[MI-Nachtrag vom 29.09.2026](Documentation/MI-UEBERGABE.md). Bei Widerspruch gilt der MI-Nachtrag;
+seine Abschnitte 3 und 12 benennen die abgelösten Annahmen und die nächsten Arbeitspakete.
+
 ## Vorhanden
 
 - SwiftUI: Figur auswählen, Gespräch führen, Entwürfe sichern, Sitzungen fortsetzen und abschließen, Verlauf und Rückblick.
