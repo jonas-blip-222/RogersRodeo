@@ -676,8 +676,12 @@ actor OpenRouterModelProvider: TrainerModelProvider {
     private let configuration: OpenRouterConfiguration
     private let session: URLSession
     private var key: String?
+    /// Opt-in-Diagnose für Live-Evaluationen: ausschließlich Modellinhalt, keine Header/Schlüssel.
+    private let analysisDiagnostics: (@Sendable (Data) async -> Void)?
 
-    init(configuration: OpenRouterConfiguration = .init()) {
+    init(configuration: OpenRouterConfiguration = .init(),
+         analysisDiagnostics: (@Sendable (Data) async -> Void)? = nil) {
+        self.analysisDiagnostics = analysisDiagnostics
         self.configuration = configuration
         let settings = URLSessionConfiguration.ephemeral
         settings.timeoutIntervalForRequest = configuration.idleSeconds
@@ -718,6 +722,7 @@ actor OpenRouterModelProvider: TrainerModelProvider {
             reasoning: configuration.analysisReasoning,
             budget: configuration.analysisTokens, retryBudget: configuration.analysisTokensRetry,
             unusableFailure: .invalidAnalysis)
+        await analysisDiagnostics?(data)
         // Dieselbe Prüfung, die die App auch sonst anwendet: keine zweite Wahrheit im Adapter.
         let analysis = try OutputValidator.decodeAnalysis(data, input: request.currentInput,
                                                           context: request.recentMessages)

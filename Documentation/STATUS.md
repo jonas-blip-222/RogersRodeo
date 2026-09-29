@@ -3,6 +3,42 @@
 Neueste Prüfungen zuerst. Ältere Abschnitte bleiben als Verlauf erhalten und werden nicht
 rückwirkend umgeschrieben.
 
+## 29. September 2026 · Live-Prüfung Zielgedächtnis: nicht bestanden
+
+Der erste echte Modelltest mit Prompt 0.4 und `qwen/qwen3.8-27b` bestätigt die technische
+Erinnerungsauswahl, aber **keine zuverlässige Zielentwicklung im Modellbetrieb**.
+
+- Zwei geplante 15-Runden-Läufe über den produktiven Coordinator: Abbruch bei Runde 4 bzw. 5
+  nach 3 bzw. 4 abgeschlossenen Runden; auch die jeweilige Analysewiederholung war ungültig.
+  Fiktive Rollenreaktionen sind fest vorgegeben, die Analysen kommen vom echten Modell.
+- Sieben unabhängige Gegenproben mit belegten Fixture-Vorzuständen: nur **1/7 vollständig
+  erfüllt** (Vorschlag allein ist noch keine Vereinbarung). Drei technisch angenommene
+  Antworten, vier `invalidAnalysis`. Keine fachlich validierte oder repräsentative Trefferquote.
+- Alle sieben Kontexte enthalten den gezielt zurückgeholten alten Originalbeleg außerhalb des
+  normalen Sechs-Turn-Fensters. Das Modell erkennt trotzdem den Alias nicht zuverlässig.
+- Fehler: Markdown-Codezäune trotz JSON-Vorgabe; `confirmed` mit unzulässigem `currentGoal`;
+  aktuelle Frage statt früherem konkreten Vereinbarungsvorschlag; unbelegter Rapport mit
+  leerem Zitat, `messageIndex=null`, `occurrence=0`.
+- Relevante Zustandslücke: spätere Unsicherheit erzeugt über `characterObservations` einen
+  zweiten Zielverlauf mit neuem Zielzitat. Der alte Widerruf bleibt bestehen, aber die gemeinsame
+  Zielidentität wird umgangen. Das ist ausdrücklich kein bestandener Wiederaufnahme-Test.
+- Zielwechsel und Widerruf sind in einzelnen Rohantworten inhaltlich erkannt, werden wegen
+  ungültiger Ausgabe jedoch nicht übernommen. Kein Entfernen von Codezäunen als Erfolg gewertet.
+
+Neu: `GoalMemoryLiveTests.swift` (Opt-in über `RR_RUN_GOAL_LIVE=1`),
+`Tools/run_goal_memory_live.py long|probes`, optionaler Diagnose-Rückruf im Adapter ausschließlich
+für Modellinhalte. Keine Änderung von Prompt, Schema, Zustandsregeln oder Rollenwirkung.
+Der Starter nutzt Umgebungsvariable oder den vorhandenen `security`-Ladeweg; der direkte
+Schlüsselbundzugriff des Swift-Testprogramms schlug fehl. Keine Schlüsselausgabe/-ablage.
+
+Ergebnisse außerhalb von Git: `Evaluation/results/goal-memory-2026-09-29/`.
+38 bisherige App-Tests bestanden erneut; zwei neue Live-Tests im Offline-Lauf übersprungen;
+fünf bekannte Schlüsselbundtests gezielt ausgenommen. SwiftUI-Quellen als Mac-Prüf-App gebaut,
+`git diff --check` bestanden. Core-/Storage-Pakete unverändert, kein neuer eigenständiger Lauf.
+Kein echter Rollenlauf, Simulator-/Gerätenachweis oder vollständiger Kosten-/Anbieternachweis.
+Nächster Schritt ist Fehlerbehebung mit unveränderten Live-Erwartungen und erneuter Messung,
+nicht Aktivierung automatischer Rollenentwicklung.
+
 ## 29. September 2026 · MI-03: belegtes Zielgedächtnis
 
 ### Implementierter Baustein
