@@ -149,7 +149,7 @@ stattdessen zu tun ist, steht in Abschnitt 5. Siehe `ENTSCHEIDUNGEN.md`, E01 bis
       Vereinfachung der Szenarien, zu bestätigen vor der ersten Benutzung. Text noch nicht
       geschrieben und nicht fachlich abgenommen.
 - [ ] **Markdown-Hülle inkonsistent behandelt.** `analyze` schickt die Antwort durch
-      `OpenRouterResponse.analysisPayload` und entfernt damit eine einzelne ```json-Hülle;
+      `OpenRouterResponse.analysisPayload` und entfernt damit eine einzelne Markdown-Codehülle;
       `reply` gibt die Daten unverändert an `OutputValidator.decodeReply`. Dieselbe Route, die
       bei der Analyse toleriert wird, lässt die Figurenantwort scheitern. Entweder beide Wege
       gleich behandeln oder die Ungleichbehandlung begründen.
