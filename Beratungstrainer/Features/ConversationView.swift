@@ -192,6 +192,18 @@ struct FeedbackNotice: View {
 struct DiagnosticsView: View {
     let session: SessionSnapshot
     @Environment(\.dismiss) private var dismiss
+    @ViewBuilder private func characterRecord(_ record: CharacterRecord?, dimension: CharacterDimension) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("\(dimension.label): \(record?.label ?? "Nicht erhoben")")
+            if let record {
+                Text(verbatim: "Beleg: „\(record.evidence.quote)“")
+                if let id = record.evidence.origin.turnID,
+                   let index = session.turns.firstIndex(where: { $0.id == id }) {
+                    Text("Lukas' Antwort in Runde \(index + 1)")
+                } else { Text("Lukas' Eröffnungsäußerung") }
+            }
+        }.font(.caption)
+    }
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -204,6 +216,22 @@ struct DiagnosticsView: View {
                     LabeledContent("Modell", value: session.identity.model.id)
                     LabeledContent("Offenheit zu Beginn", value: "\(session.content.scenario.opennessStart)")
                     LabeledContent("Offenheit jetzt", value: "\(session.state.openness)")
+                    if let development = session.state.development {
+                        Text("Zuletzt belegte Aussagen zur Figur").font(.headline)
+                        Text("Getrennte Beobachtungen, keine Punkte. Sie beziehen sich auf frühere Äußerungen und sind kein Beweis des aktuellen Zustands oder einer Wirkung deiner letzten Intervention.")
+                            .font(.caption).foregroundStyle(.secondary)
+                        ForEach(Array(development.goals.enumerated()), id: \.offset) { _, goal in
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text(verbatim: "Zielbeleg: „\(goal.goal.quote)“").font(.subheadline)
+                                characterRecord(goal.readiness, dimension: .readiness)
+                                characterRecord(goal.confidence, dimension: .confidence)
+                            }
+                        }
+                        characterRecord(development.rapport, dimension: .rapport)
+                    } else {
+                        Text("Veränderungsbereitschaft, Zuversicht und Arbeitsbeziehung: noch nicht erhoben.")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
                     if session.turns.isEmpty {
                         Text("Noch keine abgeschlossene Runde.").font(.subheadline).foregroundStyle(.secondary)
                     }

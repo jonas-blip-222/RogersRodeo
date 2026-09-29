@@ -64,8 +64,12 @@ public struct TurnAnalysis: Codable, Sendable, Equatable {
     /// nil heißt nicht erhoben/erkannt, niemals eine negative Bewertung.
     /// Optionals bleiben beim Lesen alter gespeicherter Analysen kompatibel.
     public var doubleSidedReflection: DoubleSidedReflection?
-    public init(segments: [AnalysisSegment], doubleSidedReflection: DoubleSidedReflection? = nil) {
+    /// nil: alter Stand/nicht erhoben; leer: im gesehenen Kontext keine Beobachtung.
+    public var characterObservations: [CharacterObservation]?
+    public init(segments: [AnalysisSegment], doubleSidedReflection: DoubleSidedReflection? = nil,
+                characterObservations: [CharacterObservation]? = nil) {
         self.segments = segments; self.doubleSidedReflection = doubleSidedReflection
+        self.characterObservations = characterObservations
     }
 }
 
@@ -138,17 +142,23 @@ public struct SimulationState: Codable, Sendable, Equatable {
     public var disclosedFactIDs: Set<String>
     // Ältester Eintrag zuerst; maximal drei. nil bedeutet: Turn ohne Gutschrift.
     public var recentCredits: [CounselorCode?]
+    public var development: CharacterDevelopment?
     public init(openness: Int, closedQuestionStreak: Int = 0,
-                disclosedFactIDs: Set<String> = [], recentCredits: [CounselorCode?] = []) {
+                disclosedFactIDs: Set<String> = [], recentCredits: [CounselorCode?] = [],
+                development: CharacterDevelopment? = nil) {
         self.openness = openness; self.closedQuestionStreak = closedQuestionStreak
         self.disclosedFactIDs = disclosedFactIDs; self.recentCredits = recentCredits
+        self.development = development
     }
 }
 
 public struct DialogueMessage: Codable, Sendable, Equatable {
     public var speaker: Speaker
     public var text: String
-    public init(speaker: Speaker, text: String) { self.speaker = speaker; self.text = text }
+    public var origin: MessageOrigin?
+    public init(speaker: Speaker, text: String, origin: MessageOrigin? = nil) {
+        self.speaker = speaker; self.text = text; self.origin = origin
+    }
 }
 
 // Nur freigegebene Fakten passieren die Grenze zum Rollenmodell.

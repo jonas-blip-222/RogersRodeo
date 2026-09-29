@@ -62,8 +62,10 @@ public enum StateReducer {
 
 public enum ContextBuilder {
     public static func messages(_ session: SessionSnapshot) -> [DialogueMessage] {
-        [.init(speaker: .client, text: session.content.scenario.openingLine)] + session.turns.suffix(6).flatMap {
-            [DialogueMessage(speaker: .counselor, text: $0.input), DialogueMessage(speaker: .client, text: $0.reply.text)]
+        [.init(speaker: .client, text: session.content.scenario.openingLine,
+               origin: .init(turnID: nil, speaker: .client))] + session.turns.suffix(6).flatMap {
+            [DialogueMessage(speaker: .counselor, text: $0.input, origin: .init(turnID: $0.id, speaker: .counselor)),
+             DialogueMessage(speaker: .client, text: $0.reply.text, origin: .init(turnID: $0.id, speaker: .client))]
         }
     }
     public static func visibleFacts(_ scenario: ScenarioDefinition, state: SimulationState) -> [VisibleFact] {

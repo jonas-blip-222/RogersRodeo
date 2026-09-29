@@ -7,13 +7,20 @@ Die folgenden Punkte sind eine Diskussionsgrundlage, keine bereits fachlich frei
 - [x] MI-03: doppelseitige Reflexion mit belegten Sustain-/Change-Seiten und ausdrücklichem
       Lob für Sustain zuerst, Change danach. Produktentscheidung E04; Prompt und Bausteine 0.2.
 - [ ] Neues Analyseschema mit echtem Modell und aktuelle Feedbackanzeige im Simulator prüfen.
-- [ ] Drei getrennte Zustände für die Figurenentwicklung konkretisieren: Veränderungsbereitschaft
-      mit Zielbezug, Zuversicht/Selbstwirksamkeit mit Zielbezug und Rapport/Arbeitsbeziehung.
-      Fachlich bereits in MI-Übergabe 5.1–5.3 vorgesehen, noch nicht als Parameter implementiert.
-      Explizite Skalenantworten als Selbstbericht samt Beleg speichern; keine Umrechnung aus
-      Offenheit, keine automatischen SOC-Schwellen. Jonas hat die drei Bereiche am 29.09.
-      erneut ausdrücklich benannt. Zunächst belegte Beobachtungen (MI-03), danach Einfluss auf
-      Rollenverhalten und Verlauf über Termine (MI-04) ausarbeiten.
+- [x] MI-03: Veränderungsbereitschaft, Zuversicht und Rapport getrennt als belegte
+      Beobachtungen speichern. Bereitschaft/Zuversicht sind an einen konkreten Zielbeleg
+      gebunden, Rapport ist eigenständig. Dauerhafte Nachrichtenherkunft, Unsicherheit,
+      atomare Speicherung und Entwicklerdiagnostik vorhanden. Prompt 0.3, Regeln 0.2.
+- [ ] Zielidentität über Umformulierungen hinweg und gezielte Belegerinnerung außerhalb des
+      Sechs-Turn-Fensters ergänzen. Verschiedene Zielbelege bleiben vorläufig getrennt;
+      gespeicherte Beobachtungen sind historische Aussagen, keine garantierten Ist-Zustände.
+- [ ] Die drei Dimensionen nachvollziehbar in Rollenverhalten und Termine einbinden (MI-04).
+      Keine Umrechnung aus Offenheit und keine automatischen SOC-Schwellen. Aktuell wird
+      Lukas' jeweils neue Antwort erst beim nächsten Analyseaufruf berücksichtigt; kein
+      weiterer Modellaufruf und keine nachträgliche Umdeutung des Feedbacks.
+- [ ] Explizite Zuversichtsskalen als strukturierte Selbstberichte mit Ziel/Skala/Zeitpunkt
+      erfassen. Bis dahin bleiben die tatsächlich verwendeten Skalenformulierungen nur
+      als wörtliche Belege erhalten; keine vom Modell geschätzte Zahl.
 - [ ] Skalierungsfragen und das begründete Erfragen eigener Lösungsideen erkennen.
 - [ ] Wiederholungen in Lukas' Antworten untersuchen und vorhandene Beibehaltungsmotive
       situationsbezogen nutzen. Grundlage: Jonas' erster Testlauf und seine Anmerkungen.

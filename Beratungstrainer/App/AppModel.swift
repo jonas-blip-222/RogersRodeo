@@ -31,7 +31,7 @@ struct ProviderChange: Equatable {
     static func mayContinue(_ session: SessionSnapshot, with current: ModelDescriptor) -> Bool {
         session.status != .active || (session.identity.model == current
             && session.identity.promptVersion == ConversationCoordinator.promptVersion
-            && session.identity.rulesVersion == "0.1")
+            && session.identity.rulesVersion == ConversationCoordinator.rulesVersion)
     }
 }
 

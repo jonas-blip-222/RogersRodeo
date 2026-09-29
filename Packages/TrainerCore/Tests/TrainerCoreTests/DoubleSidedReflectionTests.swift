@@ -112,7 +112,7 @@ private func findings(_ analysis: TurnAnalysis, _ input: String) -> [FeedbackFin
     let coordinator = ConversationCoordinator(repository: repo, provider: provider)
     var content = TestData.content; content.scenario.openingLine = clientText
     let session = try await coordinator.create(content: content, contentHash: "test")
-    #expect(session.identity.promptVersion == "0.2")
+    #expect(session.identity.promptVersion == ConversationCoordinator.promptVersion)
     let recorder = FeedbackRecorder()
     let sink = await recorder.sink
     let task = Task { try await coordinator.send(sessionID: session.id, input: input, onFeedback: sink) }

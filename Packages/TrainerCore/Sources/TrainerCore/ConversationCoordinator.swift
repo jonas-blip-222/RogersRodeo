@@ -1,7 +1,8 @@
 import Foundation
 
 public actor ConversationCoordinator {
-    public static let promptVersion = "0.2"
+    public static let promptVersion = "0.3"
+    public static let rulesVersion = "0.2"
     private let repository: any SessionRepository
     private let provider: any TrainerModelProvider
     private var generation: UUID?
@@ -23,7 +24,7 @@ public actor ConversationCoordinator {
         try await provider.prepare(); try check(token)
         let descriptor = await provider.descriptor(); try check(token)
         let snapshot = SessionSnapshot(schemaVersion: 1, id: UUID(), revision: 0, approachID: "mi",
-            identity: .init(contentHash: contentHash, rulesVersion: "0.1", promptVersion: Self.promptVersion, model: descriptor),
+            identity: .init(contentHash: contentHash, rulesVersion: Self.rulesVersion, promptVersion: Self.promptVersion, model: descriptor),
             content: content, state: .init(openness: content.scenario.opennessStart), turns: [], status: .active, startedAt: Date())
         try await repository.create(snapshot)
         return snapshot
@@ -55,7 +56,7 @@ public actor ConversationCoordinator {
         }
         guard session.status == .active, session.turns.count < 20 else { throw TrainerFailure.sessionCompleted }
         let descriptor = await provider.descriptor(); try check(token)
-        guard session.identity.rulesVersion == "0.1", session.identity.promptVersion == Self.promptVersion,
+        guard session.identity.rulesVersion == Self.rulesVersion, session.identity.promptVersion == Self.promptVersion,
               session.identity.model == descriptor else { throw TrainerFailure.unsupportedVersion }
         prepared = nil
         let oldPending = try await repository.loadPending(sessionID: sessionID); try check(token)
@@ -74,11 +75,14 @@ public actor ConversationCoordinator {
         var analysis: TurnAnalysis?
         var analysisContext = messages
         var metrics: [ModelCallMetrics] = []
+        var development = session.state.development
         if !skipAnalysis {
             for attempt in 0...1 {
                 do {
                     let result = try await provider.analyze(request); try check(token)
                     try OutputValidator.validateAnalysis(result.value, input: text, context: result.contextMessagesUsed)
+                    development = try CharacterTracker.advance(session.state.development, analysis: result.value,
+                        input: text, context: result.contextMessagesUsed, session: session, turnID: pending.id)
                     analysis = result.value; analysisContext = result.contextMessagesUsed; metrics.append(result.metrics)
                     break
                 } catch TrainerFailure.invalidAnalysis where attempt == 0 { try check(token) }
@@ -114,6 +118,7 @@ public actor ConversationCoordinator {
         guard let replyResult else { throw TrainerFailure.invalidReply }
         metrics.append(replyResult.metrics)
         var after = reduction.state
+        after.development = development
         after.disclosedFactIDs.formUnion(replyResult.value.disclosedFactIDs)
         let tip = TipSelector.select(tag: replyResult.value.primaryTag, approach: session.approachID,
                                      tips: session.content.tips, previousID: session.turns.last?.selectedTipID)

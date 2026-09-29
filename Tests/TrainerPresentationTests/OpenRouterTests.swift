@@ -27,7 +27,7 @@ private func object(_ data: Data) throws -> [String: Any] {
 @Test func einordnungsschemaEnthaeltBelegteDoppelseitigeReflexion() throws {
     let schema = try object(try OpenRouterSchema.analysis.serialized())
     #expect(schema["additionalProperties"] as? Bool == false)
-    #expect(schema["required"] as? [String] == ["segments", "doubleSidedReflection"])
+    #expect(schema["required"] as? [String] == ["segments", "doubleSidedReflection", "characterObservations"])
     let properties = try #require(schema["properties"] as? [String: Any])
     let segments = try #require(properties["segments"] as? [String: Any])
     #expect(segments["type"] as? String == "array")
@@ -292,4 +292,29 @@ private func envelope(content: String?, finish: String?, refusal: String? = nil,
     #expect(!system.contains("REFLEXION"))
     #expect(user.contains("[2] Klient: Sonntags fitter sein."))
     #expect(user.contains("[1] Beratung: Und noch?"))
+}
+
+@Test func charakterbeobachtungenHabenGetrennteDimensionenUndOptionaleZielbelege() throws {
+    let schema = try object(OpenRouterSchema.characterObservation.serialized())
+    let fields = try #require(schema["properties"] as? [String: Any])
+    let dimension = try #require(fields["dimension"] as? [String: Any])
+    #expect(dimension["enum"] as? [String] == ["readiness", "confidence", "rapport"])
+    let goal = try #require(fields["goal"] as? [String: Any])
+    #expect(goal["type"] as? [String] == ["object", "null"])
+    let prompt = OpenRouterSchema.analysisSystemPrompt("G")
+    #expect(prompt.contains("Beziehung zu Sarah ist nicht Rapport"))
+    #expect(prompt.contains("Keine Werte aus Offenheit"))
+    #expect(prompt.contains("Skalenantworten nur wörtlich belegen"))
+}
+
+@Test func beobachteteCharakterhypothesenWerdenNochNichtZuRollenbefehlen() {
+    let observation = CharacterObservation(dimension: .rapport, assessment: .strained, goal: nil,
+        evidence: .init(source: .contextMessage, speaker: .client, messageIndex: 0,
+                        quote: "PRUEFBELEG", occurrence: 1), isUncertain: false)
+    let request = ReplyRequest(publicProfile: "P", behaviorInstruction: "B", visibleFacts: [],
+        recentMessages: [], currentInput: "Hallo", analysis: .init(segments: [], characterObservations: [observation]))
+    let prompt = OpenRouterSchema.rolePrompt(request) + OpenRouterSchema.replyPrompt(request)
+    #expect(!prompt.contains("PRUEFBELEG"))
+    #expect(!prompt.contains("strained"))
+    #expect(!prompt.contains("characterObservations"))
 }

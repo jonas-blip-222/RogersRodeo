@@ -48,6 +48,7 @@ public enum RepositoryRules {
               turn.stateAfter.disclosedFactIDs.isSubset(of: Set(record.snapshot.content.scenario.facts.map(\.id))) else {
             throw TrainerFailure.invalidReply
         }
+        try CharacterTracker.validate(turn.stateAfter.development, session: record.snapshot, currentTurnID: turn.id)
         record.snapshot.turns.append(turn)
         record.snapshot.state = turn.stateAfter
         record.snapshot.revision += 1

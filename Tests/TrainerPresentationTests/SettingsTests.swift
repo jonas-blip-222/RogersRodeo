@@ -206,7 +206,7 @@ private func schnappschuss(identity: ModelDescriptor, status: SessionStatus) -> 
                                       opennessStart: 2, openingLine: "Hallo.", publicProfile: "P",
                                       facts: [])
     return SessionSnapshot(schemaVersion: 1, id: UUID(), revision: 0, approachID: "mi",
-                           identity: .init(contentHash: "h", rulesVersion: "0.1",
+                           identity: .init(contentHash: "h", rulesVersion: ConversationCoordinator.rulesVersion,
                                            promptVersion: ConversationCoordinator.promptVersion, model: identity),
                            content: .init(scenario: scenario, codingGuide: "G", tips: []),
                            state: .init(openness: 2), turns: [], status: status, startedAt: Date())

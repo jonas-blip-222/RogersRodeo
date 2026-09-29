@@ -3,6 +3,79 @@
 Neueste Prüfungen zuerst. Ältere Abschnitte bleiben als Verlauf erhalten und werden nicht
 rückwirkend umgeschrieben.
 
+## 29. September 2026 · MI-03: getrennte Charakterbeobachtungen
+
+### Was jetzt implementiert ist
+
+Veränderungsbereitschaft, Zuversicht und Rapport werden durch denselben Analyseaufruf als
+`characterObservations` erfasst. Grundlage sind ausschließlich bereits vorliegende Aussagen
+von Lukas, nicht die vermutete Wirkung der aktuellen Beratung und nicht die erst anschließend
+erzeugte Antwort. Die drei Dimensionen dürfen unterschiedliche Ausprägungen haben.
+
+- `CharacterDimension`/`CharacterAssessment`: getrennte qualitative Kategorien. Bereitschaft
+  kennt keine Absicht, Ambivalenz, geäußerte Bereitschaft und unklar; Zuversicht Zweifel,
+  gemischte Zuversicht, geäußerte Zuversicht und unklar; Rapport Verständigung, Spannung,
+  Reparatur und unklar. Diese Labels sind fachlich noch ungeprüfte Implementierungsentwürfe.
+- Bereitschaft und Zuversicht benötigen zusätzlich einen wörtlichen Zielbeleg von Lukas.
+  Rapport bezieht sich auf die Beratung, nicht auf Sarah oder eine bloße Ablehnung von
+  Veränderung. Letztere Unterscheidung steht im Prompt und bedarf echter Modellprüfung.
+- `SimulationState.development` speichert die letzten Beobachtungen, nach Zielbeleg getrennt,
+  und Rapport unabhängig davon. Fehlend bedeutet nicht erhoben, nicht niedriger Wert.
+  Ein neuerer unsicherer Befund verdrängt einen älteren sicheren; derselbe oder ein älterer
+  Beleg erzeugt keine erneute Entwicklung. Offenheitsberechnung unverändert.
+- `DialogueMessage.origin` und `CharacterEvidence` verankern Zitate dauerhaft über Turn-ID,
+  Sprecher und Vorkommen. Die Eröffnungszeile hat keine Turn-ID. Das Modell verwendet weiter
+  Kontextindizes; erst der geprüfte Coordinator übersetzt diese in dauerhafte Herkunft.
+  Erfundenes, falscher Sprecher, falsche Dimension, fehlender Zielbeleg oder gefälschte
+  Herkunft wird abgewiesen. Speicherprüfung verhindert Belege aus der noch unbekannten Zukunft.
+- Die Charakterbeobachtungen gehören zur atomaren Turn-Transaktion. Abbruch speichert sie
+  nicht, Wiederholung nach Speicherfehler erzeugt weder neuen Modelllauf noch Doppeleintrag.
+  Ohne Einordnung bleiben frühere Beobachtungen als historische Angaben erhalten.
+- In der vorhandenen Entwicklerdiagnostik: „Zuletzt belegte Aussagen zur Figur“, mit
+  Zielzitaten, Unsicherheit und Herkunftsrunde. Zugang weiterhin über langes Drücken auf
+  Rundenzähler oder „Protokoll“. Keine neuen Skalen im normalen Gespräch.
+- Prompt **0.3**, Regeln **0.2**, Feedbackbausteine unverändert **0.2**; Snapshot-Schema bleibt
+  **1** wegen optionaler neuer Felder. Alte Daten bleiben lesbar/exportierbar. Zum Verwenden
+  der Erweiterung ein neues Gespräch starten; alte Prompt-/Regelstände nicht still fortsetzen.
+
+### Tatsächlich geprüft
+
+- **63 Core-Tests bestanden**: 14 neue Charaktertests ergänzen die zuvor 49. Unter anderem
+  unabhängige Dimensionen, falsche Belege/Herkunft, spätere Zweifel, wiederholte Belege,
+  Zielwechsel, gekürzter Kontext, Altformat, Abbruch, vollständiger Commit, idempotenter Retry,
+  Überspringen der Analyse und zeitliche Herkunftsprüfung.
+- **3 Speichertests bestanden**, einschließlich neuer Charakterbeobachtungen mit exakten
+  Belegen nach erneutem Öffnen der SwiftData-Datei und Idempotenz bei erneutem Commit.
+  Die Umgebung meldet weiter Warnungen des systemweiten Store-Änderungsdienstes.
+- **37 App-Tests bestanden**, einschließlich erweitertem Schema/Prompt und Nachweis, dass
+  die Hypothesen noch nicht als Rollenbefehle weitergegeben werden. Die fünf bekannten
+  Schlüsselbundtests wurden gezielt ausgenommen (Zugriffsfehler im vorherigen Paket), nicht
+  als bestanden gezählt. Die gemeinsame SwiftUI-App wurde dabei für macOS kompiliert.
+- `git diff --check` bestanden. Build-/Cachepfade `/private/tmp/rr-character-*`;
+  SwiftPM `--disable-sandbox` innerhalb der Agenten-Ausführungsbeschränkungen. Ein fehlendes
+  `try` in einer neuen Testhilfsfunktion wurde vor den erfolgreichen Läufen korrigiert.
+
+### Grenzen und nächster Baustein
+
+Noch kein echter Modelllauf für das erweiterte Schema, keine gemessene semantische Güte,
+Latenz oder Mehrkosten. Keine erneute iOS-/Simulatorprüfung in diesem Schritt; die zuvor
+festgestellten Zugriffsblockaden bestehen als offener Nachweis fort. Diagnosefläche noch
+nicht laufend visuell oder mit VoiceOver geprüft.
+
+Die Rolle verwendet diese Zustände noch nicht. Ein Rückschluss von einer Modellhypothese auf
+Lukas' nächste Antwort würde sonst ungeprüft eine sich selbst bestätigende Entwicklung erzeugen.
+MI-04, SOC, Terminabstände und Maintenance sind nicht umgesetzt. Die neu erzeugte Antwort
+kann erst beim nächsten Analyseaufruf beobachtet werden; die letzte Antwort eines abgeschlossenen
+Gesprächs erhält daher noch keine nachgelagerte Charakteranalyse.
+
+Das Analysefenster bleibt Eröffnung plus sechs letzte Turns. Dauerhafte Belege bleiben auch
+außerhalb dieses Fensters lesbar, werden aber noch nicht gezielt in neue Prompts zurückgeholt.
+Ein fehlender Zielbeleg führt zum Auslassen der Beobachtung. Unterschiedliche Zielformulierungen
+werden nicht automatisch gleichgesetzt: derselbe Inhalt kann vorläufig mehrere Zielbelege
+haben. Nächster Baustein ist deshalb belegte Zielidentität/Erinnerung, danach der kontrollierte
+Einfluss auf Rollenverhalten. Skalenwerte werden noch nicht separat numerisch gespeichert;
+als Beleg verwendete Formulierungen bleiben wörtlich erhalten, statt eine Zahl zu erfinden.
+
 ## 29. September 2026 · MI-03-Teilschritt: doppelseitige Reflexion
 
 ### Verhalten und Verträge

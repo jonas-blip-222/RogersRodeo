@@ -86,3 +86,46 @@ import TrainerStorage
     }
     #expect(try wieder.load(id: snapshot.id).turns.first?.feedback == findings)
 }
+
+@Test @MainActor func charakterbeobachtungenBehaltenBelegeNachNeustart() throws {
+    let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+    defer { try? FileManager.default.removeItem(at: directory) }
+    let url = directory.appendingPathComponent("sessions.store")
+    let opening = "Ich möchte sonntags fitter sein. Ich traue mir das noch nicht zu."
+    let scenario = ScenarioDefinition(schemaVersion: 1, id: "test", version: "1", status: .draft,
+        name: "Lukas", age: 28, address: "Sie", approaches: ["mi"], opennessStart: 3,
+        openingLine: opening, publicProfile: "Test", facts: [])
+    let snapshot = SessionSnapshot(schemaVersion: 1, id: UUID(), revision: 0, approachID: "mi",
+        identity: .init(contentHash: "test", rulesVersion: ConversationCoordinator.rulesVersion,
+                        promptVersion: ConversationCoordinator.promptVersion, model: DemoModelProvider.identity),
+        content: .init(scenario: scenario, codingGuide: "G", tips: []), state: .init(openness: 3),
+        turns: [], status: .active, startedAt: Date())
+    let pending = PendingTurn(id: UUID(), sessionID: snapshot.id, expectedRevision: 0, input: "Erzählen Sie.", createdAt: Date())
+    let analysis = TurnAnalysis(segments: [], characterObservations: [
+        .init(dimension: .confidence, assessment: .doubtful,
+            goal: .init(source: .contextMessage, speaker: .client, messageIndex: 0,
+                        quote: "Ich möchte sonntags fitter sein.", occurrence: 1),
+            evidence: .init(source: .contextMessage, speaker: .client, messageIndex: 0,
+                            quote: "Ich traue mir das noch nicht zu.", occurrence: 1), isUncertain: false)])
+    var after = snapshot.state
+    after.development = try CharacterTracker.advance(nil, analysis: analysis, input: pending.input,
+        context: ContextBuilder.messages(snapshot), session: snapshot, turnID: pending.id)
+    let turn = CompletedTurn(id: pending.id, input: pending.input, analysis: analysis,
+        reply: .init(text: "Hm.", primaryTag: nil, disclosedFactIDs: []), stateBefore: snapshot.state, stateAfter: after,
+        stateChangeReasons: [], selectedTipID: nil, metrics: [], completedAt: Date())
+    var repository: SwiftDataSessionRepository? = try .init(storeURL: url)
+    try repository?.create(snapshot)
+    try repository?.savePending(pending)
+    _ = try repository?.commit(sessionID: snapshot.id, expectedRevision: 0, turn: turn)
+    repository = nil
+    let reopened = try SwiftDataSessionRepository(storeURL: url)
+    let loaded = try reopened.load(id: snapshot.id)
+    #expect(loaded.state.development == after.development)
+    #expect(loaded.state.development?.goals.first?.confidence?.evidence.quote == "Ich traue mir das noch nicht zu.")
+    #expect(loaded.turns.first?.analysis?.characterObservations == analysis.characterObservations)
+    #expect(try reopened.commit(sessionID: snapshot.id, expectedRevision: 0, turn: turn) == loaded)
+    var altered = turn; altered.stateAfter.development?.goals[0].confidence?.assessment = .confident
+    #expect(throws: TrainerFailure.revisionConflict) {
+        try reopened.commit(sessionID: snapshot.id, expectedRevision: 0, turn: altered)
+    }
+}

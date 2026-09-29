@@ -9,7 +9,7 @@ public enum OutputValidator {
 
     public static func decodeAnalysis(_ data: Data, input: String, context: [DialogueMessage]) throws -> TurnAnalysis {
         do {
-            let object = try exactKeys(JSONSerialization.jsonObject(with: data), required: ["segments"], optional: ["doubleSidedReflection"])
+            let object = try exactKeys(JSONSerialization.jsonObject(with: data), required: ["segments"], optional: ["doubleSidedReflection", "characterObservations"])
             guard let segments = object["segments"] as? [Any] else { throw TrainerFailure.invalidAnalysis }
             for value in segments {
                 _ = try exactKeys(value, required: ["quote", "code", "isUncertain"], optional: ["supportingClientQuote"])
@@ -21,6 +21,19 @@ public enum OutputValidator {
                     for field in ["input", "client"] {
                         _ = try exactKeys(side[field] as Any,
                             required: ["source", "speaker", "quote", "occurrence"], optional: ["messageIndex"])
+                    }
+                }
+            }
+            if let raw = object["characterObservations"], !(raw is NSNull) {
+                guard let observations = raw as? [Any] else { throw TrainerFailure.invalidAnalysis }
+                for value in observations {
+                    let observation = try exactKeys(value,
+                        required: ["dimension", "assessment", "evidence", "isUncertain"], optional: ["goal"])
+                    for field in ["goal", "evidence"] {
+                        if let reference = observation[field], !(reference is NSNull) {
+                            _ = try exactKeys(reference, required: ["source", "speaker", "quote", "occurrence"],
+                                              optional: ["messageIndex"])
+                        }
                     }
                 }
             }
@@ -59,6 +72,26 @@ public enum OutputValidator {
                 guard !quote.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
                       context.contains(where: { $0.speaker == .client && $0.text.range(of: quote, options: .literal) != nil }) else {
                     throw TrainerFailure.invalidAnalysis
+                }
+            }
+        }
+        if let observations = analysis.characterObservations {
+            guard observations.count <= 3, Set(observations.map(\.dimension)).count == observations.count else {
+                throw TrainerFailure.invalidAnalysis
+            }
+            for observation in observations {
+                guard observation.assessment.belongs(to: observation.dimension),
+                      observation.evidence.source == .contextMessage, observation.evidence.speaker == .client else {
+                    throw TrainerFailure.invalidAnalysis
+                }
+                try validateEvidence(observation.evidence, input: input, context: context)
+                if observation.dimension == .rapport {
+                    guard observation.goal == nil else { throw TrainerFailure.invalidAnalysis }
+                } else {
+                    guard let goal = observation.goal, goal.source == .contextMessage, goal.speaker == .client else {
+                        throw TrainerFailure.invalidAnalysis
+                    }
+                    try validateEvidence(goal, input: input, context: context)
                 }
             }
         }

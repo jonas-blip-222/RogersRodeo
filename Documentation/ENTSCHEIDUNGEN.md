@@ -161,3 +161,23 @@ Umgesetzt als MI-03-Teilschritt: optionales `doubleSidedReflection` mit vier Bel
 Promptstand 0.2, Feedbackbausteine 0.2. Kein neuer Offenheitsbonus und keine sichtbare Punktzahl.
 E04 ist eine Produktentscheidung und keine Literaturquelle oder wissenschaftliche Validierung;
 der Textbaustein bleibt fachlicher Entwurf.
+
+## E05 · Bereitschaft, Zuversicht und Rapport getrennt führen
+
+**Datum:** 29.09.2026 · **Entschieden von:** Jonas · **Status:** Produktanforderung bestätigt
+
+Jonas hat drei zusätzliche Bereiche für Lukas' Charakterentwicklung ausdrücklich benannt:
+Veränderungsbereitschaft, Zuversicht in die eigenen Veränderungsfähigkeiten und Beziehung zur
+Beratung (Rapport). Die Trennung war in MI-Übergabe 5.1–5.3 bereits vorgesehen. Die anschließende
+Aufforderung, mit den Bausteinen weiterzumachen, ist Grundlage dieses MI-03-Teilschritts.
+
+Technische Startumsetzung: qualitative, belegte Beobachtungen statt aus Offenheit abgeleiteter
+Werte. Bereitschaft und Zuversicht werden getrennt je Zielbeleg geführt, Rapport eigenständig.
+Die Kategorien sind Implementierungsentwürfe, keine von Jonas einzeln fachlich validierten
+Labels. Gute Beziehung bedeutet keine Veränderungsbereitschaft; geringe Zuversicht schließt
+Bereitschaft nicht aus. Kein objektiver Zahlenwert und kein automatischer SOC-Aufstieg.
+
+Die Erfassung betrachtet ausschließlich schon vorhandene Klientenaussagen und wird mit dem
+vollständigen Turn gespeichert. Der zusätzliche Einfluss auf Rollenverhalten und spätere
+Termine ist noch offen. E05 bestätigt keine neue sichtbare Punkteskala und keine empirische
+Validität der automatischen Einordnung.
