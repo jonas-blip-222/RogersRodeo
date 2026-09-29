@@ -46,7 +46,8 @@ keine neue Simulator-/Geräteprüfung, keine fachlich validierte oder repräsent
 Der finale 15-Runden-Lauf dauerte **327 Sekunden**. Median der erfolgreichen kombinierten
 Analysestufen **5,7 Sekunden**, Maximum **14,2 Sekunden**; deren Summe nur **100,7 Sekunden**.
 Wiederholungen/zusätzliche Wartezeiten sind damit erheblich. Metriken summieren die beiden
-angenommenen Teilaufrufe, nicht alle Fehlversuche. Anbieter-/Gesamtkostenmessung bleibt offen.
+angenommenen Teilaufrufe, nicht alle Fehlversuche. Die Herkunft der Lücke ist inzwischen
+aufgeklärt, siehe den folgenden Abschnitt. Anbieter-/Gesamtkostenmessung bleibt offen.
 Ein Versuch mit aktiviertem Überlegen und 4000/8000 Token wurde nach einer langsamen ungültigen
 ersten Gegenprobe beendet. Finale Einstellungen: Überlegen aus, 1500/4000 Token je Teilaufruf.
 
@@ -55,6 +56,54 @@ im langen Lauf den Alias aus. Deshalb erst der abschließende zweistufige Lauf a
 Rohbefunde außerhalb von Git: `Evaluation/results/goal-memory-fix-2026-09-29/`.
 Nächste Arbeit: weitere unabhängige Formulierungen, geringere Latenz/verlässliche Routen und
 manueller freier Rollen-/Simulatorlauf. Automatische Rollenentwicklung bleibt ausgeschaltet.
+
+### Nachtrag 29.09.2026 · Die Latenzlücke von 226 Sekunden ist aufgeklärt
+
+**Geprüft.** Die Differenz zwischen den 327 Sekunden Gesamtdauer und den 100,7 Sekunden
+gemessener Analysestufen beträgt **226,3 Sekunden**. Sie wurde aus den Änderungszeitpunkten der
+**34 Rohdateien** `goal-fix-long-02.json.analysis-N.json` unter
+`Evaluation/results/goal-memory-fix-2026-09-29/` gegen die 15 gemessenen Rundenwerte
+rekonstruiert. Die Rechnung geht bis auf unter eine Sekunde auf; es bleibt nichts Unerklärtes.
+
+Zwei Ursachen, beide belegt:
+
+1. **Abgeschnittene Erstversuche: rund 177 Sekunden, etwa 78 Prozent der Lücke.** Das Modell
+   produziert einen Leerzeichenlauf und füllt damit das Ausgabebudget bis zur Abschneidung. Der
+   Adapter wiederholt daraufhin mit erhöhtem Budget und meldet nur die Dauer des geglückten
+   zweiten Versuchs. Der größte Einzelfall: in einer einzigen Runde rund **84 Sekunden**, die in
+   keiner Metrik auftauchen.
+2. **Bezahlte, aber verworfene Erststufen: rund 46 Sekunden.** Die Rohdateien enthalten
+   **19 Zielanalyse-** gegenüber **15 Beratungsstufen**. Die Wiederholung im
+   `ConversationCoordinator` hat also vier Runden vollständig neu gestartet, und `analyze()`
+   summiert nur die beiden erfolgreichen Stufen. Die vier verworfenen Zielanalysen sind bezahlt
+   und dauern, erscheinen aber nirgends.
+
+**Ausgeschlossen.** Rollenantworten erklären die Lücke nicht: Der Testprovider liefert feste
+Texte mit `durationSeconds: 0`; das steht so in den Rohdaten.
+
+**Gegenprobe.** Der Vergleichslauf `goal-fix-long-01.json` zeigt **161,0 s** Gesamtdauer gegen
+**120,8 s** gemessen, Lücke **40,2 s**, dort ausschließlich durch abgeschnittene Erstversuche.
+Dasselbe Muster, kleinere Ausprägung.
+
+**Welche Daten dafür heute fehlen.** Die Rekonstruktion war nur über Dateizeitstempel möglich,
+weil der Adapter das Nötige nicht erfasst:
+
+- Metriken abgeschnittener Versuche werden verworfen, statt mitgezählt zu werden.
+- Das dekodierte Feld `provider` der Antwort wird nie ausgewertet. Die Route je Aufruf ist damit
+  unbekannt, obwohl E02 sie als ausschlaggebend für die Ausfallquote benennt.
+- Der Anfragekörper sendet kein `"usage": {"include": true}`. Die von OpenRouter abgerechneten
+  Kosten je Aufruf kommen deshalb gar nicht erst zurück.
+- Die `id` der Antwort wird nicht gelesen. Ohne sie ist der kostenlose Generierungs-Endpunkt für
+  Kosten und Route nicht abfragbar.
+
+**Kostenrahmen — ausdrücklich eine Schätzung, keine Abrechnung.** Über die 30 angenommenen
+Endstufen des Laufs sind **57 539 Eingabe-** und **3 509 Ausgabetoken** gemessen. Mit den
+Listenpreisen aus E01 (0,42 bzw. 3,00 USD je Million) sind das rund **0,0347 USD**. Für die oben
+rekonstruierten unsichtbaren Aufrufe kommen geschätzt rund **0,024 USD** hinzu, zusammen etwa
+**0,06 USD** für 15 Runden ohne Rollenantworten — grob **0,4 Cent je Runde**, mit Rollenantworten
+grob **0,08 bis 0,09 USD je Sitzung**. Die tatsächlich abgerechneten Kosten sind **unbekannt**,
+weil die Nutzungsdaten nicht angefordert werden. Der Kostenrahmen ist damit der Größenordnung
+nach geklärt und unkritisch; eine belastbare Zahl ist er nicht.
 
 ## 29. September 2026 · Live-Prüfung Zielgedächtnis: nicht bestanden
 
