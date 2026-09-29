@@ -226,6 +226,24 @@ stattdessen zu tun ist, steht in Abschnitt 5. Siehe `ENTSCHEIDUNGEN.md`, E01 bis
       werden vom Adapter weiterhin verworfen (siehe Punkt „Tatsächlich abgerechnete Kosten
       erfassen"). Solange das so ist, zeigt jeder Lauf wieder eine unerklärte Lücke.
 
+- [ ] **Zweiter Analysefehlschlag bricht die Runde ab — Produktfrage, bewusst unverändert.**
+      Geprüft am 29.09.2026. `ConversationCoordinator.send` fängt `invalidAnalysis` nur bei
+      `attempt == 0`; ein zweiter Fehlschlag fliegt also durch und beendet die Runde mit
+      einem Fehler, statt sie ohne Einordnung fortzusetzen. Das ist so gewollt und nicht
+      versehentlich: Die Oberfläche zeigt dann „Ohne Einordnung fortsetzen"
+      (`ConversationView`, `AppModel.maySkipAnalysis`), und die übende Person entscheidet
+      selbst. Ein automatisches Weiterlaufen nähme ihr diese Entscheidung ab und liefe der
+      Regel zuwider, dass eine fehlende Einordnung keine Entwarnung ist. Entscheidung
+      liegt bei Jonas; ohne seine Ansage bleibt es, wie es ist.
+      - **Nicht bestätigt:** Der Zweig `analysis_unavailable` im `StateReducer` ist
+        **nicht** tot. Er wird über `skipAnalysis: true` erreicht, also genau über diese
+        Schaltfläche, und ist durch `uebersprungeneAnalyseZeigtKeineScheinbareEntwarnung`
+        und `analysisFailureCanBeExplicitlySkipped` abgedeckt.
+      - **Bestätigt:** `guard let replyResult` in `send` kann tatsächlich nie fehlschlagen,
+        weil die Antwortschleife bei `attempt == 1` selbst wirft. Der `guard` bleibt als
+        billiges Sicherheitsnetz stehen; ihn zu entfernen hieße, die Schleife umzubauen,
+        ohne dass sich am Verhalten etwas ändert.
+
 - [ ] **Der gesamte Vorschlagspfad ist tot.** `Beratungstrainer/App/ContentCatalog.swift` erzwingt
       beim Laden `catalog.tips.isEmpty`; ein Katalog mit Tipps wird als ungültiges Artefakt
       abgelehnt. `TipSelector.select` im `ConversationCoordinator` bekommt damit dauerhaft eine
