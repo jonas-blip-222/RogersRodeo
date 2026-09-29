@@ -2,6 +2,22 @@
 
 Die folgenden Punkte sind eine Diskussionsgrundlage, keine bereits fachlich freigegebene Spezifikation.
 
+## MI-04 · Sitzungsrahmen beschlossen, Umsetzung offen
+
+- [x] Jonas’ Festlegungen vom 29.09.2026 in `MI-UEBERGABE.md`, Abschnitt 12/MI-04,
+      dokumentiert: Begrüßung und offene Einstiegsfrage als Standard; 20 Runden entsprechen
+      60 fiktionalen Minuten; eine fiktionale Woche zwischen Sitzungen desselben Falls;
+      kurze belegte Dokumentation vor jedem Folgetermin.
+- [ ] **MI-04a:** Sitzung 1 abschließen → Dokumentation lesen → Sitzung 2 desselben Falls
+      beginnen. Fall-/Sitzungsverknüpfung, getrennte Rundenzählung, fiktionale Zeit und
+      kompatible Speicherung implementieren. Neustart darf keine zusätzlichen Termine erzeugen.
+- [ ] Vor Umsetzung Umgang mit vorzeitigem manuellem Abschluss und technische Erzeugung der
+      Notiz festlegen. Kein zusätzlicher Modellaufruf allein aufgrund der Produktentscheidung.
+- [ ] Danach Zwischenereignisse, berichtete Erfahrungen, Rückbewegungen und Maintenance-
+      Kriterien ausgestalten. Keine automatische Entwicklung allein durch den Wochenabstand.
+
+MI-03 bleibt teilweise offen. Der Sitzungsrahmen ist dokumentiert, noch nicht in der App gebaut.
+
 ## Aktueller Teilschritt · 29.09.2026
 
 - [x] MI-03: doppelseitige Reflexion mit belegten Sustain-/Change-Seiten und ausdrücklichem

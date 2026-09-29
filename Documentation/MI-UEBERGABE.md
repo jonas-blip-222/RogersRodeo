@@ -1,6 +1,6 @@
 # Rogers Rodeo — MI-Konzept und Übergabe zum Weiterentwickeln
 
-Stand: 29. September 2026 · Dokumentversion 1.0
+Stand: 29. September 2026 · Dokumentversion 1.1
 
 Dieses Dokument bündelt die MI-Recherche, Jonas’ Notizen, seine Korrekturen und die entwickelten Beispiele. Zusammen mit dem ursprünglichen **Beratungstrainer-Bauplan v0.1 vom 18. September 2026** und dem tatsächlichen Repository bildet es den Arbeitsauftrag für einen Coding-Agenten. Der bisherige Chat ist dafür nicht erforderlich.
 
@@ -664,6 +664,66 @@ Die folgende Reihenfolge konkretisiert den nächsten Schritt; sie ist kein Auftr
 
 **Abnahme:** Fall 14 und Varianten; kein automatischer Fortschritt aus Offenheit, Formulierungszahl oder verstrichener Gerätezeit. Das größere Gedächtnis-/Kontextproblem vor Aufhebung bisheriger Grenzen prüfen.
 
+#### Verbindlicher Sitzungsrahmen — von Jonas am 29.09.2026 festgelegt
+
+Diese Festlegungen ergänzen MI-04; sie beschreiben beschlossenes Produktverhalten,
+**noch keine implementierte Funktion**. Quelle ist Jonas’ Entscheidung im Arbeitsgespräch.
+
+- **Typischer Einstieg:** Begrüßung, danach eine offene Einstiegsfrage der beratenden Person.
+  Die Figur soll dafür Raum lassen. Dies ist der vorgesehene Standardablauf, keine starre
+  Pflicht und keine automatische Fehlerwertung bei anderen Einstiegen. Die im Gespräch
+  genannte Häufigkeit wird nicht als wissenschaftlich belegte Prozentzahl übernommen.
+- **Eine Sitzung:** 20 vollständige Gesprächsrunden stehen für **60 fiktionale Minuten**.
+  Keine echte Wartezeit, kein Countdown und keine Behauptung, jeder Beitrag dauere genau
+  drei Minuten. Der Sitzungsabschluss bedeutet weiterhin weder Zielerreichung noch Maintenance.
+- **Folgetermin:** Zwischen zwei Sitzungen desselben Falls liegt **eine fiktionale Woche**.
+  Das gilt unabhängig davon, wann die App tatsächlich wieder geöffnet wird. Ein bloßes
+  Wiederöffnen oder Fortsetzen derselben Sitzung erzeugt keinen neuen Termin.
+- **Vorbereitung:** Vor jedem Folgetermin erscheint eine kurze Dokumentation, wie sie die
+  beratende Person vor einem Gespräch liest: bisherige Themen, Lukas’ eigene Ziele,
+  Vereinbarungen/nächste Schritte und offene Fragen. Unsicheres bleibt erkennbar; fehlende
+  Vereinbarungen werden nicht ergänzt. Grundlage sind ausschließlich bisherige Gespräche,
+  mit nachvollziehbarer Herkunft aus den gespeicherten Sitzungen.
+- **Fortlaufender Fall:** Nach der Vorbereitung beginnt Sitzung 2 desselben Falls mit erneut
+  20 Runden; entsprechend folgen weitere Termine. Ziele, Änderungen und Widerrufe bleiben
+  nachvollziehbar, frühere Gespräche erhalten. Keine automatische Entwicklung aus Zeitablauf,
+  hoher Offenheit oder einer bestimmten Zahl guter Beratungsbeiträge.
+- **Kein Vorwissen über die Woche:** Noch nicht erzählte Erfahrungen zwischen den Terminen
+  stehen nicht vorab in der Vorbereitungsnotiz. Lukas berichtet darüber im nächsten Gespräch.
+  Die spätere Ausgestaltung dieser Erfahrungen gehört zu einem eigenen Entwicklungsschritt.
+
+#### MI-04a — erster abgegrenzter Umsetzungsschritt (Plan, noch offen)
+
+**Ablauf:** Sitzung 1 abschließen → kurze Dokumentation lesen → Sitzung 2 desselben Falls
+beginnen. Zunächst keine automatisch erfundenen Ereignisse in der Zwischenwoche.
+
+**Arbeit:** Fallidentität, Sitzungsnummer und fiktionale Terminfolge dauerhaft verknüpfen;
+Vorbereitungsnotiz aus bereits belegten Gesprächsinhalten erzeugen und vor dem Folgetermin
+zeigen; Einstieg mit Begrüßung/offener Frage ermöglichen. Bestehende Einzelsitzungen müssen
+kompatibel lesbar bleiben. Das vorhandene Zielgedächtnis für sitzungsübergreifende Herkunft
+und Erinnerung prüfen; nicht unbesehen den ganzen Fall in jeden Modellaufruf übernehmen.
+Die konkrete technische Erzeugung der Notiz ist noch zu bestimmen — ein zusätzlicher
+Modellaufruf ist durch diese Produktentscheidung nicht automatisch beschlossen.
+
+**Prüfbare Abnahme:**
+
+1. Nach 20 abgeschlossenen Runden endet die erste Sitzung; die zweite hat eine eigene
+   Rundenzählung und beginnt eine fiktionale Woche später im selben Fall.
+2. Vor dem zweiten Gespräch ist die Dokumentation verfügbar. Jeder darin genannte Inhalt
+   lässt sich auf gespeicherte Aussagen zurückführen. Unbekanntes und widersprüchliche
+   Zielaussagen werden nicht in eine sichere Vereinbarung umgedeutet.
+3. Neustart und wiederholtes Öffnen erzeugen weder doppelte Folgetermine noch zusätzliche
+   Wochen. Eine unterbrochene Sitzung wird am bisherigen Stand fortgesetzt.
+4. Begrüßung/offene Einstiegsfrage sind möglich; eine alternative Gesprächseröffnung führt
+   nicht allein deshalb zu einem negativen Urteil.
+5. In der Notiz stehen weder gesperrte Figurenfakten noch erfundene Wochenereignisse.
+   Zwischen den Sitzungen wird kein automatischer Fortschritt oder Maintenance gesetzt.
+6. Ältere Sitzungen bleiben lesbar; Speicherung, Abbruch und Wiederaufnahme bleiben atomar.
+
+**Später innerhalb MI-04:** kuratierte Zwischenereignisse, berichtete Erfahrungen,
+Fortschritte/Rückbewegungen und fachlich begründete Kriterien für einen möglichen Abschluss.
+Die offenen MI-03-Bausteine bleiben eigenständige Aufgaben und gelten damit nicht als erledigt.
+
 Spracheingabe/-ausgabe, PDF-Export, ältere Geräte und weitere Figuren bleiben spätere Pakete entsprechend dem Bauplan. Ein interaktiver Bubble-Sheet-Editor ist ein möglicher gesonderter Ausbau.
 
 ## 13. Noch offene Entscheidungen — keine Blockade für alle Arbeit
@@ -673,7 +733,9 @@ Spracheingabe/-ausgabe, PDF-Export, ältere Geräte und weitere Figuren bleiben 
 | Genaue Ausgabe/Seite bei Miller und Rollnick zum Bubble Sheet | Produktbedeutung ist entschieden. Buchstelle später ergänzen; keine falsche Attribution. |
 | Direkte Bitte „Welchen Vorschlag haben Sie?“ als Erlaubnis | Jonas fordert ausdrücklich vorherige Erlaubnis. Ob zusätzliche Rückversicherung auch bei klarer direkter Bitte obligatorisch sein soll, ist nicht eigens entschieden. Solche Bitten im Modell erkennen; nicht als „unaufgefordert“ beschuldigen. Fachliche Erlaubnislage und strengere Übungsabläufe getrennt halten und vor endgültiger Warnregel klären. |
 | Unterbrechung/Überarbeitung bei Warnung | Beschlossen ist unmittelbares Feedback. Kein verpflichtender Modal-Dialog, kein Sendeblock und kein automatisches Umschreiben beauftragt. |
-| Fiktionale Dauer, Termine, konkrete Maintenance-Kriterien | Vor MI-04 festlegen. Ein stabiles längerfristiges Verhalten ist erforderlich; genaue Zeit-/Ereignisregeln noch nicht beschlossen. |
+| Fiktionale Dauer und Termine | Beschlossen: 20 Runden entsprechen 60 fiktionalen Minuten; eine fiktionale Woche zwischen Sitzungen; Vorbereitungsnotiz vor Folgeterminen. Siehe MI-04. |
+| Vorzeitiger manueller Sitzungsabschluss | Bestehende Möglichkeit nicht beiläufig entfernen. Umgang mit der fiktionalen Dauer bei weniger als 20 Runden vor Umsetzung festlegen. |
+| Zwischenereignisse und Maintenance-Kriterien | Noch festzulegen. Eine vergangene Woche oder ein Sitzungsabschluss erzeugt keine Veränderung; längerfristig stabiles Verhalten braucht eigene Belege. |
 | Neue Ziel-, Beziehungs- oder SOC-Anzeigen | Keine neuen sichtbaren Punkteskalen beschlossen. Vorläufig sprachliche, belegte Rückmeldung; keine numerischen Erfolgsbalken. |
 | Fachliche Referenzlabels und Grenzwerte | Produktabnahme und fachliche Validierung auseinanderhalten. Vor Release dokumentiert prüfen; bis dahin Entwurf. |
 | Tatsächliche Runtime und Modell | Integrationsversuch erforderlich; keine aus dem alten Plan ungeprüft übernommenen API-Annahmen oder Pins. |

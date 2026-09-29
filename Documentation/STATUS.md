@@ -3,6 +3,23 @@
 Neueste Prüfungen zuerst. Ältere Abschnitte bleiben als Verlauf erhalten und werden nicht
 rückwirkend umgeschrieben.
 
+## 29. September 2026 · MI-04-Sitzungsrahmen dokumentiert
+
+Jonas hat festgelegt: typischer Gesprächseinstieg mit Begrüßung und offener Frage;
+20 Gesprächsrunden stehen für 60 fiktionale Minuten; zwischen zwei Sitzungen desselben
+Falls liegt eine fiktionale Woche. Vor Folgeterminen wird eine kurze belegte Dokumentation
+zur Vorbereitung gelesen. Keine Vorwegnahme noch nicht erzählter Wochenereignisse und
+kein automatischer Fortschritt durch den Zeitabstand.
+
+In `MI-UEBERGABE.md` (Version 1.1, MI-04) stehen die Festlegungen und die Abnahme für den
+ersten Umsetzungsschritt MI-04a: Abschluss → Vorbereitungsnotiz → nächste Sitzung.
+Die TODO-Liste unterscheidet beschlossene Anforderungen von offener Implementierung.
+Vorzeitiger manueller Abschluss, Erzeugungsverfahren der Notiz und spätere Zwischenereignisse
+bleiben ausdrücklich als offene Detailentscheidungen markiert.
+
+Reine Dokumentationsänderung: keine neue App-Funktion, keine Code-/Gerätetests und kein
+kostenpflichtiger Modelllauf. Dokumentverweise und `git diff --check` geprüft.
+
 ## 29. September 2026 · Kurzprobe zur Anbieterbeschränkung nach E06
 
 Erste Benutzung der macOS-Prüf-App mit eingeschaltetem `provider.data_collection: "deny"`
