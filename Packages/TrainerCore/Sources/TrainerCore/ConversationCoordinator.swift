@@ -28,7 +28,8 @@ public actor ConversationCoordinator {
         return snapshot
     }
 
-    public func send(sessionID: UUID, input: String, skipAnalysis: Bool = false) async throws -> SessionSnapshot {
+    public func send(sessionID: UUID, input: String, skipAnalysis: Bool = false,
+                     onFeedback: FeedbackSink? = nil) async throws -> SessionSnapshot {
         guard generation == nil else { throw TrainerFailure.operationInProgress }
         let token = UUID(); generation = token
         defer { if generation == token { generation = nil } }
@@ -37,7 +38,16 @@ public actor ConversationCoordinator {
         guard !text.isEmpty, text.count <= 1500 else { throw TrainerFailure.invalidInput }
 
         // Nach einem Speicherfehler denselben Turn sichern, ohne erneut zu generieren.
+        // Die Rückmeldung wird dabei nicht neu berechnet, sondern aus dem vorbereiteten Turn
+        // noch einmal gemeldet: derselbe Turn, dieselben Befunde, keine doppelten Einträge.
         if let prepared, prepared.sessionID == sessionID, prepared.turn.input == text {
+            if let onFeedback {
+                await onFeedback(.init(sessionID: sessionID, turnID: prepared.turn.id,
+                                       expectedRevision: prepared.revision, attempt: token, input: text,
+                                       analysisAvailable: prepared.turn.analysis != nil,
+                                       findings: prepared.turn.feedback))
+                try check(token)
+            }
             let saved = try await repository.commit(sessionID: sessionID, expectedRevision: prepared.revision, turn: prepared.turn)
             if generation == token { self.prepared = nil }
             return saved
@@ -73,6 +83,20 @@ public actor ConversationCoordinator {
                 } catch TrainerFailure.invalidAnalysis where attempt == 0 { try check(token) }
             }
         }
+        // Abschnitt 9.3: sobald die Analyse validiert ist, geht die Rückmeldung an die
+        // Oberfläche — vor der Figurenantwort und noch ohne gespeicherten Turn. Sie ist an
+        // Sitzung, PendingTurn, erwartete Revision und diesen Ausführungsversuch gebunden.
+        // Die Befunde entstehen allein aus Eingabe und bereits vorhandenem Kontext; die
+        // Antwort von Lukas existiert an dieser Stelle noch nicht und kann sie nicht färben.
+        let findings = FeedbackEngine.findings(analysis: analysis, input: text, context: analysisContext,
+                                               characterName: session.content.scenario.name,
+                                               rulesVersion: session.identity.rulesVersion)
+        if let onFeedback {
+            await onFeedback(.init(sessionID: sessionID, turnID: pending.id,
+                                   expectedRevision: session.revision, attempt: token, input: text,
+                                   analysisAvailable: analysis != nil, findings: findings))
+            try check(token)
+        }
         let reduction = try StateReducer.reduce(session.state, analysis: analysis, input: text, context: analysisContext)
         let visible = ContextBuilder.visibleFacts(session.content.scenario, state: reduction.state)
         let replyRequest = ReplyRequest(publicProfile: session.content.scenario.publicProfile,
@@ -94,7 +118,7 @@ public actor ConversationCoordinator {
                                      tips: session.content.tips, previousID: session.turns.last?.selectedTipID)
         let turn = CompletedTurn(id: pending.id, input: text, analysis: analysis, reply: replyResult.value,
             stateBefore: session.state, stateAfter: after, stateChangeReasons: reduction.reasons,
-            selectedTipID: tip?.id, metrics: metrics, completedAt: Date())
+            selectedTipID: tip?.id, metrics: metrics, completedAt: Date(), feedback: findings)
         try check(token)
         prepared = (sessionID, session.revision, turn)
         let saved = try await repository.commit(sessionID: sessionID, expectedRevision: session.revision, turn: turn)

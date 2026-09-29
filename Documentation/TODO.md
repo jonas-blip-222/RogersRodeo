@@ -6,11 +6,24 @@ Die folgenden Punkte sind eine Diskussionsgrundlage, keine bereits fachlich frei
 
 - [ ] Kompakten, versionierten MI-Inhaltsbestand festlegen: Prinzip, Erklärung, Beispiele/Gegenbeispiele, Quellenverweis und fachlicher Freigabestatus.
 - [ ] Fachliche Einordnung am Gesprächskontext mit exakten Belegzitaten und expliziter Unsicherheit definieren.
-- [ ] Rückmeldung zum eigenen Beitrag von Hinweisen für die nächste Reaktion unterscheiden.
-- [ ] Eigene FeedbackEngine ergänzen. Der aktuelle TipSelector verwendet nur das primäre Signal der Figurenantwort und liefert noch kein umfassendes Feedback zur Berateräußerung.
-- [ ] Als Startvariante: LLM erkennt sprachliche Bedeutung; geprüfte Regeln wählen Hinweise; Vorlagen verbinden sie mit echten Gesprächszitaten. Freie Umformulierungen optional per zusätzlichem LLM-Aufruf.
-- [ ] Anzeige entscheiden: Vorschlag sind ein optionaler Hinweis während des Gesprächs und ein ausführlicherer Rückblick am Ende.
-- [ ] Gemeinsam geprüfte Testdialoge und typische Grenzfälle erstellen. Automatische Einordnung nicht als validierte MITI-Bewertung ausgeben.
+- [x] Rückmeldung zum eigenen Beitrag von Hinweisen für die nächste Reaktion unterscheiden.
+      Umgesetzt am 29.09.2026: Warnung, Rückmeldung zum Beitrag und Vorschlag sind getrennte
+      Flächen; der Schalter gilt nur für die Vorschläge.
+- [x] Eigene FeedbackEngine ergänzen. Umgesetzt am 29.09.2026 für klare Fälle von Druck und
+      Rat ohne Erlaubnis sowie für belegte komplexe Reflexion, Würdigung, Autonomie und
+      Zusammenarbeit. Der TipSelector bleibt daneben für den Vorschlag zur nächsten Reaktion.
+- [x] Als Startvariante: LLM erkennt sprachliche Bedeutung; geprüfte Regeln wählen Hinweise; Vorlagen verbinden sie mit echten Gesprächszitaten. Umgesetzt; freie Umformulierungen bleiben bewusst aus.
+- [x] Anzeige entscheiden: **Keine Zahl.** Kurze Rückmeldung in Worten während des Gesprächs,
+      gespeichert und im Rückblick nachlesbar. Kein Offenheitswert, keine Punkte, kein Balken,
+      keine Note außerhalb der verborgenen Entwicklerdiagnostik. Entschieden von Jonas am
+      29.09.2026; Begründung in `STATUS.md` und im MI-Nachtrag, Abschnitte 5.3 und 13.
+- [ ] Gemeinsam geprüfte Testdialoge und typische Grenzfälle erstellen. Automatische Einordnung nicht als validierte MITI-Bewertung ausgeben. Die Fixtures zu den Fällen 4a, 4b, 5, 6 und 10 liegen seit dem 29.09.2026 in `FeedbackTests.swift`, sind aber Arbeitsentwürfe und keine Goldreferenz.
+- [ ] Formulierungen der Textbausteine fachlich prüfen und freigeben. Sie tragen bis dahin
+      `reviewStatus: .draft`. Zu klären ist auch die Anrede: die Bausteine duzen die übende
+      Person wie die übrige Oberfläche, die Beispiele im MI-Nachtrag siezen.
+- [ ] Prozessbeobachtungen ergänzen (Wanderfalle, Erlaubnislage über mehrere Turns, Bubble
+      Sheet, verlorener Fokus). Sie lassen sich nicht aus dem primären Figuren-Tag ableiten
+      und gehören zu MI-03; die Fälle 7 bis 14 sind dafür noch nicht abgedeckt.
 
 ## 2. Oberfläche und Illustrationen – heute vorgesehen
 
@@ -20,7 +33,8 @@ Die folgenden Punkte sind eine Diskussionsgrundlage, keine bereits fachlich frei
 - [x] Erweiterbaren Porträt-Pool und gespeicherte Rotation bei erneutem Öffnen implementieren und testen.
 - [ ] Neue Oberfläche in der laufenden App visuell prüfen und mit dem Nutzer abstimmen.
 - [ ] Porträts als Orientierung einsetzen; generierte Hinweise nicht als echte Zitate dieser Personen ausgeben.
-- [ ] Kleine Displays, große Schrift und VoiceOver prüfen.
+- [ ] Kleine Displays, große Schrift und VoiceOver prüfen. Seit dem 29.09.2026 betrifft das
+      auch die neuen Feedbackflächen; sie wurden noch in keiner laufenden App angesehen.
 
 ## 3. Lokales LLM anschließen — überholt durch E01 vom 29.09.2026
 

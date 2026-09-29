@@ -3,6 +3,101 @@
 Neueste Prüfungen zuerst. Ältere Abschnitte bleiben als Verlauf erhalten und werden nicht
 rückwirkend umgeschrieben.
 
+## 29. September 2026 · MI-01: Rückmeldung an die übende Person
+
+### Was jetzt tatsächlich passiert
+
+Der Ablauf vom gesendeten Beitrag zur angezeigten und gespeicherten Rückmeldung steht und ist
+durch Tests belegt. Schreibt die übende Person etwas Drängendes — sicheres `konfrontation`
+oder sicheres `ratschlag_ohne_erlaubnis` —, erscheint eine Warnung mit dem auslösenden Zitat,
+sobald die Analyse validiert ist und bevor die Antwort der Figur fertig ist. Bei belegter
+`komplexe_reflexion`, `wuerdigung`, `autonomie_betonen` oder `zusammenarbeit_suchen` erscheint
+an derselben Stelle eine kurze Rückmeldung zum Beitrag. Beides in Worten, **ohne jede Zahl**.
+
+- **Kein Offenheitswert, keine Punkte, kein Balken, keine Note in der normalen Oberfläche.**
+  Jonas' Produktentscheidung vom 29.09.2026, fachlich gestützt durch MI-Nachtrag 5.3 und 13:
+  Offenheit misst die Bereitschaft der Figur, Persönliches zu erzählen, nicht die Qualität der
+  Beratung. Der Wiederholungsschutz im Reducer gibt derselben guten Reflexion beim zweiten Mal
+  keine Gutschrift mehr — als Punktzahl gelesen wäre das eine falsche Aussage. Die
+  Rückmeldung hängt deshalb nicht am Zustand: derselbe Beitrag ergibt dieselbe Rückmeldung.
+- **Deterministisch, kein zweiter Modelllauf, keine Stichwortliste.** `FeedbackEngine` arbeitet
+  ausschließlich auf der bereits validierten `TurnAnalysis` und dem Kontext, der dieser Analyse
+  tatsächlich vorlag. Die Texte kommen aus versionierten Vorlagen (`FeedbackTemplates`,
+  Version 0.1) und werden nur mit wörtlichen Gesprächszitaten gefüllt.
+- **Die Figurenantwort kann die Rückmeldung nicht färben.** Sie wird erzeugt, nachdem die
+  Befunde feststehen. Eine zustimmende Figur beweist keine gute Beratung.
+- **Unsicher bleibt unsicher.** Ein unsicher eingeordnetes Segment ergibt „Möglicher Druck …“
+  beziehungsweise „Möglicher Rat ohne Erlaubnis …“ statt eines sicheren Vorwurfs. Positive
+  Rückmeldung gibt es nur für sichere und belegte Segmente; Reflexion und Würdigung brauchen
+  zusätzlich ein echtes Klientenzitat.
+- **Keine scheinbare Entwarnung.** Fehlt die Analyse, steht dort ausdrücklich „Für diesen
+  Beitrag liegt keine Einordnung vor. Das ist keine Entwarnung.“
+- **Der Schalter schaltet nur die Vorschläge.** Er heißt jetzt „Vorschläge ein-/ausblenden“;
+  Warnung und Rückmeldung zum Beitrag bleiben in jedem Fall sichtbar. Die drei Ausgaben aus
+  Abschnitt 7.1 sind auf dem Bildschirm unterscheidbar beschriftet.
+- **Verborgene Entwicklerdiagnostik.** Langes Drücken auf den Rundenzähler im Gespräch
+  beziehungsweise auf „Protokoll“ im Rückblick zeigt Offenheitsverlauf, gespeicherte
+  `stateChangeReasons`, Gutschriften und Regelkennungen je Runde. Das ist der einzige Ort, an
+  dem eine Zahl vorkommt.
+
+### Frühe Anzeige ohne verfrühten Commit
+
+`ConversationCoordinator.send` bekommt einen optionalen Rückruf und meldet die Befunde,
+sobald die Analyse validiert ist — vor dem Antwortaufruf und ohne gespeicherten Turn. Die
+Meldung trägt Sitzung, PendingTurn, erwartete Revision und die Generation des Versuchs.
+`AppModel` nimmt sie nur an, wenn sie zur laufenden Operation gehört, und zeigt sie nur,
+solange Sitzung, Revision und Eingabetext unverändert sind. Abbruch, bearbeitete Eingabe,
+Sitzungswechsel, Hintergrundwechsel, Anbieterwechsel und Löschen verwerfen sie. Nach einem
+Speicherfehler wird derselbe vorbereitete Turn erneut gespeichert und dieselbe Rückmeldung
+erneut gemeldet — ohne neue Generierung und ohne doppelte Einträge.
+
+### Verträge und Speicherformat
+
+- Neu in `TrainerCore`: `FeedbackKind`, `FeedbackCertainty`, `EvidenceReference`,
+  `FeedbackFinding`, `PreliminaryFeedback`, `FeedbackSink`, `FeedbackTemplate`,
+  `FeedbackTemplates`, `FeedbackEngine`, `OutputValidator.validateEvidence`.
+- `CompletedTurn.feedback` ist neu, hat einen Standardwert und wird mit einem eigenen
+  `init(from:)` über `decodeIfPresent(…) ?? []` gelesen. **`SessionSnapshot.schemaVersion`
+  bleibt 1**, und `rulesVersion` bleibt „0.1“: alte Sitzungen bleiben lesbar, exportierbar und
+  fortsetzbar. Fehlendes Feedback bedeutet „nicht erhoben“, nicht „keine Befunde“.
+- Die Textbausteine haben eine eigene Version, damit eine Formulierungsänderung nicht die
+  `rulesVersion` anfassen und damit alte Sitzungen unfortsetzbar machen muss.
+- Das Feedback gehört zur Idempotenzprüfung: `RepositoryRules.commit` vergleicht bei gleicher
+  Turn-ID `existing == turn`, ein Wiederholversuch mit abweichender Rückmeldung wird
+  abgewiesen statt still überschrieben.
+
+### Geprüft am 29.09.2026
+
+- `swift test --package-path Packages/TrainerCore`: **40 Tests, bestanden** (vorher 17).
+  Neu unter anderem: Fälle 4a/4b, 5, 6, 10 und die Gegenproben aus `Evaluation/mi-faelle.json`
+  als Fixtures, Warnung vor der fertigen Figurenantwort bei künstlich angehaltener Antwort,
+  Abbruch, Kontextlücke bleibt unsicher, Commit-Wiederholung ohne zweiten Modellaufruf und
+  ohne doppeltes Feedback, übersprungene Analyse ohne Entwarnung, erfundene und paraphrasierte
+  Belege werden abgewiesen, alte Turns ohne `feedback` bleiben decodierbar, kein Baustein
+  enthält eine Ziffer.
+- `swift test --package-path Packages/TrainerStorage`: **2 Tests, bestanden** (vorher 1).
+  Neu: gespeichertes Feedback übersteht Neustart und gehört zur Idempotenz.
+- `swift test` (Wurzelpaket): **37 Tests, bestanden** (vorher 34). Neu: die reine
+  Entscheidungslogik der frühen Anzeige (`FeedbackGate`).
+- `swift build` und `xcodebuild … -destination 'id=8053E614-…' build`: **erfolgreich.**
+
+### Weiterhin nicht nachgewiesen
+
+- **Kein Lauf der neuen Oberfläche.** Weder im Simulator noch auf einem Gerät noch in der
+  Mac-Prüf-App wurde die Feedbackfläche angesehen. Kleine Displays, große Schrift und
+  VoiceOver sind ungeprüft.
+- **Keine Messung mit echtem Modell im laufenden Gespräch.** Die Fixtures setzen die Analyse
+  von Hand; der `DemoModelProvider` liefert bewusst leere Segmente und kann kein Feedback
+  auslösen. Ohne hinterlegten Schlüssel sieht man deshalb nur den Hinweis, dass keine
+  Einordnung vorliegt.
+- **Keine gemessene Latenz.** Dass die Warnung vor der Figurenantwort erscheint, ist an einer
+  künstlich angehaltenen Antwort belegt, nicht an einer realen Wartezeit.
+- **Die Formulierungen der Bausteine sind fachlich ungeprüft** und tragen `reviewStatus:
+  .draft`. Auch die zwölf Codes bleiben ein angepasstes Lernschema; die Rückmeldung ist
+  ausdrücklich keine validierte MITI-Bewertung und keine Kompetenznote.
+- **Prozessbeobachtungen fehlen weiterhin**: Wanderfalle, Bubble Sheet, Erlaubnislage über
+  mehrere Turns, verlorener Fokus. Das sind die Fälle 7, 8, 9, 11 bis 14 und gehören zu MI-03.
+
 ## 29. September 2026
 
 ### Erstmals bestanden: iOS-Build und Simulatorlauf

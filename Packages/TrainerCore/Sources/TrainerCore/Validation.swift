@@ -54,6 +54,37 @@ public enum OutputValidator {
         }
     }
 
+    /// Prüft eine Belegstelle gegen die Texte, die tatsächlich übergeben wurden: dieselbe
+    /// Strenge wie bei den Analysezitaten. Ein Beleg, der sich nicht wörtlich und an der
+    /// bezeichneten Stelle wiederfinden lässt, wird abgewiesen — paraphrasierte Zitate
+    /// dürfen nie in eine Rückmeldung geraten (MI-Nachtrag, Abschnitt 7.3).
+    public static func validateEvidence(_ reference: EvidenceReference, input: String,
+                                        context: [DialogueMessage]) throws {
+        let text: String
+        switch reference.source {
+        case .currentInput:
+            guard reference.messageIndex == nil, reference.speaker == .counselor else {
+                throw TrainerFailure.invalidAnalysis
+            }
+            text = input
+        case .contextMessage:
+            guard let index = reference.messageIndex, context.indices.contains(index),
+                  context[index].speaker == reference.speaker else { throw TrainerFailure.invalidAnalysis }
+            text = context[index].text
+        }
+        guard reference.occurrence >= 1,
+              !reference.quote.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw TrainerFailure.invalidAnalysis
+        }
+        var cursor = text.startIndex
+        for _ in 0..<reference.occurrence {
+            guard let found = text.range(of: reference.quote, options: .literal, range: cursor..<text.endIndex) else {
+                throw TrainerFailure.invalidAnalysis
+            }
+            cursor = found.upperBound
+        }
+    }
+
     public static func validateReply(_ reply: ClientReply, visibleFacts: [VisibleFact]) throws {
         let text = reply.text.trimmingCharacters(in: .whitespacesAndNewlines)
         let ids = Set(reply.disclosedFactIDs)

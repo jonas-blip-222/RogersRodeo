@@ -244,16 +244,40 @@ public struct CompletedTurn: Codable, Sendable, Equatable {
     public var stateAfter: SimulationState
     public var stateChangeReasons: [String]
     public var selectedTipID: String?
+    /// Endgültige Rückmeldung zu diesem Beitrag, gemeinsam mit ihm gespeichert. Sie entsteht
+    /// vor der Figurenantwort und wird bei einer Commit-Wiederholung unverändert mitgeführt;
+    /// deshalb gehört sie zur Idempotenzprüfung in `RepositoryRules.commit`.
+    public var feedback: [FeedbackFinding]
     public var metrics: [ModelCallMetrics]
     public var completedAt: Date
     public init(id: UUID, input: String, analysis: TurnAnalysis?, reply: ClientReply,
                 stateBefore: SimulationState, stateAfter: SimulationState,
                 stateChangeReasons: [String], selectedTipID: String?,
-                metrics: [ModelCallMetrics], completedAt: Date) {
+                metrics: [ModelCallMetrics], completedAt: Date,
+                feedback: [FeedbackFinding] = []) {
         self.id = id; self.input = input; self.analysis = analysis; self.reply = reply
         self.stateBefore = stateBefore; self.stateAfter = stateAfter
         self.stateChangeReasons = stateChangeReasons; self.selectedTipID = selectedTipID
-        self.metrics = metrics; self.completedAt = completedAt
+        self.metrics = metrics; self.completedAt = completedAt; self.feedback = feedback
+    }
+
+    // Bereits gespeicherte Sitzungen kennen `feedback` nicht. Ein nicht-optionales neues Feld
+    // ließe sie mit `keyNotFound` scheitern und machte über `list()` die ganze Verlaufsliste
+    // unbrauchbar. Fehlendes Feedback bedeutet „nicht erhoben“, nicht „keine Befunde“ —
+    // die Oberfläche unterscheidet das über das Vorhandensein der Analyse.
+    public init(from decoder: any Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        id = try values.decode(UUID.self, forKey: .id)
+        input = try values.decode(String.self, forKey: .input)
+        analysis = try values.decodeIfPresent(TurnAnalysis.self, forKey: .analysis)
+        reply = try values.decode(ClientReply.self, forKey: .reply)
+        stateBefore = try values.decode(SimulationState.self, forKey: .stateBefore)
+        stateAfter = try values.decode(SimulationState.self, forKey: .stateAfter)
+        stateChangeReasons = try values.decode([String].self, forKey: .stateChangeReasons)
+        selectedTipID = try values.decodeIfPresent(String.self, forKey: .selectedTipID)
+        feedback = try values.decodeIfPresent([FeedbackFinding].self, forKey: .feedback) ?? []
+        metrics = try values.decode([ModelCallMetrics].self, forKey: .metrics)
+        completedAt = try values.decode(Date.self, forKey: .completedAt)
     }
 }
 

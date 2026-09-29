@@ -48,7 +48,22 @@ public enum ReviewBuilder {
                 for segment in analysis.segments {
                     lines += ["- \(segment.isUncertain ? "Unsicher" : segment.code.label): „\(escaped(segment.quote))“"]
                 }
-            } else { lines += ["Keine Einordnung vorhanden."] }
+            } else { lines += ["Keine Einordnung vorhanden. Das ist keine Entwarnung."] }
+            // Endgültige Rückmeldung mit Beleg, Unsicherheit und verwendeten Ständen. Keine
+            // Zahl: der Offenheitswert bleibt auch im Export außen vor.
+            if !turn.feedback.isEmpty {
+                lines += ["", "Rückmeldung (fachlicher Entwurf):"]
+                for finding in turn.feedback {
+                    let art = finding.kind == .warning ? "Warnung" : "Zum Beitrag"
+                    let sicherheit = finding.certainty == .possible ? " · unsicher" : ""
+                    lines += ["- \(art)\(sicherheit): \(escaped(finding.message))",
+                              "  Regel \(finding.ruleID) · Bausteine \(finding.templateVersion) · Regeln \(finding.rulesVersion) · Quelle \(finding.sourceID)"]
+                    for reference in finding.evidence {
+                        let herkunft = reference.source == .currentInput ? "eigener Beitrag" : "Gesprächsverlauf"
+                        lines += ["  Beleg (\(herkunft)): „\(escaped(reference.quote))“"]
+                    }
+                }
+            }
             lines += ["", "**\(session.content.scenario.name)**", escaped(turn.reply.text), ""]
         }
         return lines.joined(separator: "\n")

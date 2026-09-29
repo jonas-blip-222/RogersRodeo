@@ -66,6 +66,190 @@ actor FailingCommitRepository: SessionRepository {
     func delete(id: UUID) async { await base.delete(id: id) }
 }
 
+/// Eingabegesteuerter Prüfanbieter für den Feedbackablauf. Der `DemoModelProvider` taugt
+/// dafür nicht: seine `analyze` liefert immer leere Segmente, und er trägt bewusst die
+/// Demo-Kennzeichnung. Hier wird die Analyse je Eingabe vorgegeben, damit der Ablauf
+/// unabhängig von jeder Modellqualität prüfbar bleibt.
+actor ScriptedProvider: TrainerModelProvider {
+    let script: [String: TurnAnalysis]
+    let holdsReply: Bool
+    var analyses = 0
+    var replies = 0
+    /// Reihenfolge der Ereignisse, um „Feedback vor der Figurenantwort“ nachzuweisen.
+    var events: [String] = []
+    var releaseReply: CheckedContinuation<Void, Never>?
+    var observers: [CheckedContinuation<Void, Never>] = []
+    init(script: [String: TurnAnalysis], holdsReply: Bool = false) {
+        self.script = script; self.holdsReply = holdsReply
+    }
+    func descriptor() -> ModelDescriptor { TestData.model }
+    func prepare() {}
+    func unload() {}
+    func note(_ event: String) { events.append(event) }
+    func analyze(_ request: AnalysisRequest) throws -> ModelResult<TurnAnalysis> {
+        analyses += 1
+        guard let analysis = script[request.currentInput] else { throw TrainerFailure.invalidAnalysis }
+        return .init(value: analysis, metrics: .init(durationSeconds: 0.1), contextMessagesUsed: request.recentMessages)
+    }
+    func reply(_ request: ReplyRequest) async throws -> ModelResult<ClientReply> {
+        replies += 1
+        events.append("antwort_beginnt")
+        if holdsReply {
+            await withCheckedContinuation { continuation in
+                releaseReply = continuation
+                observers.forEach { $0.resume() }; observers = []
+            }
+        }
+        events.append("antwort_fertig")
+        return .init(value: .init(text: "Hm.", primaryTag: nil, disclosedFactIDs: []),
+                     metrics: .init(durationSeconds: 0.1), contextMessagesUsed: request.recentMessages)
+    }
+    func waitUntilReplyHeld() async {
+        if releaseReply != nil { return }
+        await withCheckedContinuation { observers.append($0) }
+    }
+    func release() { releaseReply?.resume(); releaseReply = nil }
+}
+
+/// Sammelt die Meldungen der frühen Anzeige.
+actor FeedbackRecorder {
+    var received: [PreliminaryFeedback] = []
+    func add(_ value: PreliminaryFeedback) { received.append(value) }
+    var sink: FeedbackSink { { [self] value in await add(value) } }
+}
+
+private let druckEingabe = "Wenn Ihnen Sarah wirklich wichtig wäre, würden Sie endlich mit dem Trinken aufhören."
+private let druckAnalyse = TurnAnalysis(segments: [
+    .init(quote: "Wenn Ihnen Sarah wirklich wichtig wäre", code: .confrontation, isUncertain: false)])
+
+@Test func warnungErscheintVorDerFertigenFigurenantwort() async throws {
+    // Abnahmepunkt 11.2: die vorläufige Warnung erscheint nach der Analyse und vor dem
+    // Abschluss einer künstlich verzögerten Figurenantwort.
+    let repo = MemorySessionRepository()
+    let provider = ScriptedProvider(script: [druckEingabe: druckAnalyse], holdsReply: true)
+    let recorder = FeedbackRecorder()
+    let coordinator = ConversationCoordinator(repository: repo, provider: provider)
+    let session = try await coordinator.create(content: TestData.content, contentHash: "test")
+    let sink = await recorder.sink
+    let task = Task { try await coordinator.send(sessionID: session.id, input: druckEingabe, onFeedback: sink) }
+    await provider.waitUntilReplyHeld()
+
+    // Die Antwort hängt noch, die Warnung steht schon.
+    let früh = await recorder.received
+    #expect(früh.count == 1)
+    let feedback = try #require(früh.first)
+    #expect(feedback.findings.map(\.ruleID) == ["warnung.konfrontation"])
+    #expect(feedback.analysisAvailable)
+    // Gebunden an Sitzung, PendingTurn, erwartete Revision und den Ausführungsversuch.
+    let pending = try #require(await repo.loadPending(sessionID: session.id))
+    #expect(feedback.sessionID == session.id)
+    #expect(feedback.turnID == pending.id)
+    #expect(feedback.expectedRevision == session.revision)
+    #expect(feedback.input == druckEingabe)
+    // Zu diesem Zeitpunkt existiert noch kein gespeicherter Turn.
+    #expect(try await repo.load(id: session.id).turns.isEmpty)
+
+    await provider.release()
+    let saved = try await task.value
+    #expect(saved.turns.first?.feedback == feedback.findings)
+    let events = await provider.events
+    #expect(events == ["antwort_beginnt", "antwort_fertig"])
+}
+
+@Test func abbruchVerhindertSpaetesFeedbackUndSpaetenCommit() async throws {
+    let repo = MemorySessionRepository()
+    let provider = ScriptedProvider(script: [druckEingabe: druckAnalyse], holdsReply: true)
+    let recorder = FeedbackRecorder()
+    let coordinator = ConversationCoordinator(repository: repo, provider: provider)
+    let session = try await coordinator.create(content: TestData.content, contentHash: "test")
+    let sink = await recorder.sink
+    let task = Task { try await coordinator.send(sessionID: session.id, input: druckEingabe, onFeedback: sink) }
+    await provider.waitUntilReplyHeld()
+    await coordinator.cancel(); task.cancel(); await provider.release()
+    await #expect(throws: CancellationError.self) { try await task.value }
+    // Der Abbruch lässt keinen Turn zurück; die bereits gemeldete Warnung gehört zu einem
+    // Versuch, dessen Marke die Oberfläche verworfen hat.
+    #expect(try await repo.load(id: session.id) == session)
+    let empfangen = await recorder.received
+    #expect(empfangen.count == 1)
+}
+
+@Test func commitWiederholungMeldetUndSpeichertDasselbeFeedbackOhneNeuberechnung() async throws {
+    let repo = FailingCommitRepository(afterCommit: false)
+    let provider = ScriptedProvider(script: [druckEingabe: druckAnalyse])
+    let recorder = FeedbackRecorder()
+    let coordinator = ConversationCoordinator(repository: repo, provider: provider)
+    let session = try await coordinator.create(content: TestData.content, contentHash: "test")
+    let sink = await recorder.sink
+    await #expect(throws: TrainerFailure.storageUnavailable) {
+        try await coordinator.send(sessionID: session.id, input: druckEingabe, onFeedback: sink)
+    }
+    let saved = try await coordinator.send(sessionID: session.id, input: druckEingabe, onFeedback: sink)
+    // Kein zweiter Modellaufruf, kein doppelter Turn, kein doppelter Feedbackeintrag.
+    #expect(await provider.analyses == 1)
+    #expect(await provider.replies == 1)
+    #expect(saved.turns.count == 1)
+    #expect(saved.turns.first?.feedback.count == 1)
+    let empfangen = await recorder.received
+    #expect(empfangen.count == 2)
+    #expect(empfangen[0].findings == empfangen[1].findings)
+    #expect(empfangen[0].turnID == empfangen[1].turnID)
+    // Verschiedene Versuche, damit die Oberfläche eine alte Meldung nicht mit einer neuen
+    // verwechselt.
+    #expect(empfangen[0].attempt != empfangen[1].attempt)
+    #expect(saved.turns.first?.feedback == empfangen[1].findings)
+
+    // Der erneute Commit desselben Turns bleibt idempotent, jetzt einschließlich Feedback.
+    let wiederholt = try await repo.commit(sessionID: session.id, expectedRevision: 0, turn: saved.turns[0])
+    #expect(wiederholt == saved)
+    var verfaelscht = saved.turns[0]
+    verfaelscht.feedback = []
+    await #expect(throws: TrainerFailure.revisionConflict) {
+        try await repo.commit(sessionID: session.id, expectedRevision: 0, turn: verfaelscht)
+    }
+}
+
+@Test func uebersprungeneAnalyseZeigtKeineScheinbareEntwarnung() async throws {
+    let repo = MemorySessionRepository()
+    let provider = ScriptedProvider(script: [:])
+    let recorder = FeedbackRecorder()
+    let coordinator = ConversationCoordinator(repository: repo, provider: provider)
+    let session = try await coordinator.create(content: TestData.content, contentHash: "test")
+    let sink = await recorder.sink
+    // Erst scheitert die Analyse zweimal und der Beitrag wird gar nicht gespeichert.
+    await #expect(throws: TrainerFailure.invalidAnalysis) {
+        try await coordinator.send(sessionID: session.id, input: druckEingabe, onFeedback: sink)
+    }
+    #expect(await recorder.received.isEmpty)
+    // Beim ausdrücklichen Fortsetzen ohne Einordnung gibt es keine Befunde — und die
+    // Oberfläche erfährt über `analysisAvailable`, dass das keine Entwarnung ist.
+    let saved = try await coordinator.send(sessionID: session.id, input: druckEingabe,
+                                           skipAnalysis: true, onFeedback: sink)
+    let feedback = try #require(await recorder.received.last)
+    #expect(!feedback.analysisAvailable)
+    #expect(feedback.findings.isEmpty)
+    #expect(saved.turns.first?.feedback.isEmpty == true)
+    #expect(saved.turns.first?.analysis == nil)
+}
+
+@Test func kontextluecheLaesstDieErlaubnislageUnsicher() async throws {
+    // Abschnitt 9.4: Kürzung darf aus „Zustimmung nicht mehr im Fenster“ kein sicheres
+    // „Rat ohne Erlaubnis“ machen. Modelliert wird das über die Unsicherheit des Segments;
+    // der Motor muss sie in die vorsichtige Formulierung übernehmen.
+    let eingabe = "Sie könnten kurz notieren, was Ihnen geholfen hat."
+    let unsicher = TurnAnalysis(segments: [
+        .init(quote: eingabe, code: .adviceWithoutPermission, isUncertain: true)])
+    let repo = MemorySessionRepository()
+    let provider = ScriptedProvider(script: [eingabe: unsicher])
+    let recorder = FeedbackRecorder()
+    let coordinator = ConversationCoordinator(repository: repo, provider: provider)
+    let session = try await coordinator.create(content: TestData.content, contentHash: "test")
+    let saved = try await coordinator.send(sessionID: session.id, input: eingabe, onFeedback: await recorder.sink)
+    let finding = try #require(saved.turns.first?.feedback.first)
+    #expect(finding.certainty == .possible)
+    #expect(finding.title == "Möglicher Rat ohne Erlaubnis")
+}
+
 @Test func successfulTurnIsAtomicAndCommitIdempotent() async throws {
     let repo = MemorySessionRepository(), provider = ControlledProvider()
     let coordinator = ConversationCoordinator(repository: repo, provider: provider)

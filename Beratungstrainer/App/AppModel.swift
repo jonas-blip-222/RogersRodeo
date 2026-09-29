@@ -33,6 +33,34 @@ struct ProviderChange: Equatable {
     }
 }
 
+/// Reine Entscheidungslogik für die frühe Rückmeldung (MI-Nachtrag, Abschnitt 9.3). Die
+/// vorläufige Rückmeldung gehört zu genau einem Ausführungsversuch und darf niemals einem
+/// anderen Beitrag zufallen. Ohne Oberfläche prüfbar gehalten, weil hier die Fehler sitzen,
+/// die man auf dem Bildschirm kaum sieht: ein spätes Ergebnis nach Abbruch, eine inzwischen
+/// gewechselte Sitzung, ein bereits gespeicherter Turn.
+enum FeedbackGate {
+    /// Beim Eintreffen: Der Rückruf stammt aus dem Versuch, der gerade läuft, und die
+    /// Sitzung steht noch genau dort, wo der Versuch begonnen hat. `token` ist die Marke,
+    /// die dieser `send`-Aufruf vergeben hat; `AppModel.operation` wird bei Abbruch,
+    /// Sitzungswechsel und Löschen auf nil gesetzt, womit ein spätes Ergebnis verfällt.
+    /// `feedback.attempt` ist zusätzlich die Generation im Coordinator und bleibt zur
+    /// Nachvollziehbarkeit erhalten.
+    static func accepts(_ feedback: PreliminaryFeedback, operation: UUID?, token: UUID,
+                        sessionID: UUID?, revision: Int?, currentInput: String) -> Bool {
+        operation != nil && operation == token
+            && keeps(feedback, sessionID: sessionID, revision: revision, currentInput: currentInput)
+    }
+
+    /// Beim Anzeigen: dieselbe Sitzung, dieselbe noch nicht erhöhte Revision, derselbe Text.
+    /// Ein erfolgreicher Commit erhöht die Revision und leert die Eingabe — die vorläufige
+    /// Anzeige verschwindet damit von selbst, und der gespeicherte Turn übernimmt.
+    static func keeps(_ feedback: PreliminaryFeedback, sessionID: UUID?, revision: Int?,
+                      currentInput: String) -> Bool {
+        sessionID == feedback.sessionID && revision == feedback.expectedRevision
+            && currentInput.trimmingCharacters(in: .whitespacesAndNewlines) == feedback.input
+    }
+}
+
 @MainActor @Observable final class AppModel {
     let catalog: ContentCatalog
     let contentHash: String
@@ -48,6 +76,10 @@ struct ProviderChange: Equatable {
     var maySkipAnalysis = false
     var showReview = false
     var showHints = true
+    /// Vorläufige Rückmeldung zum laufenden Ausführungsversuch. Noch kein gespeicherter
+    /// Turn. Lesen über `currentFeedback`, damit sie nie zu einem anderen Beitrag,
+    /// einer anderen Sitzung oder einer bereits erhöhten Revision angezeigt wird.
+    private(set) var pendingFeedback: PreliminaryFeedback?
     var showFinishConfirmation = false
     var homePortrait: HomePortrait
     /// Wahr, solange kein OpenRouter-Schlüssel vorliegt und deshalb die festen Demo-Antworten
@@ -166,7 +198,7 @@ struct ProviderChange: Equatable {
         modelIdentity = built.identity
         coordinator = ConversationCoordinator(repository: repository, provider: built.provider)
         usesDemoResponses = demo
-        errorMessage = nil; maySkipAnalysis = false
+        errorMessage = nil; maySkipAnalysis = false; pendingFeedback = nil
         refresh()
     }
 
@@ -181,6 +213,7 @@ struct ProviderChange: Equatable {
     func start(_ scenario: ScenarioDefinition) {
         guard !busy else { return }
         let token = UUID(); operation = token; busy = true; errorMessage = nil
+        pendingFeedback = nil
         task = Task {
             do {
                 let created = try await coordinator.create(content: .init(scenario: scenario, codingGuide: catalog.codingGuide, tips: catalog.tips), contentHash: contentHash)
@@ -196,7 +229,8 @@ struct ProviderChange: Equatable {
             let loaded = try repository.load(id: id)
             let pending = try repository.loadPending(sessionID: id)
             session = loaded; input = pending?.input ?? ""
-            errorMessage = nil; maySkipAnalysis = false; showReview = loaded.status == .completed
+            errorMessage = nil; maySkipAnalysis = false; pendingFeedback = nil
+            showReview = loaded.status == .completed
             // Gespeicherte Sitzungen tragen die Modellkennung in ihrer Identität. Nach einem
             // Wechsel der Antwortquelle verweigert `ConversationCoordinator.send` das
             // Fortsetzen mit `unsupportedVersion` — das ist gewollt und bleibt so. Der
@@ -206,15 +240,44 @@ struct ProviderChange: Equatable {
             }
         } catch { failure(error) }
     }
+    /// Die vorläufige Rückmeldung, sofern sie noch zum angezeigten Stand gehört. Sonst nil:
+    /// nach erfolgreichem Commit ist die Revision erhöht und die Eingabe geleert, nach
+    /// einem Sitzungswechsel stimmt die Kennung nicht mehr, nach einer Textänderung der
+    /// Beitrag nicht mehr. Eine Rückmeldung, die nicht mehr passt, verschwindet damit,
+    /// statt stehen zu bleiben.
+    var currentFeedback: PreliminaryFeedback? {
+        guard let pendingFeedback,
+              FeedbackGate.keeps(pendingFeedback, sessionID: session?.id,
+                                 revision: session?.revision, currentInput: input) else { return nil }
+        return pendingFeedback
+    }
+
+    /// Nimmt die Meldung aus dem Coordinator entgegen. Läuft auf dem Hauptakteur, weil sie
+    /// unmittelbar die Oberfläche verändert.
+    private func receive(_ feedback: PreliminaryFeedback, token: UUID) {
+        guard FeedbackGate.accepts(feedback, operation: operation, token: token,
+                                   sessionID: session?.id, revision: session?.revision,
+                                   currentInput: input) else { return }
+        pendingFeedback = feedback
+    }
+
     func send(skipAnalysis: Bool = false) {
         guard !busy, let session, session.status == .active else { return }
         let token = UUID(); operation = token; busy = true; errorMessage = nil; maySkipAnalysis = false
+        pendingFeedback = nil
         let text = input
+        // Frühe Anzeige: der Coordinator meldet die Rückmeldung, sobald die Analyse
+        // validiert ist — vor der Antwort von Lukas. Der Rückruf trägt die Marke dieses
+        // Versuchs; ein Ergebnis aus einem abgebrochenen Versuch wird verworfen.
+        let sink: FeedbackSink = { [weak self] feedback in
+            await self?.receive(feedback, token: token)
+        }
         task = Task {
             do {
-                let saved = try await coordinator.send(sessionID: session.id, input: text, skipAnalysis: skipAnalysis)
+                let saved = try await coordinator.send(sessionID: session.id, input: text,
+                                                       skipAnalysis: skipAnalysis, onFeedback: sink)
                 guard operation == token else { return }
-                self.session = saved; input = ""
+                self.session = saved; input = ""; pendingFeedback = nil
             } catch { if operation == token { failure(error) } }
             if operation == token { busy = false; task = nil; operation = nil; refresh() }
         }
@@ -223,7 +286,10 @@ struct ProviderChange: Equatable {
     /// Wartet die abgebrochene Operation ab, bevor eine neue mit derselben Oberfläche startet.
     func cancel() async {
         let running = task
-        operation = nil; running?.cancel()
+        // Abbruch verwirft die vorläufige Rückmeldung sofort und nicht erst, wenn die
+        // abgebrochene Operation zurückkommt: sonst stünde sie noch da, während bereits
+        // ein neuer Beitrag getippt wird.
+        operation = nil; pendingFeedback = nil; running?.cancel()
         await coordinator.cancel()
         await running?.value
         task = nil; busy = false
@@ -250,7 +316,10 @@ struct ProviderChange: Equatable {
             return true
         } catch { failure(error); return false }
     }
-    func close() { guard saveDraft() else { return }; session = nil; input = ""; showReview = false; refresh() }
+    func close() {
+        guard saveDraft() else { return }
+        session = nil; input = ""; showReview = false; pendingFeedback = nil; refresh()
+    }
     func requestFinish() {
         guard !busy, let session, session.status == .active else { return }
         do {
@@ -267,12 +336,16 @@ struct ProviderChange: Equatable {
                 try repository.discardPending(sessionID: session.id, turnID: pending.id)
             }
             self.session = try repository.finish(sessionID: session.id, expectedRevision: session.revision, endedAt: Date())
-            input = ""; showReview = true; errorMessage = nil; refresh()
+            input = ""; showReview = true; errorMessage = nil; pendingFeedback = nil; refresh()
         } catch { failure(error) }
     }
     func delete(_ id: UUID) {
         guard !busy else { return }
-        do { try repository.delete(id: id); if session?.id == id { session = nil; input = "" }; refresh() }
+        do {
+            try repository.delete(id: id)
+            if session?.id == id { session = nil; input = ""; pendingFeedback = nil }
+            refresh()
+        }
         catch { failure(error) }
     }
     func foreground() {

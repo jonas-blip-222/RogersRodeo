@@ -33,7 +33,56 @@ import TrainerStorage
     #if os(iOS)
     #expect(try URL(fileURLWithPath: directory.path).resourceValues(forKeys: [.isExcludedFromBackupKey]).isExcludedFromBackup == true)
     #endif
+    #expect(committed.schemaVersion == 1)
     try another.delete(id: snapshot.id)
     #expect(try another.list().isEmpty)
     #expect(throws: TrainerFailure.sessionNotFound) { try another.commit(sessionID: snapshot.id, expectedRevision: 0, turn: turn) }
+}
+
+/// Die Rückmeldung wird gemeinsam mit dem Turn gespeichert und übersteht Neustart und
+/// Wiedereinlesen. Zur Idempotenz gehört sie damit auch: ein Commit-Wiederholversuch mit
+/// abweichender Rückmeldung ist ein anderer Turn und wird abgewiesen — sonst könnte eine
+/// neu berechnete Rückmeldung eine bereits gespeicherte still überschreiben.
+@Test @MainActor func gespeichertesFeedbackUeberstehtNeustartUndGehoertZurIdempotenz() async throws {
+    let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+    defer { try? FileManager.default.removeItem(at: directory) }
+    let url = directory.appendingPathComponent("sessions.store")
+    var repository: SwiftDataSessionRepository? = try .init(storeURL: url)
+    let scenario = ScenarioDefinition(schemaVersion: 1, id: "test", version: "1.0", status: .draft,
+        name: "Lukas", age: 28, address: "Sie", approaches: ["mi"], opennessStart: 3,
+        openingLine: "Hallo", publicProfile: "Test", facts: [])
+    let snapshot = SessionSnapshot(schemaVersion: 1, id: UUID(), revision: 0, approachID: "mi",
+        identity: .init(contentHash: "test", rulesVersion: "0.1", promptVersion: "0.1", model: DemoModelProvider.identity),
+        content: .init(scenario: scenario, codingGuide: "Test", tips: []), state: .init(openness: 3),
+        turns: [], status: .active, startedAt: Date())
+    try repository?.create(snapshot)
+    let eingabe = "Wenn Ihnen Sarah wirklich wichtig wäre, würden Sie aufhören."
+    let pending = PendingTurn(id: UUID(), sessionID: snapshot.id, expectedRevision: 0, input: eingabe, createdAt: Date())
+    try repository?.savePending(pending)
+    let analyse = TurnAnalysis(segments: [
+        .init(quote: "Wenn Ihnen Sarah wirklich wichtig wäre", code: .confrontation, isUncertain: false)])
+    let findings = FeedbackEngine.findings(analysis: analyse, input: eingabe, context: [],
+                                           characterName: "Lukas", rulesVersion: "0.1")
+    #expect(findings.count == 1)
+    let turn = CompletedTurn(id: pending.id, input: eingabe, analysis: analyse,
+        reply: .init(text: "Sie kennen uns doch gar nicht.", primaryTag: nil, disclosedFactIDs: []),
+        stateBefore: snapshot.state, stateAfter: .init(openness: 1, recentCredits: [nil]),
+        stateChangeReasons: ["confrontation"], selectedTipID: nil, metrics: [], completedAt: Date(),
+        feedback: findings)
+    _ = try repository?.commit(sessionID: snapshot.id, expectedRevision: 0, turn: turn)
+    repository = nil
+
+    let wieder = try SwiftDataSessionRepository(storeURL: url)
+    let geladen = try wieder.load(id: snapshot.id)
+    #expect(geladen.schemaVersion == 1)
+    #expect(geladen.turns.first?.feedback == findings)
+    // Derselbe Turn noch einmal: unverändert idempotent.
+    #expect(try wieder.commit(sessionID: snapshot.id, expectedRevision: 0, turn: turn) == geladen)
+    // Mit anderer Rückmeldung: abgewiesen statt still überschrieben.
+    var abweichend = turn
+    abweichend.feedback = []
+    #expect(throws: TrainerFailure.revisionConflict) {
+        try wieder.commit(sessionID: snapshot.id, expectedRevision: 0, turn: abweichend)
+    }
+    #expect(try wieder.load(id: snapshot.id).turns.first?.feedback == findings)
 }

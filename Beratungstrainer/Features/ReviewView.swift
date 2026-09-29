@@ -17,6 +17,7 @@ struct ReviewView: View {
     let session: SessionSnapshot
     @State private var export = false
     @State private var exportError: String?
+    @State private var showingDiagnostics = false
     var review: SessionReview { ReviewBuilder.build(session) }
     var body: some View {
         ScrollView {
@@ -43,6 +44,10 @@ struct ReviewView: View {
                 }.buttonStyle(.bordered)
                 if let exportError { ErrorNotice(text: exportError) }
                 Text("Protokoll").font(.title2.weight(.semibold))
+                    // Verborgener Zugang zur Entwicklerdiagnostik, wie im Gespräch.
+                    .contentShape(Rectangle())
+                    .onLongPressGesture(minimumDuration: 1.2) { showingDiagnostics = true }
+                    .accessibilityAction(named: "Entwicklerdiagnostik") { showingDiagnostics = true }
                 MessageBubble(speaker: session.content.scenario.name, text: session.content.scenario.openingLine, isCounselor: false)
                 ForEach(session.turns, id: \.id) { turn in
                     VStack(alignment: .leading, spacing: 12) {
@@ -54,13 +59,19 @@ struct ReviewView: View {
                                     Text(segment.isUncertain ? "Einordnung unsicher" : segment.code.label).foregroundStyle(.secondary)
                                 }.font(.caption)
                             }
-                        } else { Text("Für diesen Beitrag liegt keine Einordnung vor.").font(.caption).foregroundStyle(.secondary) }
+                        } else { Text("Für diesen Beitrag liegt keine Einordnung vor. Das ist keine Entwarnung.").font(.caption).foregroundStyle(.secondary) }
+                        // Die gespeicherte Rückmeldung bleibt nachvollziehbar, auch wenn sie
+                        // im Gespräch längst weitergeblättert ist (MI-Nachtrag, 7.2).
+                        ForEach(Array(turn.feedback.enumerated()), id: \.offset) { _, finding in
+                            FeedbackNotice(finding: finding)
+                        }
                         MessageBubble(speaker: session.content.scenario.name, text: turn.reply.text, isCounselor: false)
                     }
                 }
             }.padding(24).frame(maxWidth: 760).frame(maxWidth: .infinity)
         }
         .navigationTitle("Rückblick mit \(session.content.scenario.name)")
+        .sheet(isPresented: $showingDiagnostics) { DiagnosticsView(session: session) }
         .fileExporter(isPresented: $export, document: TranscriptDocument(text: ReviewBuilder.markdown(session)), contentType: .plainText,
                       defaultFilename: "Gespraech-\(session.content.scenario.name).md") { result in
             if case .failure = result { exportError = "Das Protokoll konnte nicht exportiert werden." }
