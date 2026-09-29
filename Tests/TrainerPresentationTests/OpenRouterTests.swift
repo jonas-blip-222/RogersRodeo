@@ -71,6 +71,7 @@ private func object(_ data: Data) throws -> [String: Any] {
     #expect(body["max_tokens"] as? Int == 2000)
     let provider = try #require(body["provider"] as? [String: Any])
     #expect(provider["ignore"] as? [String] == ["wafer", "mancer", "parasail"])
+    #expect(provider["require_parameters"] as? Bool == true)
     #expect((body["reasoning"] as? [String: Any])?["enabled"] as? Bool == false)
     let format = try #require(body["response_format"] as? [String: Any])
     #expect(format["type"] as? String == "json_schema")
@@ -88,7 +89,9 @@ private func object(_ data: Data) throws -> [String: Any] {
         configuration: configuration, system: "S", user: "U",
         responseFormat: OpenRouterSchema.responseFormat(name: "TurnAnalysis", schema: OpenRouterSchema.analysis),
         temperature: 0, maxTokens: 4000, reasoning: nil).serialized())
-    #expect(body["provider"] == nil)
+    let provider = try #require(body["provider"] as? [String: Any])
+    #expect(provider["require_parameters"] as? Bool == true)
+    #expect(provider["ignore"] == nil)
     #expect(body["reasoning"] == nil)
 }
 
@@ -301,7 +304,7 @@ private func envelope(content: String?, finish: String?, refusal: String? = nil,
     #expect(dimension["enum"] as? [String] == ["readiness", "confidence", "rapport"])
     let goal = try #require(fields["goal"] as? [String: Any])
     #expect(goal["type"] as? [String] == ["object", "null"])
-    let prompt = OpenRouterSchema.analysisSystemPrompt("G")
+    let prompt = OpenRouterSchema.memorySystemPrompt()
     #expect(prompt.contains("Beziehung zu Sarah ist nicht Rapport"))
     #expect(prompt.contains("Keine Werte aus Offenheit"))
     #expect(prompt.contains("Skalenantworten nur wörtlich belegen"))
@@ -332,10 +335,46 @@ private func envelope(content: String?, finish: String?, refusal: String? = nil,
     #expect(prompt.contains("[2] Vorkommen 1: „ZIELBELEG“"))
     #expect(prompt.contains("withdrawn"))
     #expect(prompt.contains("ausgelassene Ziele: 2"))
-    let system = OpenRouterSchema.analysisSystemPrompt("G")
+    let system = OpenRouterSchema.memorySystemPrompt()
     #expect(system.contains("ist NICHT abstinent leben"))
     #expect(system.contains("DARAUF FOLGENDE"))
     let reply = ReplyRequest(publicProfile: "P", behaviorInstruction: "B", visibleFacts: [], recentMessages: [], currentInput: "Hallo",
         analysis: .init(segments: [], goalUpdates: [.init(kind: .introduced, currentGoal: reference, evidence: reference)]))
     #expect(!(OpenRouterSchema.rolePrompt(reply) + OpenRouterSchema.replyPrompt(reply)).contains("ZIELBELEG"))
+}
+
+@Test func einzigeJsonTransporthuelleErlaubtAberKeineInhaltsreparatur() throws {
+    let plain = #"{"segments":[],"goalUpdates":[],"characterObservations":[]}"#
+    let wrapped = Data("```json\n\(plain)\n```".utf8)
+    #expect(try OpenRouterResponse.analysisPayload(wrapped) == Data(plain.utf8))
+    #expect(try OutputValidator.decodeAnalysis(OpenRouterResponse.analysisPayload(wrapped), input: "", context: []).goalUpdates == [])
+    for invalid in ["Hier: ```json\n\(plain)\n```", "```json\n\(plain)\n``` Danach", "```json\n\(plain)\n```\n```json\n\(plain)\n```", "```json\n{kaputt}\n```"] {
+        #expect(throws: TrainerFailure.invalidAnalysis) {
+            try OutputValidator.decodeAnalysis(OpenRouterResponse.analysisPayload(Data(invalid.utf8)), input: "", context: [])
+        }
+    }
+    let forged = #"{"segments":[{"quote":"erfunden","code":"sonstiges","isUncertain":false}],"goalUpdates":[]}"#
+    #expect(throws: TrainerFailure.invalidAnalysis) {
+        try OutputValidator.decodeAnalysis(OpenRouterResponse.analysisPayload(Data("```json\n\(forged)\n```".utf8)), input: "Hallo", context: [])
+    }
+}
+
+@Test func zielstufeKenntKeineAktuelleBeratereingabeUndHatEigenesSchema() throws {
+    let request = AnalysisRequest(codingGuide: "G", recentMessages: [.init(speaker: .client, text: "Vergangene Aussage")],
+                                  currentInput: "NOCH_UNBEANTWORTETER_VORSCHLAG")
+    #expect(!OpenRouterSchema.memoryPrompt(request).contains("NOCH_UNBEANTWORTETER_VORSCHLAG"))
+    #expect(OpenRouterSchema.analysisPrompt(request).contains("NOCH_UNBEANTWORTETER_VORSCHLAG"))
+    for (schema, expected) in [(OpenRouterSchema.memoryAnalysis, Set(["goalUpdates", "characterObservations"])),
+                                (OpenRouterSchema.counselorAnalysis, Set(["segments", "doubleSidedReflection"]))] {
+        let root = try object(schema.serialized())
+        #expect(Set(try #require(root["required"] as? [String])) == expected)
+        #expect(Set(try #require(root["properties"] as? [String: Any]).keys) == expected)
+    }
+    let valid = Data(#"{"goalUpdates":[],"characterObservations":[]}"#.utf8)
+    #expect(try OpenRouterResponse.decodeMemory(valid, context: []).goalUpdates == [])
+    for text in [#"{"goalUpdates":[],"characterObservations":[],"segments":[]}"#,
+                 #"{"goalUpdates":null,"characterObservations":[]}"#,
+                 #"{"characterObservations":[]}"#] {
+        #expect(throws: TrainerFailure.invalidAnalysis) { try OpenRouterResponse.decodeMemory(Data(text.utf8), context: []) }
+    }
 }

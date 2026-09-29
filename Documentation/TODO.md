@@ -16,10 +16,13 @@ Die folgenden Punkte sind eine Diskussionsgrundlage, keine bereits fachlich frei
       in die Analyse holen. Prompt 0.4, Regeln 0.3; keine automatische Rollenwirkung.
 - [x] Erste Live-Prüfung mit Schema 0.4 ausgeführt: zwei Verlaufsläufe früh abgebrochen,
       sieben isolierte Gegenproben; nur eine vollständig erfüllt. Siehe neuesten STATUS.
-- [ ] Befunde beheben: fehlende Alias-/Einführungsereignisse, unzulässige Vereinbarungsreferenzen,
-      ungültiges Ausgabeformat, unbelegter Rapport; neue Parallelziele über Charakterbeobachtungen
-      trotz vorhandener Zielidentität verhindern. Danach dieselben Live-Tests erneut ausführen.
-- [ ] Erfolgreichen vollständigen längeren Live-Verlauf und reale Rollen-/Simulatorprüfung belegen.
+- [x] Dokumentierte Befunde behoben: getrennte Ziel-/Beratungsanalyse, exakte Kennungen,
+      Parallelziel-Sperre und enge JSON-Hüllenbehandlung. Finale Abnahme: 15/15 Runden,
+      alle 14 Verlaufserwartungen und danach 7/7 unabhängige Gegenproben bestanden.
+- [ ] Weitere unabhängige Formulierungen und reale freie Rollen-/Simulatorprüfung belegen.
+- [ ] Lange Wartezeiten/Wiederholungen untersuchen: finaler Verlauf 327 Sekunden trotz nur
+      100,7 Sekunden erfasster erfolgreicher Analysestufen. Vollständige Anbieter-/Kostenmessung
+      ergänzen. Zwei Analysestufen sind ein bewusster Mehraufwand, keine Latenzverbesserung.
 - [ ] Die drei Dimensionen nachvollziehbar in Rollenverhalten und Termine einbinden (MI-04).
       Keine Umrechnung aus Offenheit und keine automatischen SOC-Schwellen. Aktuell wird
       Lukas' jeweils neue Antwort erst beim nächsten Analyseaufruf berücksichtigt; kein

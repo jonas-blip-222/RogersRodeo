@@ -1,8 +1,8 @@
 import Foundation
 
 public actor ConversationCoordinator {
-    public static let promptVersion = "0.4"
-    public static let rulesVersion = "0.3"
+    public static let promptVersion = "0.5"
+    public static let rulesVersion = "0.4"
     private let repository: any SessionRepository
     private let provider: any TrainerModelProvider
     private var generation: UUID?

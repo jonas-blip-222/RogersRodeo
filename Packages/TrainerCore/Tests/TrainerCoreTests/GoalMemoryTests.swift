@@ -259,3 +259,29 @@ private actor MemoryWindowProvider: TrainerModelProvider {
     #expect(memory.goals.isEmpty && memory.omittedGoalCount == 1)
     #expect(memory.messages == ContextBuilder.messages(s))
 }
+
+@Test func neuerZielvertragVerhindertParallelzielAusCharakterbeobachtung() throws {
+    var s = session(); try introduce(&s)
+    append(&s, "Ich nehme mein Ziel zurück.")
+    try apply(&s, [.init(kind: .withdrawn, previousGoal: ref(s.content.scenario.openingLine), evidence: ref(s.turns[1].reply.text, 4))])
+    append(&s, "Vielleicht möchte ich weniger trinken. Ich bin unsicher.")
+    let previous = s.state.development
+    let observation = CharacterObservation(dimension: .readiness, assessment: .unclear,
+        goal: ref("weniger trinken", 8), evidence: ref("Ich bin unsicher.", 8), isUncertain: true)
+    #expect(throws: TrainerFailure.invalidAnalysis) { try apply(&s, [], observations: [observation]) }
+    #expect(s.state.development == previous)
+    var anchored = observation; anchored.goal = ref(s.content.scenario.openingLine)
+    try apply(&s, [], observations: [anchored])
+    #expect(s.state.development?.goals.count == 1)
+    #expect(s.state.development?.goals[0].memory?.standing == .withdrawn)
+    #expect(s.state.development?.goals[0].readiness?.isUncertain == true)
+}
+
+@Test func zielausschnittDarfInnerhalbDesEreigniszitatsSpaeterBeginnen() throws {
+    var s = session(); try introduce(&s)
+    append(&s, "Ich ändere mein Ziel: vollständig auf Alkohol verzichten.")
+    try apply(&s, [.init(kind: .replaced, previousGoal: ref(s.content.scenario.openingLine),
+        currentGoal: ref("vollständig auf Alkohol verzichten", 4), evidence: ref(s.turns[1].reply.text, 4))])
+    #expect(s.state.development?.goals.count == 2)
+    #expect(s.state.development?.goals[0].memory?.standing == .replaced)
+}

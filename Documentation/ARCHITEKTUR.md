@@ -14,6 +14,28 @@ Der Coordinator verwendet deterministische Validatoren, StateReducer, ContextBui
 
 Die normale Oberfläche bekommt nur das gespeicherte Ergebnis. Ein Turn besteht aus Eingabe, Einordnung, geprüfter Antwort, Zuständen davor/danach, ausgewähltem Tipp und tatsächlichen Messwerten. Offenheit und verborgene Fakten werden nicht als Bewertungsdaten angezeigt oder exportiert.
 
+## Analyseadapter ab Prompt 0.5
+
+Der OpenRouter-Adapter teilt die logische Einordnung in zwei getrennte Modellaufrufe:
+Ziel-/Charakterbeobachtungen aus dem bisherigen Verlauf, danach Bewertung des aktuellen
+Beratungssatzes. Die erste Stufe erhält die aktuelle Eingabe nicht. Beide nutzen dieselben
+nummerierten Originalnachrichten; erst ihre geprüfte Zusammenführung wird als `TurnAnalysis`
+an den Coordinator geliefert. Ohne Wiederholung sind es damit zwei Analyseaufrufe plus eine
+Rollenantwort je Runde. Der höhere Aufwand ist eine bewusste Folge der Live-Befunde; Zeiten
+und Prüfgrenzen stehen im neuesten [STATUS.md](STATUS.md).
+
+Eine vollständig umschlossene einzelne JSON-Codehülle kann am Adapterrand entfernt werden.
+Es werden keine Inhalte, Zitate oder Referenzen repariert; der vollständige Inhalt durchläuft
+weiter die strikten Validatoren. Gedächtnis- und Beratungsschema bleiben getrennt. Neue
+Charakterbeobachtungen dürfen unter dem Zielvertrag keinen neuen Zielverlauf ohne Zielereignis
+anlegen. Alte optionale Daten bleiben lesbar; Fortsetzung nur mit passender Prompt-/Regelversion.
+
+Die atomare Turn-Transaktion bleibt unverändert. Die frühe Rückmeldung erscheint nach der
+geprüften logischen Einordnung und vor der Rollenantwort. Der Rollenprompt erhält weiterhin
+nur sein normales Kontextfenster und keine Zielhypothesen. Die gespeicherten Analysemetriken
+summieren die beiden erfolgreichen Teilaufrufe; fehlgeschlagene Versuche sind darin nicht
+vollständig enthalten und dürfen nicht als vollständige Kosten- oder Wartezeitmessung gelten.
+
 ## Ausführung und Persistenz
 
 1. Eingabe als PendingTurn mit UUID und erwarteter Revision sichern.

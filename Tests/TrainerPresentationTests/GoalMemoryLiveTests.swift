@@ -60,6 +60,9 @@ private struct GoalLiveStep: Codable {
     var checks: [String: Bool]
 }
 private struct GoalLiveReport: Codable {
+    var analysisTokens = OpenRouterConfiguration().analysisTokens
+    var analysisTokensRetry = OpenRouterConfiguration().analysisTokensRetry
+    var analysisReasoning = OpenRouterConfiguration().analysisReasoning
     var promptVersion = ConversationCoordinator.promptVersion
     var rulesVersion = ConversationCoordinator.rulesVersion
     var model = OpenRouterConfiguration().model
@@ -186,6 +189,9 @@ private struct GoalProbeResult: Codable {
     var checks: [String: Bool] = [:]
 }
 private struct GoalProbeReport: Codable {
+    var analysisTokens = OpenRouterConfiguration().analysisTokens
+    var analysisTokensRetry = OpenRouterConfiguration().analysisTokensRetry
+    var analysisReasoning = OpenRouterConfiguration().analysisReasoning
     var promptVersion = ConversationCoordinator.promptVersion
     var mode = "Einzelne Live-Analysen mit technisch gesetzten, belegten Vorzuständen; keine durchgehende Live-Entwicklung"
     var started = Date()

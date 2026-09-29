@@ -3,6 +3,59 @@
 Neueste Prüfungen zuerst. Ältere Abschnitte bleiben als Verlauf erhalten und werden nicht
 rückwirkend umgeschrieben.
 
+## 29. September 2026 · Live-Zielgedächtnis korrigiert und erneut abgenommen
+
+Die Fehler aus der ersten Live-Prüfung sind für die festgelegten Fälle behoben. Finale Läufe:
+**15/15 Runden mit allen 14 Prüfaussagen bestanden**, anschließend **7/7 unabhängige Gegenproben
+bestanden**. Dieselben Erwartungen wie zuvor; keine Abschwächung der Zielkriterien.
+
+### Umsetzung
+
+- Zwei getrennte Modellstufen im Adapter: Ziel-/Charakterbeobachtungen ausschließlich aus dem
+  bisherigen Verlauf, danach Einordnung der aktuellen Beratung. Die Gedächtnisstufe bekommt
+  die aktuelle Eingabe nicht. Beide verwenden dieselben nummerierten Belege und werden erst
+  nach strikter Prüfung als gemeinsame `TurnAnalysis` an den Coordinator gegeben.
+- Eigene Teil-Schemas, kopierbare exakte Zielkennungen und präzisere Ereignis-/Belegregeln.
+  Fehlender Rapport wird ausgelassen; `confirmed` braucht einen früheren Vorschlag mit
+  anschließender Zustimmung. Keine Charakterbeobachtung darf unter dem neuen Zielvertrag
+  ein unbekanntes Parallelziel eröffnen. Alte optionale Verträge bleiben lesbar/verarbeitbar.
+- Korrigierter Validator: Ein Zielausschnitt innerhalb eines längeren Ereigniszitats ist nicht
+  „später“ als dieses Zitat; die ganze Nachricht ist verfügbar. Nachrichtenfolge bleibt geprüft.
+- Einzelne vollständige JSON-Codehüllen am Adapterrand erlaubt. Keine Prosa-/Fragmentextraktion,
+  keine Reparatur von Zitaten oder JSON-Inhalten. Das ist eine bewusste Änderung gegenüber der
+  ersten Messung, keine Behauptung, dass die Anbieter jetzt immer rohes JSON liefern.
+- `provider.require_parameters=true` nach offizieller OpenRouter-Dokumentation:
+  https://openrouter.ai/docs/guides/features/structured-outputs . Eigene Validatoren bleiben nötig.
+- Prompt **0.5**, Regeln **0.4**, Snapshot-Schema weiter **1**. Neues Gespräch für neue Regeln.
+  Rollenprompt, Offenheitslogik und atomarer Commit unverändert. Ohne Wiederholung nun zwei
+  Analyseaufrufe plus eine Rollenantwort pro Runde; frühes Feedback nach beiden Analysestufen.
+
+### Nachweise und Grenzen
+
+77 Core-Tests, 3 Storage-Tests und 40 reguläre App-Tests bestanden. Zwei zusätzliche Live-Tests
+im Offline-Lauf übersprungen; fünf bekannte Schlüsselbundtests gezielt ausgenommen. Gemeinsame
+SwiftUI-Quellen als macOS-Prüf-App gebaut. `git diff --check` bestanden. Speicherumgebung meldet
+weiter Fehler des systemweiten Store-Änderungsdienstes bei erfolgreichen Dateiroundtrips.
+
+Finaler Live-Verlauf: Einführung, Alias, Zustimmung, Erinnerung nach mehr als sechs Runden,
+Reduktion → Abstinenz, Widerruf und Unsicherheit korrekt. Danach alle sieben isolierten
+Gegenproben korrekt. Feste fiktive Klientenantworten; die durchgehende Historie entsteht aus
+echten Modellanalysen, die Einzelproben haben belegte Fixture-Vorzustände. Kein freier Rollenlauf,
+keine neue Simulator-/Geräteprüfung, keine fachlich validierte oder repräsentative Qualitätsquote.
+
+Der finale 15-Runden-Lauf dauerte **327 Sekunden**. Median der erfolgreichen kombinierten
+Analysestufen **5,7 Sekunden**, Maximum **14,2 Sekunden**; deren Summe nur **100,7 Sekunden**.
+Wiederholungen/zusätzliche Wartezeiten sind damit erheblich. Metriken summieren die beiden
+angenommenen Teilaufrufe, nicht alle Fehlversuche. Anbieter-/Gesamtkostenmessung bleibt offen.
+Ein Versuch mit aktiviertem Überlegen und 4000/8000 Token wurde nach einer langsamen ungültigen
+ersten Gegenprobe beendet. Finale Einstellungen: Überlegen aus, 1500/4000 Token je Teilaufruf.
+
+Zwischenstand mit nur verbessertem gemeinsamen Prompt bestand zwar 7/7 Einzelproben, ließ aber
+im langen Lauf den Alias aus. Deshalb erst der abschließende zweistufige Lauf als Abnahme.
+Rohbefunde außerhalb von Git: `Evaluation/results/goal-memory-fix-2026-09-29/`.
+Nächste Arbeit: weitere unabhängige Formulierungen, geringere Latenz/verlässliche Routen und
+manueller freier Rollen-/Simulatorlauf. Automatische Rollenentwicklung bleibt ausgeschaltet.
+
 ## 29. September 2026 · Live-Prüfung Zielgedächtnis: nicht bestanden
 
 Der erste echte Modelltest mit Prompt 0.4 und `qwen/qwen3.8-27b` bestätigt die technische

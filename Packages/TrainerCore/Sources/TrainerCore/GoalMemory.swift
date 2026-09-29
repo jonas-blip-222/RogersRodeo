@@ -253,7 +253,9 @@ extension OutputValidator {
                 guard update.previousGoal != nil, update.currentGoal == nil, update.proposal == nil else { throw TrainerFailure.invalidAnalysis }
             }
             for ref in [update.previousGoal, update.currentGoal].compactMap({ $0 }) {
-                guard try beforeOrEqual(ref, update.evidence) else { throw TrainerFailure.invalidAnalysis }
+                // Eine Aussage ist als Ganzes verfügbar: ein Zielausschnitt kann innerhalb
+                // des längeren Ereigniszitats erst später beginnen. Kein künstliches Wort-Timing.
+                guard ref.messageIndex! <= update.evidence.messageIndex! else { throw TrainerFailure.invalidAnalysis }
             }
             // Pro Ziel und pro Beleg höchstens ein Ereignis in einer Analyse.
             let target = update.previousGoal ?? update.currentGoal

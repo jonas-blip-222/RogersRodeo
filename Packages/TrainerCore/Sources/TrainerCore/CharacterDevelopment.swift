@@ -119,7 +119,10 @@ public enum CharacterTracker {
                 let index: Int
                 if let existing = GoalTracker.index(for: goal, in: next.goals) { index = existing }
                 else {
-                    // Verschiedene Ziele nicht anhand ähnlicher Wörter zusammenlegen.
+                    // Im Zielgedächtnis-Vertrag entstehen Ziele ausschließlich durch belegte
+                    // Zielereignisse. Eine Beobachtung darf keinen Parallelverlauf eröffnen.
+                    // nil bewahrt die Lesbarkeit/Verarbeitung älterer Analysen ohne Zielvertrag.
+                    guard analysis.goalUpdates == nil else { throw TrainerFailure.invalidAnalysis }
                     next.goals.append(.init(goal: goal)); index = next.goals.count - 1
                 }
                 if observation.dimension == .readiness {
