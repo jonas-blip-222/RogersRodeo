@@ -42,6 +42,10 @@ struct ConversationView: View {
         }
     }
 
+    private var canSend: Bool {
+        !model.busy && !model.input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
     private var composer: some View {
         VStack(alignment: .leading, spacing: 10) {
             if let error = model.errorMessage {
@@ -76,13 +80,21 @@ struct ConversationView: View {
                         .focused($composing).disabled(model.busy)
                         .accessibilityIdentifier("conversation.input")
                         .onChange(of: model.input) { _, new in if new.count > 1500 { model.input = String(new.prefix(1500)) } }
+                        // Eingabetaste sendet, Umschalt+Eingabe bleibt der Zeilenumbruch.
+                        // Ohne das fügt ein mehrzeiliges Feld bei Eingabe nur eine Zeile ein.
+                        .onKeyPress(phases: .down) { press in
+                            guard press.key == .return, !press.modifiers.contains(.shift), canSend else { return .ignored }
+                            composing = false
+                            model.send()
+                            return .handled
+                        }
                     if model.busy {
                         Button("Abbrechen", systemImage: "stop.fill") { Task { await model.cancel() } }
                             .labelStyle(.iconOnly).buttonStyle(.bordered).controlSize(.large)
                     } else {
                         Button("Senden", systemImage: "arrow.up") { composing = false; model.send() }
                             .labelStyle(.iconOnly).buttonStyle(.borderedProminent).controlSize(.large)
-                            .disabled(model.input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                            .disabled(!canSend)
                             .accessibilityIdentifier("conversation.send")
                     }
                 }
