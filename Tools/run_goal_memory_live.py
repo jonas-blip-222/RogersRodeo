@@ -13,6 +13,8 @@ import subprocess
 import sys
 import uuid
 
+from model_trace import execute_run
+
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -46,9 +48,11 @@ def main():
                '--security-path', '/private/tmp/rr-goal-security', '--filter', test]
     print(f'Live-Test {args.mode}; fiktive Daten werden an OpenRouter gesendet. Ergebnis: {report}', flush=True)
     with (directory / 'build-and-test.log').open('w') as log:
-        result = subprocess.run(command, cwd=root, env=environment, stdout=log, stderr=subprocess.STDOUT, check=False)
-    print(f'Test beendet, Exitstatus {result.returncode}. Log und rohe Analyseantworten liegen im Ergebnisordner.')
-    return result.returncode
+        code = execute_run(command, directory / 'model-calls.jsonl', cwd=root, environment=environment,
+                           stdout=log, stderr=subprocess.STDOUT)
+    print(f'Test beendet, Exitstatus {code}. Messspur: {directory / "model-calls.jsonl"}')
+    print('Offline auswerten: python3 Tools/model_trace.py summarize <Ergebnisordner>/model-calls.jsonl')
+    return code
 
 
 if __name__ == '__main__':

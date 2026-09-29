@@ -138,12 +138,21 @@ stattdessen zu tun ist, steht in Abschnitt 5. Siehe `ENTSCHEIDUNGEN.md`, E01 bis
       Systemdialog aus, der damit beim App-Start erscheint und den Main Actor blockiert. Besser
       erst beim Start einer Sitzung. Behelf bis dahin: Mac-App mit `OPENROUTER_API_KEY` starten
       oder im Dialog einmal „Immer erlauben" wählen. Auf iOS tritt das nicht auf.
-- [ ] **Tatsächlich abgerechnete Kosten erfassen.** Der Größenordnung nach ist der Rahmen
-      geschätzt (grob 0,4 Cent je Runde, siehe STATUS vom 29.09.2026), die Schätzung ist aber
-      keine Abrechnung. Es fehlen: `"usage": {"include": true}` im Anfragekörper, das Auswerten
-      der Antwort-`id` gegen den kostenlosen Generierungs-Endpunkt und die Metriken der
-      abgeschnittenen Versuche, die der Adapter derzeit verwirft. Ebenso ungenutzt bleibt das
-      bereits dekodierte Feld `provider` der Antwort, womit die Route je Aufruf unbekannt ist.
+- [x] **Messspur für jeden Modellaufruf, einschließlich Fehlversuchen.** Separate JSONL-Senke
+      über `RR_MODEL_TRACE_FILE`; keine Gesprächsinhalte oder Header. Stufe, beide
+      Wiederholungszähler, UTC-Start, monotone Dauer, HTTP-/Abschlussgrund, tatsächliche Route,
+      Generierungs-ID, gemeldete Token/Kosten und Leerraum-Zähler bleiben auch bei Abschneidung,
+      ungültiger zweiter Stufe und Abbruch erhalten. Offline-Auswertung: `Tools/model_trace.py`.
+      Alte `ModelCallMetrics`/Snapshots bleiben Erfolgsmetriken; für vollständige Messungen
+      die neue Messspur verwenden. Bedienung und Grenzen siehe neuesten Eintrag in STATUS.md.
+- [ ] **Kosten und Routenverträglichkeit live bestätigen.** `usage.include=true` wird gesendet;
+      Kombination mit `require_parameters`, `deny` und `ignore` nur offline am Anfragekörper
+      geprüft. Gemeldetes `usage.cost` ist USD, fehlende Angaben sind unbekannt, nicht null.
+      Kein automatischer Abruf des Generierungs-Endpunkts: IDs liegen für einen späteren
+      Abgleich vor. Der laut Auftrag gebührenfreie Endpunkt braucht zusätzliche Netzaufrufe;
+      Kosten nach Abbruch ohne Antwort-ID lassen sich damit nicht sicher rekonstruieren.
+      Kein neuer kostenpflichtiger Lauf in diesem Auftrag. Historische Preisüberschläge sind
+      weiterhin keine Abrechnung.
 - [ ] **Bis zu zwölf HTTP-Aufrufe je Runde.** Die Schleife in `OpenRouterModelProvider.call`
       sendet jede Stufe zweimal (normales und erhöhtes Budget), `analyze` hat zwei Stufen, und
       der `ConversationCoordinator` wiederholt sowohl `analyze` als auch `reply` je einmal
@@ -222,9 +231,14 @@ stattdessen zu tun ist, steht in Abschnitt 5. Siehe `ENTSCHEIDUNGEN.md`, E01 bis
       zeigt bei sauberem Verlauf ebenfalls 40,2 von 161 Sekunden (25 %) unerfasst, gegen
       226,3 von 327 Sekunden (69 %) im auffälligen Lauf.
 
-      *Voraussetzung für jede künftige Messung:* Die Metriken der abgeschnittenen Versuche
-      werden vom Adapter weiterhin verworfen (siehe Punkt „Tatsächlich abgerechnete Kosten
-      erfassen"). Solange das so ist, zeigt jeder Lauf wieder eine unerklärte Lücke.
+      *Voraussetzung für jede künftige Messung, jetzt implementiert:* Der Live-Starter
+      erzeugt zusätzlich `model-calls.jsonl` und den Prozessrahmen `.run.json`. Darin werden
+      auch abgeschnittene Versuche gezählt. `Tools/model_trace.py summarize <Datei>` zeigt
+      Anbieter, Ausgänge, Wiederholungen, Zeitabdeckung und bekannte/unbekannte Kosten.
+      Leerraumverdacht wird als Heuristik markiert (längste Folge mindestens 128 Unicode-
+      Leerraumzeichen bei `length/error`); die Zähler erlauben spätere andere Schwellen.
+      Keine neue Stopsequenz, kein Streaming, kein weiterer Anbieterausschluss und keine
+      Budgetänderung. Null beobachtete Fälle bei einer Route sind kein Zuverlässigkeitsbeweis.
 
 - [ ] **Zweiter Analysefehlschlag bricht die Runde ab — Produktfrage, bewusst unverändert.**
       Geprüft am 29.09.2026. `ConversationCoordinator.send` fängt `invalidAnalysis` nur bei
