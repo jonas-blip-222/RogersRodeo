@@ -77,10 +77,25 @@ auch an Anbieter, die übermittelte Daten speichern oder für eigenes Training v
 Äußerungen der übenden Person sind ihr eigenes Übungsmaterial, keine Klientendaten. Funktionalität
 und Antwortqualität haben nach Jonas' Abwägung Vorrang vor der strengeren Einstellung.
 
-**Auslösender Befund.** Mit der Beschränkung bediente durchgängig nur ein einziger Anbieter die
-Anfragen (Reka). Der Auswertungslauf blieb nach 13 von 28 Aufrufen stehen. Ein einzelner
-zulässiger Anbieter bedeutet keine Ausweichmöglichkeit; die Beschränkung war damit die
-wahrscheinliche Ursache des Stillstands. Ob das tatsächlich der Grund war, ist noch nicht belegt.
+**Auslösender Befund — am 29.09.2026 als falsch widerlegt.** Ursprünglich wurde angenommen, die
+Beschränkung lasse nur einen einzigen Anbieter zu (Reka) und sei deshalb die Ursache dafür, dass
+der Auswertungslauf nach 13 von 28 Aufrufen stehen blieb. Die Messung widerlegt beides:
+
+- Die Beschränkung hat **nie** auf einen Anbieter verengt. Auch mit `deny` wurden acht
+  verschiedene Anbieter bedient.
+- Der Stillstand hatte eine ganz andere Ursache: `urlopen(timeout=…)` wirkt in Python je
+  Socket-Operation und nicht als Gesamtfrist. Der Prozess hing ohne CPU-Last in `read()` bei
+  offener Verbindung. Behoben durch eine harte Gesamtfrist von 150 Sekunden in einem Wachfaden.
+- Das Aufheben der Beschränkung hat die Lage **nicht** verbessert: bei `max_tokens: 768` waren
+  7 von 16 Antworten mit Beschränkung lesbar und 0 von 12 ohne. Entscheidend war das
+  Tokenbudget, weil das Modell als Reasoning-Modell 344 bis 3742 Token für interne Überlegungen
+  verbraucht und danach kein Budget für das JSON übrig hat.
+
+**Die Entscheidung selbst bleibt damit gültig, ihre Begründung schrumpft aber.** Tragend ist allein
+Jonas' Abwägung: fiktives Übungsmaterial, Vorrang für Funktionalität und Antwortqualität. Der
+technische Anlass ist entfallen — die Beschränkung hätte den Stillstand nicht verursacht und ihre
+Aufhebung hat ihn nicht behoben. Jonas kann die Entscheidung auf dieser korrigierten Grundlage
+jederzeit zurücknehmen, ohne dafür einen technischen Preis zu zahlen.
 
 **Was das ersetzt.** Den Punkt „Nur Anbieterrouten ohne Datenspeicherung verwenden" aus den
 offenen Folgen von E01.
@@ -91,7 +106,39 @@ Sobald Kolleg:innen mitüben, sind es deren Äußerungen, und eine Beratungsübu
 echtes Fallmaterial einzutippen. Die Abwägung ist dann erneut zu treffen, und ein Hinweis in der
 App bleibt vorgesehen.
 
-**Folge für die Umsetzung.** Der Swift-Adapter braucht unabhängig davon Zeitüberschreitung,
+**Folge für die Umsetzung.** Der Swift-Adapter braucht unabhängig davon eine echte Gesamtfrist,
 begrenzte Wiederholungen und eine verständliche Fehlermeldung statt einer hängenden Oberfläche.
-Der tatsächlich verwendete Anbieter wird je Aufruf protokolliert, weil Struktur- und Zitattreue
-zwischen Anbietern abweichen können.
+Der tatsächlich verwendete Anbieter wird je Aufruf protokolliert: gemessen am 29.09.2026 lieferten
+Wafer (0 von 6), Mancer 2 (0 von 3) und Parasail (0 von 2) keine verwertbare Antwort, während
+Phala, Ionstream, Darkbloom, Cloudflare, DeepInfra, Chutes, Venice, AkashML und Reka sauber
+lieferten. Die Anbieterwahl ist damit kein Randthema, sondern bestimmt die Ausfallquote. Siehe E03.
+
+## E03 · Tokenbudget und Anbieterwahl aus der Messung ableiten
+
+**Datum:** 29.09.2026 · **Grundlage:** eigene Messung, 56 Aufrufe · **Status:** Befund, technische
+Folge noch nicht implementiert
+
+Die Startwerte des Bauplans für die reservierte Ausgabe — 768 Token für die segmentierte
+Einordnung, 384 für die Figurenantwort — sind für dieses Modell zu niedrig. Der Bauplan hatte sie
+ausdrücklich als zu messende Startwerte gekennzeichnet; das ist hiermit geschehen.
+
+**Messergebnis.** Mit `max_tokens: 768` waren 7 von 28 Aufrufen als JSON lesbar, mit 4000 waren es
+17 von 28. Ursache ist nicht die Länge der Analyse, sondern das interne Überlegen des Modells: 344
+bis 3742 Token gehen dafür weg, bevor das JSON beginnt. Bei zu kleinem Budget endet der Aufruf mit
+`finish_reason=length` und **leerem** Inhalt — also HTTP 200 ohne jede Analyse.
+
+**Was daraus für den Adapter folgt.**
+
+- Das Ausgabebudget deutlich höher ansetzen als im Bauplan, oder das Überlegen des Modells
+  begrenzen. Reasoning-Token werden als Ausgabe abgerechnet und kosten beim gewählten Modell
+  3,00 USD je Million; die Kostenschätzung aus E01 ist damit zu niedrig.
+- Abschneidung ist ein eigener, wiederholbarer Fehlerfall und darf nicht als ungültige Analyse
+  behandelt werden. Der vorhandene Weg über `TrainerFailure.invalidAnalysis` mit einem
+  Wiederholungsversuch passt dafür nur, wenn die Wiederholung das Budget erhöht.
+- Anbieter, die nichts Verwertbares liefern, gezielt ausschließen.
+
+**Nicht belegt.** Bei `temperature: 0` war die Ausgabe **nicht** stabil: nur 9 von 14 Fällen waren
+über zwei Läufe wortgleich. Auf Determinismus darf kein Zwischenspeicher und keine
+Wiederholungslogik aufgebaut werden.
+
+**Tatsächliche Kosten der Messung:** 0,25 USD für 56 Aufrufe.
