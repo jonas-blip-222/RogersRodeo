@@ -32,6 +32,7 @@ import argparse
 import getpass
 import json
 import os
+import statistics
 import subprocess
 import sys
 import threading
@@ -560,7 +561,8 @@ def nutzernachricht(fall: dict[str, Any]) -> str:
 
 def anfrage_koerper(fall: dict[str, Any], leitfaden: str,
                     max_tokens: int = MAX_TOKENS,
-                    ignorieren: list[str] | None = None) -> dict[str, Any]:
+                    ignorieren: list[str] | None = None,
+                    ueberlegen: bool | None = None) -> dict[str, Any]:
     koerper: dict[str, Any] = {
         "model": MODELL,
         "messages": [
@@ -585,6 +587,15 @@ def anfrage_koerper(fall: dict[str, Any], leitfaden: str,
         # E01 ist entsprechend zu aktualisieren, falls die Aufhebung auch fuer die
         # App gelten soll - das ist Jonas' Entscheidung, nicht die dieses Skripts.
     }
+    if ueberlegen is not None:
+        # Internes Ueberlegen des Modells ("reasoning"). Bewusst wortgleich mit dem
+        # Swift-Adapter: OpenRouterSchema.body in
+        # Beratungstrainer/Services/Models/OpenRouterModelProvider.swift setzt
+        # `fields["reasoning"] = .object(["enabled": .bool(reasoning)])`, und nur bei
+        # `nil` wird das Feld gar nicht gesendet. Wuerde hier eine andere Form stehen
+        # (etwa `reasoning.effort` oder `reasoning.exclude`), misse diese Reihe etwas
+        # anderes als die App spaeter tut.
+        koerper["reasoning"] = {"enabled": bool(ueberlegen)}
     if ignorieren:
         # Bewusst `ignore` und nicht `only`: eine Ausschlussliste laesst die
         # uebrigen Endpunkte als Ausweichweg offen und entspricht damit dem,
@@ -716,6 +727,36 @@ def steuerung_aus(anfrage: dict[str, Any]) -> str | None:
     return json.dumps(p, ensure_ascii=False)
 
 
+def ueberlegen_aus(anfrage: dict[str, Any]) -> str:
+    """Beschreibt die im Aufruf gesendete Einstellung zum internen Ueberlegen."""
+    r = anfrage.get("reasoning")
+    if not isinstance(r, dict):
+        return "Feld nicht gesendet (Anbietervorgabe)"
+    return "reasoning.enabled=" + ("true" if r.get("enabled") else "false")
+
+
+def verbrauch_aus(roh: dict[str, Any]) -> dict[str, int | None]:
+    """Liest Eingabe- und Ausgabetoken aus der Antwort; fehlende Werte bleiben None.
+
+    Ausgabetoken schliessen beim Reasoning-Modell die internen Ueberlegungen ein -
+    genau deshalb bestimmen sie zugleich Dauer und Kosten.
+    """
+    nutzung = ((roh.get("antwort") or {}).get("usage") or {}) if roh.get("ok") else {}
+    return {
+        "eingabetoken": nutzung.get("prompt_tokens"),
+        "ausgabetoken": nutzung.get("completion_tokens"),
+    }
+
+
+def kennzahlen(werte: list[float]) -> str:
+    """Median und Spanne, oder ein Strich. Kein Mittelwert: einzelne sehr langsame
+    Aufrufe verzerren ihn, und genau um die typische Wartezeit geht es hier."""
+    if not werte:
+        return "–"
+    return (f"Median {statistics.median(werte):.1f}, "
+            f"Spanne {min(werte):.1f}–{max(werte):.1f} (n={len(werte)})")
+
+
 def anbieter_aus(roh: dict[str, Any]) -> str | None:
     """Liest den tatsaechlich bedienenden Anbieter aus der Antwort."""
     if not roh.get("ok"):
@@ -783,8 +824,12 @@ def bericht_schreiben(ergebnisse: list[dict[str, Any]], laeufe: int, pfad: Path,
     z.append("# Modell-Auswertung: MI-Einordnung über OpenRouter")
     z.append("")
     z.append(f"Modell: `{MODELL}` · Endpunkt: `{ENDPUNKT}`")
+    gesendete_ueberlegung = sorted(
+        {l.get("ueberlegen") or "unbekannt" for e in ergebnisse for l in e["laeufe"]}
+    ) or ["unbekannt"]
     z.append(f"Erstellt: {time.strftime('%d.%m.%Y %H:%M')} · Läufe je Fall: {laeufe} · "
-             f"`max_tokens`: {max_tokens} · `temperature`: 0")
+             f"`max_tokens`: {max_tokens} · `temperature`: 0 · internes Überlegen: "
+             + ", ".join(gesendete_ueberlegung))
     z.append("")
     z.append(
         "Gemessen wird ausschließlich, was mechanisch prüfbar ist: Schemagültigkeit, "
@@ -922,6 +967,60 @@ def bericht_schreiben(ergebnisse: list[dict[str, Any]], laeufe: int, pfad: Path,
             f"Spanne {min(abdeckungen):.0%}–{max(abdeckungen):.0%} (technische Kennzahl, kein Gütemaß)"
         )
     z.append(f"- Beide Läufe wortgleich: {quote(identisch_anzahl, identisch_vergleichbar)}")
+    z.append("")
+
+    # ---- Antwortzeit und Ausgabetoken ----
+    z.append("### Antwortzeit und Ausgabetoken")
+    z.append("")
+    z.append(
+        "Die Zeiten sind Netzlaufzeiten vom Mac aus, gemessen vom Absenden bis zur "
+        "vollständig gelesenen Antwort. Sie enthalten Warteschlange und Übertragung und "
+        "sind deshalb keine reine Modellzeit; für die Frage, wie lange Jonas wartet, ist "
+        "genau das aber die richtige Größe. Angegeben sind Median und Spanne, kein "
+        "Mittelwert: einzelne sehr langsame Aufrufe verzerren ihn. Ausgabetoken schließen "
+        "beim Reasoning-Modell die internen Überlegungen ein und bestimmen die Kosten "
+        "(3,00 USD je Million)."
+    )
+    z.append("")
+    alle = [l for e in ergebnisse for l in e["laeufe"]]
+    zeiten_alle = [float(l["dauer_s"]) for l in alle if l.get("dauer_s") is not None]
+    zeiten_ok = [float(l["dauer_s"]) for l in alle
+                 if l.get("dauer_s") is not None and l.get("pruefung")
+                 and l["pruefung"].gueltig]
+    token_alle = [float(l["ausgabetoken"]) for l in alle if l.get("ausgabetoken") is not None]
+    token_ok = [float(l["ausgabetoken"]) for l in alle
+                if l.get("ausgabetoken") is not None and l.get("pruefung")
+                and l["pruefung"].gueltig]
+    eingabe_alle = [float(l["eingabetoken"]) for l in alle if l.get("eingabetoken") is not None]
+    z.append(f"- Antwortzeit in Sekunden, alle Aufrufe: {kennzahlen(zeiten_alle)}")
+    z.append(f"- Antwortzeit in Sekunden, nur von der App akzeptierte Aufrufe: {kennzahlen(zeiten_ok)}")
+    z.append(f"- Ausgabetoken, alle Aufrufe: {kennzahlen(token_alle)}")
+    z.append(f"- Ausgabetoken, nur akzeptierte Aufrufe: {kennzahlen(token_ok)}")
+    z.append(f"- Eingabetoken: {kennzahlen(eingabe_alle)}")
+    if token_alle:
+        kosten = (sum(eingabe_alle) * 0.42 + sum(token_alle) * 3.00) / 1_000_000
+        z.append(
+            f"- Rechnerische Modellkosten dieser Reihe: {kosten:.4f} USD "
+            f"({sum(eingabe_alle):.0f} Eingabe-, {sum(token_alle):.0f} Ausgabetoken zu "
+            "den Listenpreisen aus E01). Nicht die abgerechnete Summe."
+        )
+    z.append("")
+    ueberl = sorted({l.get("ueberlegen") or "unbekannt" for l in alle})
+    z.append("Einstellung zum internen Überlegen in dieser Reihe: "
+             + ", ".join(f"`{u}`" for u in ueberl)
+             + (" — **uneinheitlich, die Reihe ist kein durchgehender Vergleich**"
+                if len(ueberl) > 1 else "."))
+    z.append("")
+    z.append("| Fall | Zeit je Lauf (s) | Ausgabetoken je Lauf |")
+    z.append("|---|---|---|")
+    for e in ergebnisse:
+        zt = ", ".join(
+            f"{l['dauer_s']:.1f}" if l.get("dauer_s") is not None else "?"
+            for l in e["laeufe"]) or "–"
+        tk = ", ".join(
+            str(l["ausgabetoken"]) if l.get("ausgabetoken") is not None else "?"
+            for l in e["laeufe"]) or "–"
+        z.append(f"| `{e['id']}` | {zt} | {tk} |")
     z.append("")
 
     # ---- Normalisierung: nfc gegen streng ----
@@ -1344,6 +1443,8 @@ def aus_rohdaten(faelle: list[dict[str, Any]], rohordner: Path,
                 "dauer_s": roh.get("dauer_s"),
                 "anbieter": anbieter_aus(roh),
                 "steuerung": steuerung_aus(gespeichert.get("anfrage", {})),
+                "ueberlegen": ueberlegen_aus(gespeichert.get("anfrage", {})),
+                **verbrauch_aus(roh),
             }
             if not roh.get("ok"):
                 le["fehler"] = roh.get("fehler")
@@ -1395,6 +1496,12 @@ def main() -> int:
              "ausgeschlossen werden",
     )
     parser.add_argument(
+        "--ueberlegen", choices=("an", "aus", "anbieter"), default="anbieter",
+        help="internes Ueberlegen des Modells: 'an' sendet reasoning.enabled=true, "
+             "'aus' sendet reasoning.enabled=false, 'anbieter' sendet das Feld gar "
+             "nicht (Vorgabe, so wurden die Reihen 1 bis 3 gemessen)",
+    )
+    parser.add_argument(
         "--ordner", type=str, default=None,
         help="Unterordner unter Evaluation/results für eine getrennt ausgewiesene Messreihe",
     )
@@ -1421,6 +1528,14 @@ def main() -> int:
         print(f"Bericht aus Rohdaten neu gebaut: {bericht_pfad}", file=sys.stderr)
         return 0
 
+    ueberlegen = {"an": True, "aus": False, "anbieter": None}[args.ueberlegen]
+    print(
+        "Internes Überlegen: "
+        + ("Feld nicht gesendet, Anbietervorgabe" if ueberlegen is None
+           else f"reasoning.enabled={'true' if ueberlegen else 'false'}"),
+        file=sys.stderr,
+    )
+
     ignoriert = [t.strip() for t in args.ignorieren.split(",") if t.strip()]
     if ignoriert:
         print(f"Ausgeschlossene Anbieter (provider.ignore): {', '.join(ignoriert)}",
@@ -1445,7 +1560,7 @@ def main() -> int:
             "laeufe": [],
             "identisch": False,
         }
-        koerper = anfrage_koerper(fall, leitfaden, args.max_tokens, ignoriert)
+        koerper = anfrage_koerper(fall, leitfaden, args.max_tokens, ignoriert, ueberlegen)
         for lauf in range(1, args.laeufe + 1):
             rohpfad = rohordner / f"{fall['id']}_lauf{lauf}.json"
             # Bereits vorhandene Antworten werden wiederverwendet, nicht erneut
@@ -1473,6 +1588,8 @@ def main() -> int:
                 "dauer_s": roh.get("dauer_s"),
                 "anbieter": anbieter_aus(roh),
                 "steuerung": steuerung_aus(gesendet),
+                "ueberlegen": ueberlegen_aus(gesendet),
+                **verbrauch_aus(roh),
             }
             if not roh.get("ok"):
                 lauf_eintrag["fehler"] = roh.get("fehler")
@@ -1528,6 +1645,7 @@ def main() -> int:
         json.dumps(
             {"modell": MODELL, "laeufe_je_fall": args.laeufe,
              "max_tokens": args.max_tokens,
+             "ueberlegen": args.ueberlegen,
              "zeitpunkt": time.strftime("%Y-%m-%dT%H:%M:%S"),
              "faelle": zusammenfassung},
             ensure_ascii=False, indent=2,

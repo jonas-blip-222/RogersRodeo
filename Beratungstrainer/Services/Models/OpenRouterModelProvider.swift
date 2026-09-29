@@ -65,10 +65,27 @@ enum JSONValue: Encodable, Sendable, Equatable {
 struct OpenRouterConfiguration: Sendable {
     var model = "qwen/qwen3.8-27b"
     var endpoint = URL(string: "https://openrouter.ai/api/v1/chat/completions")!
-    /// E03: 768 Token reichen für dieses Reasoning-Modell nicht; mit 4000 waren 17 von 28
-    /// Aufrufen lesbar. Bei Abschneidung wird einmalig auf den zweiten Wert erhöht.
-    var analysisTokens = 4000
-    var analysisTokensRetry = 8000
+    /// E03: Mit eingeschaltetem Überlegen reichten 768 Token nicht; deshalb standen hier
+    /// 4000 und 8000. Seit das Überlegen auch für die Einordnung abgeschaltet ist (siehe
+    /// `analysisReasoning`), ist das Budget deutlich kleiner: In der Messreihe vom
+    /// 29.09.2026 mit `reasoning.enabled=false` brauchte keine einzige angenommene
+    /// Einordnung mehr als 143 Ausgabetoken, der Median lag bei 94. Ein Budget von 768
+    /// genügte dort in 25 von 28 Aufrufen — genauso oft wie 4000 in derselben
+    /// Einstellung (24 von 28).
+    ///
+    /// Warum trotzdem 1500 und nicht 768: die 14 Messfälle erzeugten nur ein bis zwei
+    /// Segmente, `OutputValidator.locations` lässt aber zwölf zu. Gemessener
+    /// Höchstverbrauch je Segment war 109 Token; zwölf davon wären 1308. Das ist eine
+    /// Hochrechnung aus Messwerten, keine eigene Messung — eine lange Beratungsäußerung
+    /// mit vielen Segmenten wurde nicht geprüft.
+    ///
+    /// Das Budget ist zugleich die Obergrenze für den schlimmsten Fall. Bleibt das Modell
+    /// in einem Leerzeichenlauf hängen (siehe `OpenRouterOutcome.unusable`), füllt es das
+    /// Budget vollständig: mit 4000 dauerte das am 29.09.2026 bis zu 148 Sekunden, mit
+    /// 768 noch 18. Ein kleineres Budget kostet also nicht nur weniger, es begrenzt auch
+    /// die Wartezeit im Fehlerfall.
+    var analysisTokens = 1500
+    var analysisTokensRetry = 4000
     var replyTokens = 2000
     var replyTokensRetry = 4000
     /// E03: Die Einordnung wurde mit `temperature: 0` gemessen; dieser Wert bleibt.
@@ -78,12 +95,37 @@ struct OpenRouterConfiguration: Sendable {
     /// nichts aufgebaut werden.
     var replyTemperature = 0.8
     /// Internes Überlegen des Modells. `nil` sendet das Feld nicht und überlässt es dem
-    /// Anbieter — so wurde die Einordnung am 29.09.2026 gemessen, deshalb bleibt sie dabei.
-    /// Für die Rollenantwort ist es abgeschaltet: eigene Messung am 29.09.2026, vier Fälle
-    /// mit Überlegen brauchten 6,6 bis 64,5 Sekunden und 300 bis 1815 Ausgabetoken für
-    /// Antworten von 83 bis 271 Zeichen. Eine Figur, auf die man eine Minute wartet, ist
-    /// zum Üben unbrauchbar.
-    var analysisReasoning: Bool?
+    /// Anbieter; `false` sendet `reasoning: {"enabled": false}`.
+    ///
+    /// Für die Einordnung am 29.09.2026 abgeschaltet, nachdem es gegen die bisherige
+    /// Fassung gemessen wurde. Zwei Reihen, gleiche 14 Fälle, zwei Läufe je Fall,
+    /// derselbe Anbieterausschluss, `max_tokens: 4000`, `temperature: 0` — einziger
+    /// Unterschied war dieses Feld
+    /// (`Evaluation/results/reihe3-anbieter-gefiltert` gegen `.../reihe4-ohne-ueberlegen`):
+    ///
+    ///  | Kennzahl                        | Überlegen an | Überlegen aus |
+    ///  |---------------------------------|--------------|---------------|
+    ///  | Zitat-Treue `streng`            | 23/23        | 24/24         |
+    ///  | Belegprüfung `streng`           | 23/23        | 24/24         |
+    ///  | von `decodeAnalysis` angenommen | 23/28 (82 %) | 24/28 (86 %)  |
+    ///  | Antwortzeit angenommener Aufrufe| Median 19,9 s| Median 2,5 s  |
+    ///  | Ausgabetoken dieser Aufrufe     | Median 909   | Median 96     |
+    ///  | beide Läufe wortgleich          | 4/12 (33 %)  | 10/14 (71 %)  |
+    ///
+    /// Die Zitat-Treue, an der diese Entscheidung hing, ist also nicht eingebrochen,
+    /// sondern in beiden Vergleichsmodi weiterhin fehlerfrei. Die Einordnung wurde rund
+    /// achtmal schneller und knapp zehnmal billiger. Die vier nicht angenommenen Aufrufe
+    /// sind dieselbe Pathologie wie zuvor (gültiger JSON-Anfang, dann Leerzeichenlauf)
+    /// und treffen dieselben zwei Fälle, die auch mit Überlegen scheiterten.
+    ///
+    /// **Nicht gemessen** ist die fachliche Richtigkeit der Codes; sie beurteilt Jonas.
+    /// Auffällig und fachlich zu prüfen: die Unsicherheitsquote sank von 3/31 auf 2/32.
+    ///
+    /// Für die Rollenantwort war es schon vorher abgeschaltet: eigene Messung am
+    /// 29.09.2026, vier Fälle mit Überlegen brauchten 6,6 bis 64,5 Sekunden und 300 bis
+    /// 1815 Ausgabetoken für Antworten von 83 bis 271 Zeichen. Eine Figur, auf die man
+    /// eine Minute wartet, ist zum Üben unbrauchbar.
+    var analysisReasoning: Bool? = false
     var replyReasoning: Bool? = false
     /// Frist ohne Datenfluss.
     var idleSeconds: Double = 90
