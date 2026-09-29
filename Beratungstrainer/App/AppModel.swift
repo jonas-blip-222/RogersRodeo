@@ -3,11 +3,43 @@ import Observation
 import TrainerCore
 import TrainerStorage
 
+/// Reine Entscheidungslogik für den Anbieterwechsel: aus Schlüssellage und laufendem Betrieb
+/// ergibt sich, was zu tun ist. Ohne Oberfläche und ohne Netz prüfbar. Die Ausführung bleibt
+/// in `AppModel` und benutzt die vorhandene Maschinerie (`cancel()`, `close()`).
+struct ProviderChange: Equatable {
+    /// nil bedeutet: kein Wechsel nötig.
+    var switchesToDemo: Bool?
+    /// Eine laufende Operation muss zuerst über `AppModel.cancel()` beendet und abgewartet
+    /// werden. Mitten in einem Turn darf der Anbieter nie getauscht werden.
+    var cancelsRunningOperation = false
+    /// Eine offene Sitzung gehört zur alten Modellkennung und wird mit gesichertem Entwurf
+    /// geschlossen; fortsetzen ließe sie sich nach dem Wechsel ohnehin nicht.
+    var closesOpenSession = false
+    var changes: Bool { switchesToDemo != nil }
+
+    static func make(hasKey: Bool, usesDemoResponses: Bool,
+                     busy: Bool, hasSession: Bool) -> ProviderChange {
+        let target = !hasKey
+        guard target != usesDemoResponses else { return ProviderChange() }
+        return ProviderChange(switchesToDemo: target,
+                              cancelsRunningOperation: busy, closesOpenSession: hasSession)
+    }
+
+    /// Dieselbe Bedingung, die `ConversationCoordinator.send` prüft, nur früher gestellt.
+    /// Die Speicherlogik bleibt unberührt: eine Sitzung mit fremder Modellkennung ist und
+    /// bleibt nicht fortsetzbar.
+    static func mayContinue(_ session: SessionSnapshot, with current: ModelDescriptor) -> Bool {
+        session.status != .active || session.identity.model == current
+    }
+}
+
 @MainActor @Observable final class AppModel {
     let catalog: ContentCatalog
     let contentHash: String
     let repository: SwiftDataSessionRepository
-    let coordinator: ConversationCoordinator
+    /// Wird beim Wechsel der Antwortquelle ersetzt, deshalb `var`. Der Austausch findet
+    /// ausschließlich in `applyKeyChange()` und nur zwischen zwei Operationen statt.
+    private(set) var coordinator: ConversationCoordinator
     var history: [SessionSummary] = []
     var session: SessionSnapshot?
     var input = ""
@@ -19,9 +51,18 @@ import TrainerStorage
     var showFinishConfirmation = false
     var homePortrait: HomePortrait
     /// Wahr, solange kein OpenRouter-Schlüssel vorliegt und deshalb die festen Demo-Antworten
-    /// laufen. Der Hinweistext auf der Startseite muss sich danach richten; er behauptet
-    /// derzeit unbedingt „Demo mit festen Antworten" und ist mit echtem Modell falsch.
-    let usesDemoResponses: Bool
+    /// laufen. Der Hinweistext auf der Startseite richtet sich danach. Seit der
+    /// Einstellungsansicht kann sich der Wert zur Laufzeit ändern; die Oberfläche folgt ihm
+    /// über `@Observable`.
+    private(set) var usesDemoResponses: Bool
+    @ObservationIgnored private let modelSettings: OpenRouterConfiguration
+    /// Derselbe Anbieter, den auch der Coordinator benutzt. Hier zusätzlich gehalten, um ihn
+    /// beim Wechsel mit `unload()` zu entladen — damit der alte Schlüssel nicht im Speicher
+    /// eines nicht mehr benutzten Adapters liegen bleibt.
+    @ObservationIgnored private var provider: any TrainerModelProvider
+    /// Kennung des aktuellen Anbieters. Wird mit der gespeicherten Sitzungsidentität
+    /// verglichen, um beim Öffnen früh zu warnen.
+    @ObservationIgnored private var modelIdentity: ModelDescriptor
     @ObservationIgnored private let portraitRotation: HomePortraitRotation
     @ObservationIgnored private var wasInBackground = false
     @ObservationIgnored private var task: Task<Void, Never>?
@@ -51,12 +92,82 @@ import TrainerStorage
         // unterscheidbar: `usesDemoResponses` hier, die abweichende Modellkennung in der
         // Sitzungsidentität und der Demo-Hinweis im Rückblick.
         let settings = OpenRouterConfiguration()
-        usesDemoResponses = OpenRouterKey.lookup(service: settings.keychainService) == nil
-        let provider: any TrainerModelProvider = usesDemoResponses
-            ? DemoModelProvider()
-            : OpenRouterModelProvider(configuration: settings)
-        coordinator = ConversationCoordinator(repository: repository, provider: provider)
+        modelSettings = settings
+        let demo = OpenRouterKey.lookup(service: settings.keychainService) == nil
+        usesDemoResponses = demo
+        let built = Self.makeProvider(demo: demo, settings: settings)
+        provider = built.provider
+        modelIdentity = built.identity
+        coordinator = ConversationCoordinator(repository: repository, provider: built.provider)
         history = try repository.list()
+    }
+
+    private static func makeProvider(demo: Bool, settings: OpenRouterConfiguration)
+        -> (provider: any TrainerModelProvider, identity: ModelDescriptor) {
+        if demo { return (DemoModelProvider(), DemoModelProvider.identity) }
+        let adapter = OpenRouterModelProvider(configuration: settings)
+        // `descriptor()` ist nonisolated und deshalb ohne await lesbar.
+        return (adapter, adapter.descriptor())
+    }
+
+    // MARK: Zugangsschlüssel
+
+    /// Maskierte Anzeige des hinterlegten Schlüssels, sonst nil. Die Einstellungsansicht
+    /// bekommt den Schlüssel selbst nie zu sehen.
+    var storedKeyDisplay: String? { OpenRouterKey.storedDisplay(service: modelSettings.keychainService) }
+
+    /// Wahr, wenn der Schlüssel aus der Umgebungsvariablen stammt und nicht aus dem
+    /// Schlüsselbund. Kommt nur bei der Mac-Prüf-App vor, erklärt dort aber den sonst
+    /// widersprüchlichen Zustand „kein Eintrag, trotzdem kein Demo-Betrieb".
+    var usesEnvironmentKey: Bool {
+        OpenRouterKey.keychain(service: modelSettings.keychainService) == nil
+            && OpenRouterKey.lookup(service: modelSettings.keychainService) != nil
+    }
+
+    /// Prüft den eingegebenen Schlüssel mit einem echten, kostenlosen Aufruf und legt ihn
+    /// nur bei Erfolg im Schlüsselbund ab. Der Wert wird weder protokolliert noch in eine
+    /// Rückmeldung übernommen; er geht ausschließlich in den Authorization-Header und in
+    /// den Schlüsselbund.
+    func saveKey(_ value: String) async -> OpenRouterKeyOutcome {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return .missing }
+        let outcome = await OpenRouterKeyProbe.check(key: trimmed)
+        guard outcome.isSuccess else { return outcome }
+        guard OpenRouterKey.save(trimmed, service: modelSettings.keychainService) else { return .notStored }
+        await applyKeyChange()
+        return .accepted
+    }
+
+    /// Entfernt den Schlüssel und schaltet auf die Demo-Antworten zurück.
+    @discardableResult
+    func removeKey() async -> Bool {
+        let removed = OpenRouterKey.remove(service: modelSettings.keychainService)
+        await applyKeyChange()
+        return removed
+    }
+
+    /// Tauscht den Anbieter, wenn sich die Schlüssellage geändert hat.
+    ///
+    /// Der Tausch findet nie mitten in einer Operation statt: `cancel()` bricht eine
+    /// laufende Operation ab und wartet sie ab — danach ist `busy` falsch und der
+    /// Coordinator frei. Eine offene Sitzung wird über `close()` mit gesichertem Entwurf
+    /// geschlossen, weil sie zur alten Modellkennung gehört und nach dem Wechsel nicht mehr
+    /// fortsetzbar wäre. Erst danach werden Anbieter, Kennung und Coordinator ersetzt.
+    func applyKeyChange() async {
+        let hasKey = OpenRouterKey.lookup(service: modelSettings.keychainService) != nil
+        let plan = ProviderChange.make(hasKey: hasKey, usesDemoResponses: usesDemoResponses,
+                                       busy: busy, hasSession: session != nil)
+        guard let demo = plan.switchesToDemo else { return }
+        if plan.cancelsRunningOperation { await cancel() }
+        if plan.closesOpenSession { close() }
+        await provider.unload()
+        let built = Self.makeProvider(demo: demo, settings: modelSettings)
+        provider = built.provider
+        modelIdentity = built.identity
+        coordinator = ConversationCoordinator(repository: repository, provider: built.provider)
+        usesDemoResponses = demo
+        errorMessage = nil; maySkipAnalysis = false
+        refresh()
     }
 
     private func failure(_ error: Error) {
@@ -86,6 +197,13 @@ import TrainerStorage
             let pending = try repository.loadPending(sessionID: id)
             session = loaded; input = pending?.input ?? ""
             errorMessage = nil; maySkipAnalysis = false; showReview = loaded.status == .completed
+            // Gespeicherte Sitzungen tragen die Modellkennung in ihrer Identität. Nach einem
+            // Wechsel der Antwortquelle verweigert `ConversationCoordinator.send` das
+            // Fortsetzen mit `unsupportedVersion` — das ist gewollt und bleibt so. Der
+            // Hinweis steht hier, damit er vor dem Tippen kommt und nicht erst danach.
+            if !ProviderChange.mayContinue(loaded, with: modelIdentity) {
+                errorMessage = TrainerFailure.unsupportedVersion.errorDescription
+            }
         } catch { failure(error) }
     }
     func send(skipAnalysis: Bool = false) {
