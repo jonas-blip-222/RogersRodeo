@@ -697,17 +697,24 @@ enum OpenRouterResponse {
     /// Manche Routen liefern trotz JSON-Schema eine einzige Markdown-Hülle. Nur diese
     /// eindeutige Transporthülle entfernen; der Inhalt bleibt vollständig strikt geprüft.
     /// Kein Herausgreifen eines JSON-Fragments aus Prosa und keine Reparatur von Belegen.
-    static func analysisPayload(_ data: Data) throws -> Data {
-        guard let text = String(data: data, encoding: .utf8) else { throw TrainerFailure.invalidAnalysis }
+    ///
+    /// Gilt für beide Aufgaben. Die Hülle ist eine Eigenheit der Route, nicht der Aufgabe:
+    /// Dieselbe Route, die bei der Einordnung toleriert wurde, ließ die Figurenantwort
+    /// scheitern. `failure` unterscheidet nur, welcher Fehler nach außen geht — die
+    /// Oberfläche bietet bei der Einordnung zusätzlich „ohne Einordnung fortsetzen" an.
+    static func payload(_ data: Data, failure: TrainerFailure) throws -> Data {
+        guard let text = String(data: data, encoding: .utf8) else { throw failure }
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard trimmed.hasPrefix("```") else { return data }
-        guard trimmed.hasPrefix("```json\n"), trimmed.hasSuffix("\n```") else { throw TrainerFailure.invalidAnalysis }
+        guard trimmed.hasPrefix("```json\n"), trimmed.hasSuffix("\n```") else { throw failure }
         let body = String(trimmed.dropFirst(8).dropLast(4))
         guard !body.contains("```"), body.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("{") else {
-            throw TrainerFailure.invalidAnalysis
+            throw failure
         }
         return Data(body.utf8)
     }
+    static func analysisPayload(_ data: Data) throws -> Data { try payload(data, failure: .invalidAnalysis) }
+    static func replyPayload(_ data: Data) throws -> Data { try payload(data, failure: .invalidReply) }
     static func decodeMemory(_ data: Data, context: [DialogueMessage]) throws -> TurnAnalysis {
         do {
             guard var object = try JSONSerialization.jsonObject(with: analysisPayload(data)) as? [String: Any],
@@ -859,7 +866,10 @@ actor OpenRouterModelProvider: TrainerModelProvider {
             reasoning: configuration.replyReasoning,
             budget: configuration.replyTokens, retryBudget: configuration.replyTokensRetry,
             unusableFailure: .invalidReply)
-        let reply = try OutputValidator.decodeReply(data, visibleFacts: request.visibleFacts)
+        // Dieselbe Transporthülle wie bei der Einordnung entfernen; siehe
+        // `OpenRouterResponse.payload`. Vorher bekam `decodeReply` die Rohdaten.
+        let reply = try OutputValidator.decodeReply(OpenRouterResponse.replyPayload(data),
+                                                    visibleFacts: request.visibleFacts)
         return .init(value: reply, metrics: metrics, contextMessagesUsed: request.recentMessages)
     }
 

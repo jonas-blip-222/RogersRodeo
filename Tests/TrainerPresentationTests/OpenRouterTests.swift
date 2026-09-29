@@ -393,3 +393,27 @@ private func envelope(content: String?, finish: String?, refusal: String? = nil,
         #expect(throws: TrainerFailure.invalidAnalysis) { try OpenRouterResponse.decodeMemory(Data(text.utf8), context: []) }
     }
 }
+
+@Test func figurenantwortVertraegtDieselbeTransporthuelleWieDieEinordnung() throws {
+    // Vorher bekam `decodeReply` die Rohdaten: dieselbe Route, die bei der Einordnung
+    // toleriert wurde, ließ die Figurenantwort scheitern. Die Hülle ist eine Eigenheit
+    // der Route, nicht der Aufgabe.
+    let plain = #"{"text":"Na ja.","primaryTag":null,"disclosedFactIDs":[]}"#
+    #expect(try OpenRouterResponse.replyPayload(Data("```json\n\(plain)\n```".utf8)) == Data(plain.utf8))
+    #expect(try OpenRouterResponse.replyPayload(Data(plain.utf8)) == Data(plain.utf8))
+    // Der Fehlerfall bleibt aufgabenspezifisch: die Oberfläche bietet nur bei der
+    // Einordnung zusätzlich „ohne Einordnung fortsetzen" an.
+    for invalid in ["```json\n\(plain)\n``` Danach", "```\n\(plain)\n```", "```json\nkein Objekt\n```"] {
+        #expect(throws: TrainerFailure.invalidReply) { try OpenRouterResponse.replyPayload(Data(invalid.utf8)) }
+        #expect(throws: TrainerFailure.invalidAnalysis) { try OpenRouterResponse.analysisPayload(Data(invalid.utf8)) }
+    }
+    // Prosa vor der Hülle wird bewusst nicht ausgepackt: hier wird kein JSON-Fragment aus
+    // Text herausgegriffen. Die Rohdaten gehen unverändert weiter und scheitern erst an der
+    // strikten Prüfung — bei Analyse und Figurenantwort gleichermaßen.
+    let prosa = Data("Hier: ```json\n\(plain)\n```".utf8)
+    #expect(try OpenRouterResponse.replyPayload(prosa) == prosa)
+    #expect(try OpenRouterResponse.analysisPayload(prosa) == prosa)
+    #expect(throws: TrainerFailure.invalidReply) {
+        try OutputValidator.decodeReply(OpenRouterResponse.replyPayload(prosa), visibleFacts: [])
+    }
+}

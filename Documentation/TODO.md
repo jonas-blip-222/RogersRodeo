@@ -156,11 +156,11 @@ stattdessen zu tun ist, steht in Abschnitt 5. Siehe `ENTSCHEIDUNGEN.md`, E01 bis
 - [ ] **Einmaligen Disclaimer bauen (E07).** Datenverarbeitung und die pädagogische
       Vereinfachung der Szenarien, zu bestätigen vor der ersten Benutzung. Text noch nicht
       geschrieben und nicht fachlich abgenommen.
-- [ ] **Markdown-Hülle inkonsistent behandelt.** `analyze` schickt die Antwort durch
-      `OpenRouterResponse.analysisPayload` und entfernt damit eine einzelne Markdown-Codehülle;
-      `reply` gibt die Daten unverändert an `OutputValidator.decodeReply`. Dieselbe Route, die
-      bei der Analyse toleriert wird, lässt die Figurenantwort scheitern. Entweder beide Wege
-      gleich behandeln oder die Ungleichbehandlung begründen.
+- [x] **Markdown-Hülle inkonsistent behandelt.** Vereinheitlicht: `OpenRouterResponse.payload`
+      entfernt die einzelne Transporthülle für beide Wege; `analysisPayload` und der neue
+      `replyPayload` unterscheiden nur noch, welcher `TrainerFailure` nach außen geht.
+      Unverändert bleibt die enge Auslegung: kein Herausgreifen eines JSON-Fragments aus
+      Prosa und keine Reparatur von Inhalten.
 - [ ] **Der gesamte Vorschlagspfad ist tot.** `Beratungstrainer/App/ContentCatalog.swift` erzwingt
       beim Laden `catalog.tips.isEmpty`; ein Katalog mit Tipps wird als ungültiges Artefakt
       abgelehnt. `TipSelector.select` im `ConversationCoordinator` bekommt damit dauerhaft eine
