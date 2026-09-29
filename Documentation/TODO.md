@@ -29,6 +29,9 @@ MI-03 bleibt teilweise offen. Der Sitzungsrahmen ist dokumentiert, noch nicht in
       auch innerhalb desselben Beitrags. Neun Lagen je Ratschlagssegment, Modell entscheidet
       semantisch mit Belegen, Validator prüft Herkunft, Sprecher, Reihenfolge, Zitate und die
       Wiederverwendung der Zustimmung. Prompt 0.6, Regeln 0.5, Bausteine 0.3.
+- [x] Erlaubnisablauf über Coordinator und SwiftData geprüft: Antwortfehler, PendingTurn,
+      erneutes Öffnen des Speichers, Verbrauch, erneute Zustimmung und echtes gekürztes
+      Kontextfenster. Kontrollierte Antworten; keine Live-/Geräteprüfung (30.09.2026).
 - [ ] **Zweiter Schritt der Erlaubnis:** dauerhaftes, belegtes Erlaubnisgedächtnis über das
       Kontextfenster hinaus, nach dem Vorbild des Zielgedächtnisses mit sitzungsstabiler
       Herkunft im `SimulationState`. Heute arbeitet die Einordnung nur auf dem tatsächlich

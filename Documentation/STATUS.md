@@ -3,6 +3,43 @@
 Neueste Prüfungen zuerst. Ältere Abschnitte bleiben als Verlauf erhalten und werden nicht
 rückwirkend umgeschrieben.
 
+## 30. September 2026 · Erlaubnisablauf mit Speicherneustart geprüft
+
+Auf Basis `2e71356` wurde die bislang fehlende Verknüpfung von Erlaubnisanalyse,
+ConversationCoordinator und echtem SwiftData-Speicher mit kontrollierten fiktiven
+Modellantworten getestet. Es waren keine Änderungen am Anwendungscode erforderlich.
+Neue Tests: `Packages/TrainerStorage/Tests/TrainerStorageTests/PermissionFlowTests.swift`.
+
+Der erste Test durchläuft fünf abgeschlossene Runden: Erlaubnisfrage → ein Ratschlag →
+zweiter Ratschlag mit verbrauchter Zustimmung → neue Frage → Rat nach neuer Zustimmung.
+Dazwischen werden Repository und Coordinator freigegeben und gegen dieselbe Store-Datei
+neu erzeugt. Eine absichtlich ungültige Figurenantwort vor dem ersten Rat darf keinen
+halben Turn speichern; PendingTurn bleibt über das erneute Öffnen erhalten und wird bei
+erfolgreicher Wiederholung mit derselben Kennung abgeschlossen. Gespeicherte Analyse,
+Erlaubnisbelege und Rückmeldungen bleiben exakt erhalten. Der identische Commit ist
+idempotent, nachträglich veränderte Erlaubnisdaten werden abgewiesen. Die frühe Rückmeldung
+kommt vor der Figurenantwort. Der Prüfanbieter führt kein eigenes Erlaubnisgedächtnis.
+
+Der zweite Test nutzt das wirkliche Sechs-Runden-Kontextfenster. Dieselbe sicher vorgegebene
+Modelleinschätzung „nicht eingeholt“ ergibt bei vollständig bekanntem Gespräch eine sichere
+Warnung, nach sieben Runden mit ausgelassenem Kontext dagegen nur einen möglichen Befund.
+Die Testantworten sind vorgegeben; damit wird weiterhin keine semantische Modellqualität
+behauptet. Auch ein neuer Prozess oder ein Start auf dem iPhone wurde nicht simuliert.
+
+Ausgeführte Prüfungen: TrainerStorage **5 Tests**, TrainerCore **100 Tests**, `swift build`:
+alle Exit 0. Volle Logs und direkt erfasste Exitcodes unter
+`/private/tmp/rr-codex-permission-flow-7vh2ztch/` (`storage-2.log`, `result-2.json`,
+`core.log`, `build.log`, `checks.json`). Der erste Versuch scheiterte an verschachtelten
+Testmakros im neuen Testcode; nach deren Korrektur bestand der vollständige Speichertestlauf.
+`RR_RUN_GOAL_LIVE` und `RR_MODEL_TRACE_FILE` waren entfernt; kein Keychain-/Netzzugriff
+durch diese Prüfungen. App- und iOS-Buildnachweise des vorigen Schritts gelten unverändert
+für den Anwendungscode; sie wurden hier nicht erneut als neue Läufe ausgegeben.
+
+Jonas hat die vorgelegte Rollenprobe ausdrücklich akzeptiert. Seine Bemerkung zum etwas
+ungewöhnlichen Satz „Können wir nicht einfach über meinen Konsum reden?“ ist keine
+Änderungsanforderung. Rollenprompt und Rollenverhalten bleiben deshalb unverändert.
+Kein Push, kein Merge ins Hauptrepo; ein dauerhaftes Erlaubnisgedächtnis bleibt offen.
+
 ## 30. September 2026 · Unabhängige Abnahme des begrenzten Erlaubnisschritts
 
 Codex hat Claudes Commit `ea4c178` in den eigenen Prüf-Worktree übernommen
