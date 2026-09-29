@@ -7,7 +7,9 @@ eingeführt wird; deshalb steht er hier.
 
 ## E01 · Cloud-Inferenz über OpenRouter statt lokaler Modellausführung
 
-**Datum:** 29.09.2026 · **Entschieden von:** Jonas · **Status:** beschlossen, Umsetzung offen
+**Datum:** 29.09.2026 · **Entschieden von:** Jonas · **Status:** beschlossen und umgesetzt; der
+Adapter `Beratungstrainer/Services/Models/OpenRouterModelProvider.swift` ist gebaut und in
+`AppModel` verdrahtet. Einzelne Folgen unten bleiben offen.
 
 Die App führt ihre Modellaufrufe über die OpenRouter-API aus. Lokale Inferenz über MLX entfällt
 als Weg für die Kernfunktion.
@@ -51,14 +53,16 @@ einer verteilten App ist nicht geheim.
 
 **Offene Folgen, noch nicht erledigt.**
 
-- README, `Documentation/ARCHITEKTUR.md` und die Oberfläche behaupten derzeit ausschließlich
-  lokale Verarbeitung. Diese Aussagen müssen angepasst werden, bevor die Cloud-Anbindung
-  benutzbar ist. Eine App, die Text an einen Dienst sendet, darf nicht weiter „vollständig lokal"
-  versprechen.
+- README und `Documentation/ARCHITEKTUR.md` sind am 29.09.2026 angepasst und benennen jetzt
+  ausdrücklich, dass eingegebener Text das Gerät verlässt. Offen bleibt die Oberfläche: eine App,
+  die Text an einen Dienst sendet, darf nicht weiter „vollständig lokal" versprechen. Die Form
+  der Aufklärung regelt E07.
 - Datenschutz: Beratungsäußerungen verlassen das Gerät. Zur Anbieterwahl siehe E02, die diesen
   Punkt am 29.09.2026 neu geregelt hat. Unverändert gilt: `~/Developer/AGENTS.md` verbietet
   Klienten- und Mandatsdaten in Prompts und Logs, und eine Beratungsübung verleitet dazu, echtes
-  Fallmaterial einzutippen. Ein Hinweis in der App ist vorzusehen.
+  Fallmaterial einzutippen. Die Aufklärung der übenden Person läuft über den einmaligen
+  Disclaimer nach E07; dort werden die offenen Aufklärungspflichten gesammelt. Zur Anbieterwahl
+  gilt seit E06 wieder `provider.data_collection: "deny"`.
 - Offline-Betrieb entfällt. Verhalten ohne Netz, bei Zeitüberschreitung und bei Fehlern der
   Gegenseite muss definiert werden; die Speicherinvarianten des Coordinators gelten unverändert.
 - Das Deployment-Target ist neu zu bestimmen. Ohne MLX und ohne FoundationModels-Brücke gibt es
@@ -66,9 +70,15 @@ einer verteilten App ist nicht geheim.
 - Der fachlich geprüfte Referenzsatz aus dem Bauplan (60 Einzelbeispiele, fünf je Code) fehlt
   weiterhin. Er wird durch diese Entscheidung nicht ersetzt.
 
-## E02 · Keine Beschränkung auf Anbieter ohne Datenspeicherung
+## E02 · Keine Beschränkung auf Anbieter ohne Datenspeicherung — **aufgehoben durch E06**
 
-**Datum:** 29.09.2026 · **Entschieden von:** Jonas · **Status:** beschlossen
+**Datum:** 29.09.2026 · **Entschieden von:** Jonas · **Status:** **aufgehoben am 29.09.2026
+durch [E06](#e06--anbieterbeschr%C3%A4nkung-wieder-einschalten)**
+
+> Dieser Eintrag bleibt vollständig stehen, weil die darin festgehaltene Widerlegung des
+> ursprünglichen Befundes weiter gilt und weiter gebraucht wird. Die *Entscheidung* selbst gilt
+> nicht mehr: Anfragen gehen künftig wieder mit `provider.data_collection: "deny"`. Alles, was
+> unten über die Messung steht, bleibt richtig; nur die daraus gezogene Folgerung ist ersetzt.
 
 Anfragen werden ohne `provider.data_collection: "deny"` gestellt. OpenRouter darf frei routen,
 auch an Anbieter, die übermittelte Daten speichern oder für eigenes Training verwenden dürfen.
@@ -104,7 +114,8 @@ offenen Folgen von E01.
 für echte Klienten- oder Mandatsdaten; das Verbot aus `~/Developer/AGENTS.md` bleibt unberührt.
 Sobald Kolleg:innen mitüben, sind es deren Äußerungen, und eine Beratungsübung verleitet dazu,
 echtes Fallmaterial einzutippen. Die Abwägung ist dann erneut zu treffen, und ein Hinweis in der
-App bleibt vorgesehen.
+App bleibt vorgesehen. — Genau dieser in den Grenzen benannte Fall ist eingetreten; er ist der
+tragende Grund für E06. Die Form des Hinweises regelt E07.
 
 **Folge für die Umsetzung.** Der Swift-Adapter braucht unabhängig davon eine echte Gesamtfrist,
 begrenzte Wiederholungen und eine verständliche Fehlermeldung statt einer hängenden Oberfläche.
@@ -181,3 +192,84 @@ Die Erfassung betrachtet ausschließlich schon vorhandene Klientenaussagen und w
 vollständigen Turn gespeichert. Der zusätzliche Einfluss auf Rollenverhalten und spätere
 Termine ist noch offen. E05 bestätigt keine neue sichtbare Punkteskala und keine empirische
 Validität der automatischen Einordnung.
+
+## E06 · Anbieterbeschränkung wieder einschalten
+
+**Datum:** 29.09.2026 · **Entschieden von:** im Auftrag von Jonas, der die Entscheidung
+ausdrücklich delegiert hat · **Status:** beschlossen, Umsetzung im Code offen
+
+Anfragen gehen künftig wieder mit `provider.data_collection: "deny"`. OpenRouter darf damit nicht
+mehr an Anbieter routen, die Übermitteltes speichern oder für eigenes Training verwenden dürfen.
+
+**Was das ersetzt.** [E02](#e02--keine-beschränkung-auf-anbieter-ohne-datenspeicherung--aufgehoben-durch-e06)
+vollständig. Der dortige Eintrag bleibt stehen, weil seine Widerlegung des ursprünglichen
+Befundes weiter gebraucht wird.
+
+**Begründung.** Drei Punkte, die alle aus E02 selbst stammen.
+
+1. *Der technische Preis ist null.* E02 hält ausdrücklich fest, dass die Beschränkung nie auf
+   einen einzigen Anbieter verengt hat — auch mit `deny` wurden acht verschiedene Anbieter
+   bedient — und dass ihr Aufheben nichts verbessert hat: bei `max_tokens: 768` waren mit
+   Beschränkung 7 von 16 Antworten lesbar, ohne Beschränkung 0 von 12. Entscheidend war das
+   Tokenbudget, nicht die Anbieterwahl. E02 zieht daraus selbst den Schluss, die Entscheidung
+   lasse sich „ohne technischen Preis" zurücknehmen. Das geschieht hiermit.
+2. *Der in E02 benannte Grenzfall ist eingetreten.* E02 schreibt in seinem Abschnitt „Grenzen":
+   „Sobald Kolleg:innen mitüben, sind es deren Äußerungen. Die Abwägung ist dann erneut zu
+   treffen." Genau das ist der vorgesehene Nutzerkreis — Jonas plus zwei bis drei Kolleg:innen.
+   Deren Übungsäußerungen sind nicht Jonas' Material, über das er allein verfügen kann.
+3. *Eine Beratungsübung verleitet zu echtem Fallmaterial.* Das steht so schon in E01 und E02.
+   Wer eine Gesprächssituation übt, greift auf das zurück, was er kennt. Die Annahme rein
+   fiktiver Eingaben ist damit nicht belastbar, und sie ist auch nicht überprüfbar.
+
+**Grenzen.** Das ist eine Verringerung des Risikos, keine Erlaubnis: Echte Klienten- oder
+Mandatsdaten bleiben nach `~/Developer/AGENTS.md` und der projektbezogenen `AGENTS.md`
+ausgeschlossen, `deny` hin oder her. Die Einstellung wirkt auf die Weitergabe durch den Anbieter,
+nicht auf die Übermittlung selbst: Der Text verlässt weiterhin das Gerät. Belegt ist die
+Wirkung der Einstellung nur über die Zusage von OpenRouter; eine eigene Prüfung gibt es nicht.
+
+**Folgen.**
+
+- Die Umsetzung im Code steht noch aus. Nötig ist ein Flag im Anfragekörper des Adapters
+  (`OpenRouterSchema.body` setzt derzeit nur `provider.require_parameters` und `provider.ignore`).
+  Der Punkt ist in [TODO.md](TODO.md) geführt.
+- Sollte die Verfügbarkeit unter der Beschränkung leiden, ist die Entscheidung rücknehmbar —
+  aber nur mit Messbelegen, nicht auf Verdacht. Die Messreihe zu E02 ist die Vorlage dafür.
+- Die zu E02 erhobenen Messwerte bleiben gültig; sie wurden teils mit, teils ohne Beschränkung
+  erhoben, und die Beschränkung war dabei nachweislich nicht die wirksame Größe.
+
+## E07 · Aufklärung über einen einmaligen Disclaimer statt Dauerhinweisen
+
+**Datum:** 29.09.2026 · **Entschieden von:** Jonas · **Status:** beschlossen, noch nicht gebaut
+
+Die Aufklärung der übenden Person läuft über einen einmaligen Disclaimer, durch den man sich
+klicken muss, bevor die App benutzbar ist. Sie läuft **nicht** über dauerhafte Hinweistexte in
+der Oberfläche.
+
+**Inhalt des Disclaimers.** Zwei Dinge, beide vor der ersten Benutzung:
+
+- Die Datenverarbeitung: Eingetippte Beiträge und der bisherige Gesprächsverlauf verlassen das
+  Gerät und gehen an OpenRouter und den dort gewählten Anbieter. Gesprächsdaten werden zusätzlich
+  lokal gespeichert. Echtes Fall-, Klienten- oder Mandatsmaterial gehört nicht in die App.
+- Die fachliche Reichweite: Die dargestellten Beratungsszenarien sind zu pädagogischen Zwecken
+  vereinfacht. Sie können die beraterische Realität nicht abbilden und ersetzen weder eine
+  Ausbildung noch ein Studium.
+
+**Begründung.** Dauerhafte Hinweistexte in der Oberfläche werden nach kurzer Zeit nicht mehr
+gelesen, und sie stören eine Übung, die von der Einfühlung in die Gesprächssituation lebt. Ein
+einmaliger, bewusst zu bestätigender Schritt erreicht die Aufklärung zuverlässiger als mehrere
+verstreute Randnotizen.
+
+**Grenzen.** Eine Bestätigung ist kein Nachweis, dass gelesen und verstanden wurde, und sie ist
+keine rechtliche Prüfung der Aufklärungspflichten. Der Text ist noch nicht geschrieben und nicht
+fachlich abgenommen.
+
+**Folgen.**
+
+- Offene Aufklärungspflichten werden ab sofort hier gesammelt, statt einzeln in die Oberfläche
+  gestreut zu werden. Das betrifft insbesondere die bisher offen geführte Zusage „Ein Hinweis in
+  der App ist vorzusehen" aus E01 und E02; sie ist damit in E07 aufgegangen und wird nicht mehr
+  doppelt geführt.
+- Der Punkt in [TODO.md](TODO.md) zu `RootView` („Nur auf diesem Gerät gespeichert") bleibt
+  davon unberührt: Das ist eine sachlich missverständliche Aussage in der Oberfläche, kein
+  Aufklärungshinweis.
+- Bau und Text stehen aus.
