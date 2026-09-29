@@ -104,8 +104,8 @@ stattdessen zu tun ist, steht in Abschnitt 5. Siehe `ENTSCHEIDUNGEN.md`, E01 bis
       daran: unsichere Segmente dürfen keinen Bonus erzeugen, und bei unklarer Erlaubnislage soll
       „unklar" herauskommen statt eines sicheren Vorwurfs. Ein Modell, das nie zweifelt, unterläuft
       das.
-- [ ] Entscheiden, ob E02 auf der korrigierten Grundlage bestehen bleibt. Der technische Anlass für
-      die Aufhebung der Anbieterbeschränkung ist entfallen.
+- [x] Entschieden: E02 bleibt nicht bestehen. E06 schaltet die Anbieterbeschränkung wieder ein.
+      Die Umsetzung im Code steht aus, siehe unten.
 
 ### Technisch
 
@@ -116,20 +116,49 @@ stattdessen zu tun ist, steht in Abschnitt 5. Siehe `ENTSCHEIDUNGEN.md`, E01 bis
 - [ ] Ausgabebudget nach E03 festlegen und Abschneidung als eigenen, wiederholbaren Fehlerfall
       behandeln — nicht als ungültige Analyse. Eine Wiederholung ohne höheres Budget läuft ins
       selbe Ergebnis.
-- [ ] Echte Gesamtfrist, begrenzte Wiederholungen und verständliche Fehlermeldung statt hängender
-      Oberfläche. Anbieter ohne verwertbare Antworten ausschließen.
-- [ ] **Schlüsseleingabe auf dem iPhone.** Der `security`-Eintrag vom Mac existiert dort nicht, die
-      App bleibt deshalb auf dem iPhone im Demo-Betrieb. Nötig ist eine Einstellungsansicht, die
-      den Schlüssel per `SecItemAdd` unter `rogersrodeo-openrouter` mit
-      `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly` ablegt.
+- [x] Echte Gesamtfrist **je HTTP-Aufruf**: `timeoutIntervalForResource = 150` Sekunden im
+      Adapter. Wiederholungen sind begrenzt, die Fehlermeldung ist verständlich.
+- [ ] **Frist je Gesprächsrunde.** Die vorhandene Frist wirkt nur je Aufruf. Bei bis zu zwölf
+      Aufrufen sind theoretisch rund 30 Minuten möglich, in denen die Oberfläche nur
+      „Antwort wird vorbereitet …" zeigt. Nötig ist eine Obergrenze für die ganze Runde mit
+      einem sauberen Abbruch. Anbieter ohne verwertbare Antworten weiter ausschließen.
+- [x] **Schlüsseleingabe auf dem iPhone.** `Beratungstrainer/Features/SettingsView.swift` gibt es;
+      der Adapter legt den Schlüssel unter `rogersrodeo-openrouter` mit
+      `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly` ab, bewusst erst per `SecItemUpdate` und
+      nur bei `errSecItemNotFound` per `SecItemAdd`. Ein Lauf auf einem echten Gerät steht aus.
 - [ ] **Zeitpunkt der Schlüsselsuche auf dem Mac.** `OpenRouterKey.lookup` läuft in
       `AppModel.init`; bei der nur lokal signierten Mac-App löst der Schlüsselbundzugriff einen
       Systemdialog aus, der damit beim App-Start erscheint und den Main Actor blockiert. Besser
       erst beim Start einer Sitzung. Behelf bis dahin: Mac-App mit `OPENROUTER_API_KEY` starten
       oder im Dialog einmal „Immer erlauben" wählen. Auf iOS tritt das nicht auf.
-- [ ] **Kosten je Runde messen.** Es sind bis zu vier Modellaufrufe möglich: Der Adapter erhöht
-      das Budget bei Abschneidung einmal, und der Coordinator wiederholt zusätzlich einmal. Ein
-      realer Kostenrahmen je Sitzung fehlt.
+- [ ] **Tatsächlich abgerechnete Kosten erfassen.** Der Größenordnung nach ist der Rahmen
+      geschätzt (grob 0,4 Cent je Runde, siehe STATUS vom 29.09.2026), die Schätzung ist aber
+      keine Abrechnung. Es fehlen: `"usage": {"include": true}` im Anfragekörper, das Auswerten
+      der Antwort-`id` gegen den kostenlosen Generierungs-Endpunkt und die Metriken der
+      abgeschnittenen Versuche, die der Adapter derzeit verwirft. Ebenso ungenutzt bleibt das
+      bereits dekodierte Feld `provider` der Antwort, womit die Route je Aufruf unbekannt ist.
+- [ ] **Bis zu zwölf HTTP-Aufrufe je Runde.** Die Schleife in `OpenRouterModelProvider.call`
+      sendet jede Stufe zweimal (normales und erhöhtes Budget), `analyze` hat zwei Stufen, und
+      der `ConversationCoordinator` wiederholt sowohl `analyze` als auch `reply` je einmal
+      vollständig: bis zu acht Aufrufe für die Analyse plus vier für die Rollenantwort. Der
+      Adapter dokumentiert das im Kommentar zu `call` selbst. Ob diese Obergrenze sinnvoll ist,
+      ist offen; sie bestimmt zugleich die Kosten und die Wartezeit im schlimmsten Fall.
+- [ ] **`provider.data_collection: "deny"` im Anfragekörper setzen (E06).** `OpenRouterSchema.body`
+      setzt derzeit nur `provider.require_parameters` und `provider.ignore`.
+- [ ] **Einmaligen Disclaimer bauen (E07).** Datenverarbeitung und die pädagogische
+      Vereinfachung der Szenarien, zu bestätigen vor der ersten Benutzung. Text noch nicht
+      geschrieben und nicht fachlich abgenommen.
+- [ ] **Markdown-Hülle inkonsistent behandelt.** `analyze` schickt die Antwort durch
+      `OpenRouterResponse.analysisPayload` und entfernt damit eine einzelne ```json-Hülle;
+      `reply` gibt die Daten unverändert an `OutputValidator.decodeReply`. Dieselbe Route, die
+      bei der Analyse toleriert wird, lässt die Figurenantwort scheitern. Entweder beide Wege
+      gleich behandeln oder die Ungleichbehandlung begründen.
+- [ ] **Der gesamte Vorschlagspfad ist tot.** `Beratungstrainer/App/ContentCatalog.swift` erzwingt
+      beim Laden `catalog.tips.isEmpty`; ein Katalog mit Tipps wird als ungültiges Artefakt
+      abgelehnt. `TipSelector.select` im `ConversationCoordinator` bekommt damit dauerhaft eine
+      leere Liste und liefert immer `nil`. Die Sperre ist als Schutz gegen fachlich ungeprüfte
+      Tipps gedacht; sie muss zusammen mit dem Tippschema und dessen Freigaben aufgehoben
+      werden, sonst bleibt die Tippfläche der Oberfläche ohne Funktion.
 - [ ] Simulatorlauf mit echtem Modell durchführen. Bisher wurde der Adapter nur außerhalb der App
       gegen die Schnittstelle geprüft, nicht im laufenden Gespräch.
 - [ ] `RootView` „Nur auf diesem Gerät gespeichert" prüfen: Die Aussage stimmt für die
