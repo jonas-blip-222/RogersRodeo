@@ -22,10 +22,11 @@ rückwirkend umgeschrieben.
 
 ### Erstmals gemessen: Modellqualität der Einordnung
 
-Zwei Messreihen über OpenRouter mit `qwen/qwen3.8-27b`, 56 Aufrufe, tatsächliche Kosten 0,25 USD.
+Drei Messreihen über OpenRouter mit `qwen/qwen3.8-27b`, zusammen 84 Aufrufe. Die ersten beiden
+Reihen kosteten 0,25 USD; die dritte ist gleich groß, ihre Abrechnung wurde nicht eigens geprüft.
 Rohdaten und Berichte in `Evaluation/results/`, außerhalb von Git.
 
-- **Zitat-Treue fehlerfrei: 24 von 24 prüfbaren Läufen**, sowohl im reinen Codepunkt-Vergleich als
+- **Zitat-Treue fehlerfrei: 47 von 47 prüfbaren Läufen** über alle drei Reihen, sowohl im reinen Codepunkt-Vergleich als
   auch NFC-normalisiert. Kein erfundenes, verkürztes oder umformuliertes Zitat, keine
   Reihenfolgeverletzung, kein `supportingClientQuote` ohne echte Entsprechung in einer
   Klientennachricht. Geprüft mit einer Python-Nachbildung von `OutputValidator.locations` und
@@ -34,12 +35,18 @@ Rohdaten und Berichte in `Evaluation/results/`, außerhalb von Git.
 - **Der Normalisierungsvorbehalt ist belegt gegenstandslos**, nicht bloß vermutet: beide
   Vergleichsmodi stimmen in allen 24 Läufen überein. Gilt für diese Eingaben, ist keine Garantie
   für Text aus Kopieren und Einfügen oder von einer iOS-Tastatur.
-- **Ausfallquote durch Abschneidung:** Mit `max_tokens: 768` waren nur 7 von 28 Antworten lesbar,
-  mit 4000 immerhin 17 von 28. Ursache ist das interne Überlegen des Modells, nicht die Länge der
-  Analyse. Die Ausfälle häufen sich auf einzelnen Anbietern. Einzelheiten in E03.
-- **Keine stabile Ausgabe bei `temperature: 0`:** 9 von 14 Fällen über zwei Läufe wortgleich.
-- **Auffällig und fachlich zu bewerten:** nur 1 von 23 Segmenten wurde als unsicher markiert,
-  obwohl der MI-Nachtrag mehrere der Fälle ausdrücklich als vorläufig unsicher beschreibt.
+- **Ausfallquote durch Abschneidung, und wie sie sinkt.** Mit `max_tokens: 768` waren nur 7 von 28
+  Antworten lesbar, mit 4000 waren es 17 von 28. Ursache ist das interne Überlegen des Modells,
+  nicht die Länge der Analyse. Die Ausfälle häufen sich auf einzelnen Anbietern: Nach Ausschluss
+  von `wafer`, `mancer` und `parasail` über `provider.ignore` stieg die von der App akzeptierte
+  Quote in der dritten Reihe auf **23 von 28, also 82 Prozent**. Die Anbieterwahl ist damit der
+  wirksamste Hebel, nicht das Modell. Einzelheiten in E03.
+- **Keine stabile Ausgabe bei `temperature: 0`:** 9 von 14 Fällen in der zweiten Reihe und 4 von 12
+  in der dritten waren über zwei Läufe wortgleich. Auf Determinismus darf nichts aufgebaut werden.
+- **Auffällig und fachlich zu bewerten:** Die Unsicherheitsquote bleibt niedrig — 1 von 23
+  Segmenten in der zweiten Reihe, 3 von 31 in der dritten. Der MI-Nachtrag beschreibt mehrere der
+  Fälle ausdrücklich als vorläufig unsicher und baut seine Schutzlogik darauf, dass unsichere
+  Segmente keinen Zustandsbonus erzeugen.
 
 **Ausdrücklich nicht gemessen:** die fachliche Richtigkeit der Einordnung. Die 14 Fälle sind laut
 MI-Nachtrag Arbeitsentwürfe und keine Goldreferenz; es wurde bewusst keine Trefferquote gegen sie
