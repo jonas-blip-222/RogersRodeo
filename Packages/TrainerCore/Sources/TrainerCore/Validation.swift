@@ -9,7 +9,7 @@ public enum OutputValidator {
 
     public static func decodeAnalysis(_ data: Data, input: String, context: [DialogueMessage]) throws -> TurnAnalysis {
         do {
-            let object = try exactKeys(JSONSerialization.jsonObject(with: data), required: ["segments"], optional: ["doubleSidedReflection", "characterObservations"])
+            let object = try exactKeys(JSONSerialization.jsonObject(with: data), required: ["segments"], optional: ["doubleSidedReflection", "characterObservations", "goalUpdates"])
             guard let segments = object["segments"] as? [Any] else { throw TrainerFailure.invalidAnalysis }
             for value in segments {
                 _ = try exactKeys(value, required: ["quote", "code", "isUncertain"], optional: ["supportingClientQuote"])
@@ -33,6 +33,18 @@ public enum OutputValidator {
                         if let reference = observation[field], !(reference is NSNull) {
                             _ = try exactKeys(reference, required: ["source", "speaker", "quote", "occurrence"],
                                               optional: ["messageIndex"])
+                        }
+                    }
+                }
+            }
+            if let raw = object["goalUpdates"], !(raw is NSNull) {
+                guard let updates = raw as? [Any] else { throw TrainerFailure.invalidAnalysis }
+                for value in updates {
+                    let update = try exactKeys(value, required: ["kind", "evidence", "isUncertain"],
+                                               optional: ["previousGoal", "currentGoal", "proposal"])
+                    for field in ["previousGoal", "currentGoal", "evidence", "proposal"] {
+                        if let reference = update[field], !(reference is NSNull) {
+                            _ = try exactKeys(reference, required: ["source", "speaker", "quote", "occurrence"], optional: ["messageIndex"])
                         }
                     }
                 }
@@ -66,6 +78,7 @@ public enum OutputValidator {
     }
 
     public static func validateAnalysis(_ analysis: TurnAnalysis, input: String, context: [DialogueMessage]) throws {
+        try validateGoalUpdates(analysis.goalUpdates ?? [], input: input, context: context)
         let ranges = try locations(analysis, input: input)
         for segment in analysis.segments {
             if let quote = segment.supportingClientQuote {

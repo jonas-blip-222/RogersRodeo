@@ -11,9 +11,12 @@ Die folgenden Punkte sind eine Diskussionsgrundlage, keine bereits fachlich frei
       Beobachtungen speichern. Bereitschaft/Zuversicht sind an einen konkreten Zielbeleg
       gebunden, Rapport ist eigenständig. Dauerhafte Nachrichtenherkunft, Unsicherheit,
       atomare Speicherung und Entwicklerdiagnostik vorhanden. Prompt 0.3, Regeln 0.2.
-- [ ] Zielidentität über Umformulierungen hinweg und gezielte Belegerinnerung außerhalb des
-      Sechs-Turn-Fensters ergänzen. Verschiedene Zielbelege bleiben vorläufig getrennt;
-      gespeicherte Beobachtungen sind historische Aussagen, keine garantierten Ist-Zustände.
+- [x] MI-03: belegte Zielidentität mit Umformulierungen, getrennten Zielwechseln, Vereinbarungen,
+      Widerrufen und Unsicherheit; begrenzte Originalbelege jenseits von sechs Turns gezielt
+      in die Analyse holen. Prompt 0.4, Regeln 0.3; keine automatische Rollenwirkung.
+- [ ] Längeren echten Modelllauf mit Schema 0.4 durchführen: Reduktion versus Abstinenz,
+      Vereinbarung erst nach Zustimmung, spätere Zweifel/Widerrufe und ausgelassene Ziele.
+      Technische Fixtures bestätigen noch keine semantische Modellqualität.
 - [ ] Die drei Dimensionen nachvollziehbar in Rollenverhalten und Termine einbinden (MI-04).
       Keine Umrechnung aus Offenheit und keine automatischen SOC-Schwellen. Aktuell wird
       Lukas' jeweils neue Antwort erst beim nächsten Analyseaufruf berücksichtigt; kein

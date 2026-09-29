@@ -1,8 +1,8 @@
 import Foundation
 
 public actor ConversationCoordinator {
-    public static let promptVersion = "0.3"
-    public static let rulesVersion = "0.2"
+    public static let promptVersion = "0.4"
+    public static let rulesVersion = "0.3"
     private let repository: any SessionRepository
     private let provider: any TrainerModelProvider
     private var generation: UUID?
@@ -71,9 +71,11 @@ public actor ConversationCoordinator {
         }
         try await provider.prepare(); try check(token)
         let messages = ContextBuilder.messages(session)
-        let request = AnalysisRequest(codingGuide: session.content.codingGuide, recentMessages: messages, currentInput: text)
+        let memory = try ContextBuilder.analysisMemory(session)
+        let request = AnalysisRequest(codingGuide: session.content.codingGuide, recentMessages: memory.messages,
+                                      currentInput: text, knownGoals: memory.goals, omittedGoalCount: memory.omittedGoalCount)
         var analysis: TurnAnalysis?
-        var analysisContext = messages
+        var analysisContext = memory.messages
         var metrics: [ModelCallMetrics] = []
         var development = session.state.development
         if !skipAnalysis {
@@ -83,6 +85,7 @@ public actor ConversationCoordinator {
                     try OutputValidator.validateAnalysis(result.value, input: text, context: result.contextMessagesUsed)
                     development = try CharacterTracker.advance(session.state.development, analysis: result.value,
                         input: text, context: result.contextMessagesUsed, session: session, turnID: pending.id)
+                    try CharacterTracker.validate(development, session: session, currentTurnID: pending.id)
                     analysis = result.value; analysisContext = result.contextMessagesUsed; metrics.append(result.metrics)
                     break
                 } catch TrainerFailure.invalidAnalysis where attempt == 0 { try check(token) }

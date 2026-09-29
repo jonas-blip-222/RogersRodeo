@@ -66,10 +66,11 @@ public struct TurnAnalysis: Codable, Sendable, Equatable {
     public var doubleSidedReflection: DoubleSidedReflection?
     /// nil: alter Stand/nicht erhoben; leer: im gesehenen Kontext keine Beobachtung.
     public var characterObservations: [CharacterObservation]?
+    public var goalUpdates: [GoalUpdate]?
     public init(segments: [AnalysisSegment], doubleSidedReflection: DoubleSidedReflection? = nil,
-                characterObservations: [CharacterObservation]? = nil) {
+                characterObservations: [CharacterObservation]? = nil, goalUpdates: [GoalUpdate]? = nil) {
         self.segments = segments; self.doubleSidedReflection = doubleSidedReflection
-        self.characterObservations = characterObservations
+        self.characterObservations = characterObservations; self.goalUpdates = goalUpdates
     }
 }
 
@@ -175,9 +176,12 @@ public struct AnalysisRequest: Sendable {
     public var codingGuide: String
     public var recentMessages: [DialogueMessage]
     public var currentInput: String
-    public init(codingGuide: String, recentMessages: [DialogueMessage], currentInput: String) {
+    public var knownGoals: [KnownGoal]
+    public var omittedGoalCount: Int
+    public init(codingGuide: String, recentMessages: [DialogueMessage], currentInput: String,
+                knownGoals: [KnownGoal] = [], omittedGoalCount: Int = 0) {
         self.codingGuide = codingGuide; self.recentMessages = recentMessages
-        self.currentInput = currentInput
+        self.currentInput = currentInput; self.knownGoals = knownGoals; self.omittedGoalCount = omittedGoalCount
     }
 }
 

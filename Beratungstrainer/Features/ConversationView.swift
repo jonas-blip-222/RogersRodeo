@@ -223,11 +223,29 @@ struct DiagnosticsView: View {
                         ForEach(Array(development.goals.enumerated()), id: \.offset) { _, goal in
                             VStack(alignment: .leading, spacing: 6) {
                                 Text(verbatim: "Zielbeleg: „\(goal.goal.quote)“").font(.subheadline)
+                                if let memory = goal.memory {
+                                    Text(memory.standing.label).font(.caption)
+                                    ForEach(Array(memory.aliases.enumerated()), id: \.offset) { _, alias in
+                                        Text(verbatim: "Umformulierung: „\(alias.quote)“").font(.caption)
+                                    }
+                                    if let event = memory.lastEvent {
+                                        Text(verbatim: "\(event.isUncertain ? "Unsicherer letzter Befund" : "Letzter Beleg"): „\(event.evidence.quote)“").font(.caption)
+                                        if let proposal = event.proposal {
+                                            Text(verbatim: "Vereinbarungsvorschlag: „\(proposal.quote)“").font(.caption)
+                                        }
+                                    }
+                                }
                                 characterRecord(goal.readiness, dimension: .readiness)
                                 characterRecord(goal.confidence, dimension: .confidence)
                             }
                         }
                         characterRecord(development.rapport, dimension: .rapport)
+                        if let events = development.goalEvents, !events.isEmpty {
+                            Text("Belegte Zielereignisse").font(.subheadline)
+                            ForEach(Array(events.enumerated()), id: \.offset) { _, event in
+                                Text(verbatim: "\(event.kind.rawValue)\(event.isUncertain ? " · unsicher" : ""): „\(event.evidence.quote)“").font(.caption)
+                            }
+                        }
                     } else {
                         Text("Veränderungsbereitschaft, Zuversicht und Arbeitsbeziehung: noch nicht erhoben.")
                             .font(.caption).foregroundStyle(.secondary)

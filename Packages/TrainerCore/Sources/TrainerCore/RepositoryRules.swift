@@ -48,6 +48,12 @@ public enum RepositoryRules {
               turn.stateAfter.disclosedFactIDs.isSubset(of: Set(record.snapshot.content.scenario.facts.map(\.id))) else {
             throw TrainerFailure.invalidReply
         }
+        let previousEvents = turn.stateBefore.development?.goalEvents ?? []
+        let nextEvents = turn.stateAfter.development?.goalEvents ?? []
+        guard Array(nextEvents.prefix(previousEvents.count)) == previousEvents,
+              nextEvents.dropFirst(previousEvents.count).allSatisfy({ $0.observedInTurnID == turn.id }) else {
+            throw TrainerFailure.invalidAnalysis
+        }
         try CharacterTracker.validate(turn.stateAfter.development, session: record.snapshot, currentTurnID: turn.id)
         record.snapshot.turns.append(turn)
         record.snapshot.state = turn.stateAfter

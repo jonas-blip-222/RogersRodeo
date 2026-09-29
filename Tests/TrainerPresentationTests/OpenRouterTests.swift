@@ -27,7 +27,7 @@ private func object(_ data: Data) throws -> [String: Any] {
 @Test func einordnungsschemaEnthaeltBelegteDoppelseitigeReflexion() throws {
     let schema = try object(try OpenRouterSchema.analysis.serialized())
     #expect(schema["additionalProperties"] as? Bool == false)
-    #expect(schema["required"] as? [String] == ["segments", "doubleSidedReflection", "characterObservations"])
+    #expect(schema["required"] as? [String] == ["segments", "doubleSidedReflection", "characterObservations", "goalUpdates"])
     let properties = try #require(schema["properties"] as? [String: Any])
     let segments = try #require(properties["segments"] as? [String: Any])
     #expect(segments["type"] as? String == "array")
@@ -317,4 +317,25 @@ private func envelope(content: String?, finish: String?, refusal: String? = nil,
     #expect(!prompt.contains("PRUEFBELEG"))
     #expect(!prompt.contains("strained"))
     #expect(!prompt.contains("characterObservations"))
+}
+
+
+@Test func zielSchemaUndPromptEnthaltenBelegteKennungenUndKontextluecken() throws {
+    let schema = try object(OpenRouterSchema.goalUpdate.serialized())
+    let fields = try #require(schema["properties"] as? [String: Any])
+    #expect(Set(try #require(schema["required"] as? [String])) == Set(fields.keys))
+    #expect(schema["additionalProperties"] as? Bool == false)
+    let reference = EvidenceReference(source: .contextMessage, speaker: .client, messageIndex: 2, quote: "ZIELBELEG", occurrence: 1)
+    let request = AnalysisRequest(codingGuide: "G", recentMessages: [], currentInput: "Hallo",
+        knownGoals: [.init(goal: reference, aliases: [], standing: .withdrawn, lastEventEvidence: reference, isUncertain: true)], omittedGoalCount: 2)
+    let prompt = OpenRouterSchema.analysisPrompt(request)
+    #expect(prompt.contains("[2] Vorkommen 1: „ZIELBELEG“"))
+    #expect(prompt.contains("withdrawn"))
+    #expect(prompt.contains("ausgelassene Ziele: 2"))
+    let system = OpenRouterSchema.analysisSystemPrompt("G")
+    #expect(system.contains("ist NICHT abstinent leben"))
+    #expect(system.contains("DARAUF FOLGENDE"))
+    let reply = ReplyRequest(publicProfile: "P", behaviorInstruction: "B", visibleFacts: [], recentMessages: [], currentInput: "Hallo",
+        analysis: .init(segments: [], goalUpdates: [.init(kind: .introduced, currentGoal: reference, evidence: reference)]))
+    #expect(!(OpenRouterSchema.rolePrompt(reply) + OpenRouterSchema.replyPrompt(reply)).contains("ZIELBELEG"))
 }

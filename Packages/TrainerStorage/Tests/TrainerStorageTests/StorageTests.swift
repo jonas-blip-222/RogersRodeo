@@ -101,12 +101,15 @@ import TrainerStorage
         content: .init(scenario: scenario, codingGuide: "G", tips: []), state: .init(openness: 3),
         turns: [], status: .active, startedAt: Date())
     let pending = PendingTurn(id: UUID(), sessionID: snapshot.id, expectedRevision: 0, input: "Erzählen Sie.", createdAt: Date())
-    let analysis = TurnAnalysis(segments: [], characterObservations: [
+    var analysis = TurnAnalysis(segments: [], characterObservations: [
         .init(dimension: .confidence, assessment: .doubtful,
             goal: .init(source: .contextMessage, speaker: .client, messageIndex: 0,
                         quote: "Ich möchte sonntags fitter sein.", occurrence: 1),
             evidence: .init(source: .contextMessage, speaker: .client, messageIndex: 0,
                             quote: "Ich traue mir das noch nicht zu.", occurrence: 1), isUncertain: false)])
+    let goalRef = EvidenceReference(source: .contextMessage, speaker: .client, messageIndex: 0,
+                                    quote: "Ich möchte sonntags fitter sein.", occurrence: 1)
+    analysis.goalUpdates = [.init(kind: .introduced, currentGoal: goalRef, evidence: goalRef)]
     var after = snapshot.state
     after.development = try CharacterTracker.advance(nil, analysis: analysis, input: pending.input,
         context: ContextBuilder.messages(snapshot), session: snapshot, turnID: pending.id)
@@ -121,6 +124,9 @@ import TrainerStorage
     let reopened = try SwiftDataSessionRepository(storeURL: url)
     let loaded = try reopened.load(id: snapshot.id)
     #expect(loaded.state.development == after.development)
+    #expect(loaded.state.development?.goals.first?.memory?.standing == .mentioned)
+    #expect(loaded.state.development?.goalEvents?.count == 1)
+    #expect(loaded.turns.first?.analysis?.goalUpdates == analysis.goalUpdates)
     #expect(loaded.state.development?.goals.first?.confidence?.evidence.quote == "Ich traue mir das noch nicht zu.")
     #expect(loaded.turns.first?.analysis?.characterObservations == analysis.characterObservations)
     #expect(try reopened.commit(sessionID: snapshot.id, expectedRevision: 0, turn: turn) == loaded)

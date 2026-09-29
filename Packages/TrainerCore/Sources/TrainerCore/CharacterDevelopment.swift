@@ -85,11 +85,13 @@ public struct GoalDevelopment: Codable, Sendable, Equatable {
     public var goal: CharacterEvidence
     public var readiness: CharacterRecord?
     public var confidence: CharacterRecord?
+    public var memory: GoalMemory?
 }
 
 public struct CharacterDevelopment: Codable, Sendable, Equatable {
     public var goals: [GoalDevelopment] = []
     public var rapport: CharacterRecord?
+    public var goalEvents: [GoalEvent]?
     public init() {}
 }
 
@@ -99,9 +101,12 @@ public enum CharacterTracker {
     public static func advance(_ before: CharacterDevelopment?, analysis: TurnAnalysis?,
                                input: String, context: [DialogueMessage], session: SessionSnapshot,
                                turnID: UUID) throws -> CharacterDevelopment? {
-        guard let analysis, let observations = analysis.characterObservations, !observations.isEmpty else { return before }
+        guard let analysis else { return before }
         try OutputValidator.validateAnalysis(analysis, input: input, context: context)
-        var next = before ?? CharacterDevelopment()
+        let updated = try GoalTracker.advance(before, updates: analysis.goalUpdates ?? [], input: input,
+                                              context: context, session: session, turnID: turnID)
+        guard let observations = analysis.characterObservations, !observations.isEmpty else { return updated }
+        var next = updated ?? CharacterDevelopment()
         for observation in observations {
             let evidence = try anchored(observation.evidence, input: input, context: context, session: session)
             let record = CharacterRecord(assessment: observation.assessment, evidence: evidence,
@@ -112,7 +117,7 @@ public enum CharacterTracker {
                 guard let goalReference = observation.goal else { throw TrainerFailure.invalidAnalysis }
                 let goal = try anchored(goalReference, input: input, context: context, session: session)
                 let index: Int
-                if let existing = next.goals.firstIndex(where: { $0.goal == goal }) { index = existing }
+                if let existing = GoalTracker.index(for: goal, in: next.goals) { index = existing }
                 else {
                     // Verschiedene Ziele nicht anhand ähnlicher Wörter zusammenlegen.
                     next.goals.append(.init(goal: goal)); index = next.goals.count - 1
@@ -136,7 +141,7 @@ public enum CharacterTracker {
         guard development.goals.count <= 40 else { throw TrainerFailure.invalidAnalysis }
         func check(_ record: CharacterRecord?, dimension: CharacterDimension, goal: CharacterEvidence? = nil) throws {
             guard let record else { return }
-            guard record.assessment.belongs(to: dimension) else { throw TrainerFailure.invalidAnalysis }
+            guard record.evidence.origin.speaker == .client, record.assessment.belongs(to: dimension) else { throw TrainerFailure.invalidAnalysis }
             let latestAvailableMessage: Int
             if record.observedInTurnID == currentTurnID { latestAvailableMessage = session.turns.count }
             else if let index = session.turns.firstIndex(where: { $0.id == record.observedInTurnID }) {
@@ -150,7 +155,8 @@ public enum CharacterTracker {
             }
         }
         for (index, goal) in development.goals.enumerated() {
-            guard goal.readiness != nil || goal.confidence != nil,
+            guard goal.goal.origin.speaker == .client,
+                  goal.readiness != nil || goal.confidence != nil || goal.memory != nil,
                   !development.goals.prefix(index).contains(where: { $0.goal == goal.goal }) else {
                 throw TrainerFailure.invalidAnalysis
             }
@@ -159,6 +165,7 @@ public enum CharacterTracker {
             try check(goal.confidence, dimension: .confidence, goal: goal.goal)
         }
         try check(development.rapport, dimension: .rapport)
+        try GoalTracker.validate(development, session: session, currentTurnID: currentTurnID)
     }
 
     private static func newer(_ record: CharacterRecord, than previous: CharacterRecord?,
@@ -166,35 +173,43 @@ public enum CharacterTracker {
         guard let previous else { return true }
         // Derselbe Beleg wird nicht bei jeder Modellanalyse neu umgedeutet. Ein älterer Beleg
         // darf einen späteren Widerruf oder Zweifel nicht überschreiben.
-        let newPosition = try position(record.evidence, session: session)
-        let oldPosition = try position(previous.evidence, session: session)
+        return try isLater(record.evidence, than: previous.evidence, session: session)
+    }
+
+    static func isLater(_ evidence: CharacterEvidence, than previous: CharacterEvidence,
+                        session: SessionSnapshot) throws -> Bool {
+        let newPosition = try position(evidence, session: session)
+        let oldPosition = try position(previous, session: session)
         return newPosition.message > oldPosition.message
             || (newPosition.message == oldPosition.message && newPosition.offset > oldPosition.offset)
     }
 
-    private static func anchored(_ reference: EvidenceReference, input: String,
-                                 context: [DialogueMessage], session: SessionSnapshot) throws -> CharacterEvidence {
+    static func anchored(_ reference: EvidenceReference, input: String,
+                                 context: [DialogueMessage], session: SessionSnapshot, speaker: Speaker = .client) throws -> CharacterEvidence {
         try OutputValidator.validateEvidence(reference, input: input, context: context)
-        guard reference.source == .contextMessage, reference.speaker == .client,
+        guard reference.source == .contextMessage, reference.speaker == speaker,
               let index = reference.messageIndex, let origin = context[index].origin,
-              origin.speaker == .client else { throw TrainerFailure.invalidAnalysis }
+              origin.speaker == speaker else { throw TrainerFailure.invalidAnalysis }
         let original = try source(origin, session: session)
         guard original.text == context[index].text else { throw TrainerFailure.invalidAnalysis }
         return .init(origin: origin, quote: reference.quote, occurrence: reference.occurrence)
     }
 
-    private static func source(_ origin: MessageOrigin, session: SessionSnapshot) throws -> (text: String, position: Int) {
-        guard origin.speaker == .client else { throw TrainerFailure.invalidAnalysis }
-        guard let id = origin.turnID else { return (session.content.scenario.openingLine, 0) }
+    static func source(_ origin: MessageOrigin, session: SessionSnapshot) throws -> (text: String, position: Int) {
+        guard let id = origin.turnID else {
+            guard origin.speaker == .client else { throw TrainerFailure.invalidAnalysis }
+            return (session.content.scenario.openingLine, 0)
+        }
         guard let index = session.turns.firstIndex(where: { $0.id == id }) else { throw TrainerFailure.invalidAnalysis }
-        return (session.turns[index].reply.text, index + 1)
+        return (origin.speaker == .client ? session.turns[index].reply.text : session.turns[index].input,
+                index + 1)
     }
 
-    private static func position(_ evidence: CharacterEvidence, session: SessionSnapshot) throws -> (message: Int, offset: Int) {
+    static func position(_ evidence: CharacterEvidence, session: SessionSnapshot) throws -> (message: Int, offset: Int) {
         let original = try source(evidence.origin, session: session)
-        let reference = EvidenceReference(source: .contextMessage, speaker: .client, messageIndex: 0,
+        let reference = EvidenceReference(source: .contextMessage, speaker: evidence.origin.speaker, messageIndex: 0,
                                            quote: evidence.quote, occurrence: evidence.occurrence)
-        let range = try OutputValidator.evidenceRange(reference, input: "", context: [.init(speaker: .client, text: original.text)])
+        let range = try OutputValidator.evidenceRange(reference, input: "", context: [.init(speaker: evidence.origin.speaker, text: original.text)])
         return (original.position, original.text.distance(from: original.text.startIndex, to: range.lowerBound))
     }
 }

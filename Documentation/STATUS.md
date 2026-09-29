@@ -3,6 +3,73 @@
 Neueste Prüfungen zuerst. Ältere Abschnitte bleiben als Verlauf erhalten und werden nicht
 rückwirkend umgeschrieben.
 
+## 29. September 2026 · MI-03: belegtes Zielgedächtnis
+
+### Implementierter Baustein
+
+Die Analyse erhält gezielt alte Originalnachrichten über das bisherige Sechs-Turn-Fenster
+hinaus. `GoalUpdate` unterscheidet Einführung, Umformulierung, ausdrückliche Vereinbarung,
+Zielwechsel und Widerruf. `GoalEvent` verankert deren Zitate dauerhaft über Turn/Sprecher/
+Vorkommen; `GoalMemory` führt Aliasse, Status und letzten Befund. Die semantische Zuordnung
+trifft das Modell; keine Stichwortheuristik setzt „weniger trinken“ mit Abstinenz gleich.
+
+- Umformulierungen teilen einen Verlauf. Ein echter Wechsel lässt zwei Ziele mit getrennten
+  Bereitschafts-/Zuversichtsbelegen bestehen. Bereits getrennte Ziele werden nicht nachträglich
+  zusammengeführt; Aliaskollisionen werden abgewiesen.
+- Vereinbarung braucht ein schon genanntes Klientenziel, einen konkreten Berater-Vorschlag und
+  die zeitlich folgende Klientenzustimmung. Die aktuelle Eingabe genügt nicht. Nur eine neue
+  ausdrückliche Vereinbarung kann einen zurückgenommenen Verlauf wieder aufnehmen.
+- Unsichere Änderungen bleiben als Ereignisse sichtbar, ändern jedoch den Status nicht.
+  Neuere unsichere Befunde verhindern ein Zurückdrehen durch ältere Belege. Wiederholte Belege
+  erzeugen keinen Fortschritt; auch eine unsichere Einführung wird nicht durch erneute Deutung
+  desselben Belegs sicher. Unsichere neue Ziele werden vorerst nur in der Ereignishistorie geführt.
+- `ContextBuilder.analysisMemory`: Eröffnung plus sechs letzte Turns, maximal drei Zielgruppen,
+  sechs zusätzliche Original-Turns und 10.000 zusätzliche Zeichen. Eine Gruppe wird vollständig
+  geholt oder ausgelassen; chronologisch sortiert. Enthalten sind Ziel, Aliasse, letzte
+  Bereitschaft/Zuversicht, letzter Ereignisbeleg und die letzte sichere Statusgrundlage samt
+  Vereinbarungsvorschlag. Der Prompt erhält die tatsächlich geholten Kennungen und die Zahl
+  ausgelassener Ziele; er benennt Kontextlücken ausdrücklich. Zeichenbudget ist kein Tokenmaß.
+- Strikter Decoder, Rollen-/Zitat-/Reihenfolgeprüfung und begrenzte Ereignislisten. Die
+  Speicherprüfung rekonstruiert Aliasse und Status aus der Historie, prüft Verfügbarkeit zum
+  Beobachtungszeitpunkt und weist fremde Turns, Dubletten und manipulierte Zustände ab.
+  Commit erhält die bisherige Ereignishistorie unverändert; neue Ereignisse gehören zur aktuellen
+  Beobachtungsrunde. Charakterbelege bleiben ausschließlich Klientenaussagen.
+- OpenRouter-Schema und Prompt erweitert; vorhandene Entwicklerdiagnostik zeigt Zielstatus,
+  Aliasse, letzte Belege und Ereignisse einschließlich Unsicherheit. Keine neue normale Skala.
+- Prompt **0.4**, Regeln **0.3**, Feedbackbausteine **0.2**, Snapshot-Schema weiter **1**.
+  Neue Felder sind optional; alte Gespräche bleiben lesbar. Neues Gespräch für neue Regeln starten.
+  Der Rollenprompt erhält weiterhin das normale Sechs-Turn-Fenster und keine Zielhypothesen.
+
+### Tatsächlich geprüft
+
+- **75 Core-Tests bestanden** (12 zusätzliche Zielgedächtnistests): Erinnerung jenseits von sechs
+  Turns, vollständiger Coordinator-Lauf über zehn Runden mit getrennten Kontexten, Alias versus
+  Ersatz-Ziel, Vereinbarung/Widerruf/Wiederaufnahme, spätere Unsicherheit, wiederholte Aussagen
+  mit verschiedenen Turn-IDs, falsche Belege/Rollen/Chronologie/Felder, manipulierte Historie,
+  JSON-Roundtrip sowie Zielgruppen-, Zeichen- und zusätzliche-Turn-Budgets.
+- Abbruch und Wiederholung nach unbekanntem Commit-Ausgang eigens mit Zielereignissen geprüft:
+  keine vorzeitige Speicherung, kein zweiter Modelllauf, keine doppelten Ereignisse.
+- **3 Storage-Tests bestanden**, erweitert um Zielstatus, Ereignisse und Analyse nach erneutem
+  Öffnen des SwiftData-Dateispeichers sowie Idempotenz. Die Umgebung meldet weiterhin Fehler
+  des systemweiten Store-Änderungsdienstes; die Datei-Roundtrips bestehen.
+- **38 App-Tests bestanden**; gemeinsamer SwiftUI-Code als macOS-App kompiliert. Schema, konkrete
+  Gedächtnisreferenzen, Auslassungshinweis und fehlende Rollenwirkung geprüft. Die fünf bekannten
+  Schlüsselbundtests gezielt ausgenommen, kein vollständiges grünes Root-Ergebnis behauptet.
+- `git diff --check` bestanden; temporäre Build-/Cachepfade `/private/tmp/rr-goal-*`.
+  Zwei Swift-Exklusivitätsfehler in neuen Test-Fixtures vor den erfolgreichen Läufen korrigiert.
+
+### Offene Nachweise und Grenzen
+
+Kein echter Modelllauf für Schema 0.4, keine gemessene semantische Qualität, Kosten oder Latenz.
+Die Tests setzen semantische Befunde als Fixtures; sie belegen nicht, dass das Modell Zielwechsel,
+Zustimmung oder Unsicherheit fachlich richtig erkennt. Nächster Schritt ist ein längerer echter
+Modelllauf. Keine neue iOS-/Simulator-/Geräte- oder visuelle/VoiceOver-Prüfung in diesem Paket.
+
+Das begrenzte Gedächtnis garantiert keine vollständige Erinnerung: große Aliasgruppen können
+ausgelassen werden. Die letzte Figurenantwort wird weiterhin erst bei der folgenden Analyse
+beobachtet. Automatische Rollenentwicklung, SOC, mehrere Termine und MI-04 bleiben offen.
+Fremde Änderungen am Evaluationsskript, lange Fälle und Jonas' Testläufe bleiben unverändert.
+
 ## 29. September 2026 · MI-03: getrennte Charakterbeobachtungen
 
 ### Was jetzt implementiert ist
