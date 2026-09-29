@@ -417,3 +417,175 @@ private func envelope(content: String?, finish: String?, refusal: String? = nil,
         try OutputValidator.decodeReply(OpenRouterResponse.replyPayload(prosa), visibleFacts: [])
     }
 }
+
+// MARK: - Wiederholungs- und Budgetkette
+
+// Diese Kette erzeugt Kosten, Wartezeit und Fehlerverhalten und war bisher durch keinen
+// Test abgedeckt. Geprüft wird sie mit gestubbten Antworten: kein Netzaufruf, kein Geld,
+// keine Abhängigkeit vom Modellverhalten. Laut E03 ist die Ausgabe selbst bei
+// `temperature: 0` nicht stabil (9 von 14 Fällen wortgleich über zwei Läufe) — ein Test,
+// der sich darauf verließe, wäre wertlos.
+
+/// Sammelt die gesendeten Anfragen und gibt der Reihe nach vorbereitete Antworten zurück.
+private actor StubTransport {
+    private var responses: [Data]
+    private(set) var requests: [URLRequest] = []
+    /// Künstliche Dauer je Aufruf, um einen langsamen Anbieter nachzustellen.
+    private let delay: Duration?
+    init(_ responses: [Data], delay: Duration? = nil) {
+        self.responses = responses; self.delay = delay
+    }
+    func handle(_ request: URLRequest) async throws -> (Data, URLResponse) {
+        requests.append(request)
+        if let delay { try await Task.sleep(for: delay) }
+        let body = responses.isEmpty ? Data("{}".utf8) : responses.removeFirst()
+        let http = HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!
+        return (body, http)
+    }
+    var callCount: Int { requests.count }
+    /// Die gesendeten Ausgabebudgets in der Reihenfolge der Aufrufe.
+    func sentBudgets() throws -> [Int] {
+        try requests.map {
+            let body = try #require(JSONSerialization.jsonObject(with: $0.httpBody ?? Data()) as? [String: Any])
+            return try #require(body["max_tokens"] as? Int)
+        }
+    }
+    nonisolated var transport: OpenRouterTransport { { [self] in try await handle($0) } }
+}
+
+/// Antwortkörper der Gegenseite mit HTTP 200.
+private func modelAnswer(_ content: String, finish: String = "stop") -> Data {
+    try! JSONSerialization.data(withJSONObject: [
+        "choices": [["message": ["content": content], "finish_reason": finish]],
+        "usage": ["prompt_tokens": 100, "completion_tokens": 20]])
+}
+
+private let gueltigeAntwort = #"{"text":"Hm, na ja.","primaryTag":null,"disclosedFactIDs":[]}"#
+private let leereZielstufe = #"{"goalUpdates":[],"characterObservations":[]}"#
+
+private func stubProvider(_ stub: StubTransport) -> OpenRouterModelProvider {
+    var configuration = OpenRouterConfiguration()
+    // Kein Schlüsselbund, kein echter Schlüssel, kein Netz.
+    configuration.environment = ["OPENROUTER_API_KEY": "sk-pruefwert-ohne-funktion"]
+    return OpenRouterModelProvider(configuration: configuration, transport: stub.transport)
+}
+
+private let pruefAnfrage = ReplyRequest(publicProfile: "P", behaviorInstruction: "B", visibleFacts: [],
+                                        recentMessages: [], currentInput: "Sie entscheiden selbst.", analysis: nil)
+
+@Test func abschneidungLoestGenauEineWiederholungMitGroesseremBudgetAus() async throws {
+    // E03: Abschneidung ist ein eigener, wiederholbarer Fall. Eine Wiederholung ohne
+    // höheres Budget liefe ins selbe Ergebnis — genau das muss der zweite Aufruf zeigen.
+    let stub = StubTransport([modelAnswer("", finish: "length"), modelAnswer(gueltigeAntwort)])
+    let provider = stubProvider(stub)
+    try await provider.prepare()
+    let result = try await provider.reply(pruefAnfrage)
+    #expect(result.value.text == "Hm, na ja.")
+    let budgets = try await stub.sentBudgets()
+    #expect(budgets == [OpenRouterConfiguration().replyTokens, OpenRouterConfiguration().replyTokensRetry])
+    #expect(budgets == [2000, 4000])
+}
+
+@Test func einLeerzeichenlaufImErstversuchWirdEbensoEskaliert() async throws {
+    // Die am 29.09.2026 beobachtete Pathologie: gültiger JSON-Anfang, dann ein Lauf aus
+    // Leerzeichen bis zur Abschneidung. Der angefangene Körper darf nicht durchgehen.
+    let angefangen = "{\"text\":\"Hm" + String(repeating: " ", count: 200)
+    let stub = StubTransport([modelAnswer(angefangen, finish: "length"), modelAnswer(gueltigeAntwort)])
+    let provider = stubProvider(stub)
+    try await provider.prepare()
+    _ = try await provider.reply(pruefAnfrage)
+    #expect(await stub.callCount == 2)
+}
+
+@Test func nachZweiUnbrauchbarenVersuchenWirdNichtWeiterProbiert() async throws {
+    // Obergrenze der Wiederholungen im Adapter: zwei Aufrufe je Stufe, nicht mehr.
+    let stub = StubTransport([modelAnswer("", finish: "length"), modelAnswer("", finish: "length"),
+                              modelAnswer(gueltigeAntwort)])
+    let provider = stubProvider(stub)
+    try await provider.prepare()
+    await #expect(throws: TrainerFailure.invalidReply) { _ = try await provider.reply(pruefAnfrage) }
+    #expect(await stub.callCount == 2)
+}
+
+@Test func dieZielstufeBrichtDieAnalyseAbBevorDieZweiteStufeKostetGeld() async throws {
+    // `analyze` hat zwei Stufen mit je zwei Versuchen. Scheitert die erste, darf die
+    // zweite gar nicht erst gesendet werden — sonst kostet ein aussichtsloser Versuch.
+    let stub = StubTransport([modelAnswer("", finish: "error"), modelAnswer("", finish: "error"),
+                              modelAnswer(leereZielstufe)])
+    let provider = stubProvider(stub)
+    try await provider.prepare()
+    let request = AnalysisRequest(codingGuide: "G", recentMessages: [], currentInput: "Hallo")
+    await #expect(throws: TrainerFailure.invalidAnalysis) { _ = try await provider.analyze(request) }
+    #expect(await stub.callCount == 2)
+    #expect(try await stub.sentBudgets() == [1500, 4000])
+}
+
+@Test func ohneBrauchbareAntwortAberMitTransportfehlerKommtKeinSchemafehler() async throws {
+    // HTTP 500 ist kein Schemafehler des Modells; die Oberfläche darf dafür nicht
+    // „ohne Einordnung fortsetzen" anbieten.
+    let provider = OpenRouterModelProvider(
+        configuration: { var c = OpenRouterConfiguration(); c.environment = ["OPENROUTER_API_KEY": "sk-pruefwert"]; return c }(),
+        transport: { request in
+            (Data("{}".utf8), HTTPURLResponse(url: request.url!, statusCode: 500, httpVersion: nil, headerFields: nil)!)
+        })
+    try await provider.prepare()
+    await #expect(throws: TrainerFailure.modelUnavailable) { _ = try await provider.reply(pruefAnfrage) }
+}
+
+@Test func jederGesendeteAufrufTraegtDieAnbieterbeschraenkungUndDenSchluesselNurImHeader() async throws {
+    let stub = StubTransport([modelAnswer("", finish: "length"), modelAnswer(gueltigeAntwort)])
+    let provider = stubProvider(stub)
+    try await provider.prepare()
+    _ = try await provider.reply(pruefAnfrage)
+    let requests = await stub.requests
+    #expect(requests.count == 2)
+    for request in requests {
+        // E06 gilt auch für den Wiederholungsversuch, nicht nur für den ersten.
+        let raw = try #require(request.httpBody)
+        let body = try #require(JSONSerialization.jsonObject(with: raw) as? [String: Any])
+        let settings = try #require(body["provider"] as? [String: Any])
+        #expect(settings["data_collection"] as? String == "deny")
+        #expect(settings["require_parameters"] as? Bool == true)
+        // Der Schlüssel gehört ausschließlich in den Authorization-Header.
+        #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer sk-pruefwert-ohne-funktion")
+        #expect(!(String(data: request.httpBody ?? Data(), encoding: .utf8) ?? "").contains("sk-pruefwert"))
+    }
+}
+
+@Test func abbruchVonAussenBeendetDieKetteUndIstKeinModellausfall() async throws {
+    // So wirkt die Rundenfrist aus `TrainerCore.RoundDeadline` auf den Adapter: sie bricht
+    // den laufenden Aufruf ab. Daraus muss ein CancellationError werden, kein
+    // `modelUnavailable` — sonst forderte die Oberfläche zur Netzprüfung auf.
+    let stub = StubTransport([modelAnswer(gueltigeAntwort)], delay: .seconds(10))
+    let provider = stubProvider(stub)
+    try await provider.prepare()
+    let task = Task { try await provider.reply(pruefAnfrage) }
+    try await Task.sleep(for: .milliseconds(50))
+    task.cancel()
+    await #expect(throws: CancellationError.self) { _ = try await task.value }
+    // Kein zweiter Versuch nach dem Abbruch.
+    #expect(await stub.callCount == 1)
+}
+
+@Test func rundenfristKapptDieGanzeKetteImZusammenspielMitDemCoordinator() async throws {
+    // Zusammenspiel statt Einzelteil: echter Adapter, gestubbte HTTP-Schicht, echter
+    // Coordinator. Ohne Frist liefe diese Runde über vier Aufrufe zu je zehn Sekunden.
+    let stub = StubTransport([], delay: .seconds(10))
+    let provider = stubProvider(stub)
+    let repository = MemorySessionRepository()
+    let coordinator = ConversationCoordinator(repository: repository, provider: provider,
+                                              roundDeadline: .milliseconds(200))
+    let scenario = ScenarioDefinition(schemaVersion: 1, id: "lukas", version: "0.1", status: .draft,
+        name: "Lukas", age: 28, address: "Sie", approaches: ["mi"], opennessStart: 3,
+        openingLine: "Sarah meint, ich soll herkommen.", publicProfile: "Lukas, 28.", facts: [])
+    let session = try await coordinator.create(content: .init(scenario: scenario, codingGuide: "G", tips: []),
+                                               contentHash: "test")
+    let start = ContinuousClock.now
+    await #expect(throws: TrainerFailure.roundDeadlineExceeded) {
+        _ = try await coordinator.send(sessionID: session.id, input: "Sie entscheiden selbst.")
+    }
+    #expect(start.duration(to: .now) < .seconds(5))
+    // Kein halber Zustand und keine weiteren kostenpflichtigen Aufrufe nach dem Abbruch.
+    #expect(try await repository.load(id: session.id).turns.isEmpty)
+    #expect(await stub.callCount == 1)
+}

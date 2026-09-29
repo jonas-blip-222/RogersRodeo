@@ -157,6 +157,10 @@ struct OpenRouterConfiguration: Sendable {
     /// Rücknahme laut E06 nur mit Messbelegen, nicht auf Verdacht.
     var dataCollection: String? = "deny"
     var keychainService = "rogersrodeo-openrouter"
+    /// Quelle der Schlüsselsuche. Vorgabe ist die echte Prozessumgebung. Prüfungen ohne
+    /// Netz setzen hier einen Platzhalter ein, damit `prepare` ohne Schlüsselbundzugriff
+    /// und ohne echten Schlüssel durchläuft.
+    var environment: [String: String] = ProcessInfo.processInfo.environment
 }
 
 // MARK: - Schlüssel
@@ -786,23 +790,40 @@ enum OpenRouterResponse {
 
 // MARK: - Adapter
 
+/// Genau der eine Schritt, der wirklich mit dem Netz spricht. Als eigener Typ, damit die
+/// Wiederholungs- und Budgetkette ohne Netz und ohne Kosten geprüft werden kann: Tests
+/// setzen hier gestubbte Antworten ein, alles davor (Anfragekörper) und danach
+/// (Auswertung, Wiederholung, Dekodierung) bleibt der Weg des Betriebs.
+typealias OpenRouterTransport = @Sendable (URLRequest) async throws -> (Data, URLResponse)
+
 actor OpenRouterModelProvider: TrainerModelProvider {
     private let configuration: OpenRouterConfiguration
-    private let session: URLSession
+    private let session: URLSession?
+    private let transport: OpenRouterTransport
     private var key: String?
     /// Opt-in-Diagnose für Live-Evaluationen: ausschließlich Modellinhalt, keine Header/Schlüssel.
     private let analysisDiagnostics: (@Sendable (Data) async -> Void)?
 
     init(configuration: OpenRouterConfiguration = .init(),
-         analysisDiagnostics: (@Sendable (Data) async -> Void)? = nil) {
+         analysisDiagnostics: (@Sendable (Data) async -> Void)? = nil,
+         transport: OpenRouterTransport? = nil) {
         self.analysisDiagnostics = analysisDiagnostics
         self.configuration = configuration
-        let settings = URLSessionConfiguration.ephemeral
-        settings.timeoutIntervalForRequest = configuration.idleSeconds
-        settings.timeoutIntervalForResource = configuration.deadlineSeconds
-        settings.urlCache = nil
-        settings.httpAdditionalHeaders = nil
-        session = URLSession(configuration: settings)
+        if let transport {
+            // Prüfbetrieb: keine URLSession anlegen, damit kein Aufruf versehentlich
+            // doch ins Netz geht.
+            self.session = nil
+            self.transport = transport
+        } else {
+            let settings = URLSessionConfiguration.ephemeral
+            settings.timeoutIntervalForRequest = configuration.idleSeconds
+            settings.timeoutIntervalForResource = configuration.deadlineSeconds
+            settings.urlCache = nil
+            settings.httpAdditionalHeaders = nil
+            let session = URLSession(configuration: settings)
+            self.session = session
+            self.transport = { try await session.data(for: $0) }
+        }
     }
 
     /// Der Coordinator vergleicht diesen Wert mit der gespeicherten Sitzungsidentität und
@@ -818,7 +839,8 @@ actor OpenRouterModelProvider: TrainerModelProvider {
     func prepare() throws {
         try Task.checkCancellation()
         if key != nil { return }
-        guard let found = OpenRouterKey.lookup(service: configuration.keychainService) else {
+        guard let found = OpenRouterKey.lookup(service: configuration.keychainService,
+                                               environment: configuration.environment) else {
             throw TrainerFailure.modelUnavailable
         }
         key = found
@@ -919,7 +941,7 @@ actor OpenRouterModelProvider: TrainerModelProvider {
         let data: Data
         let response: URLResponse
         do {
-            (data, response) = try await session.data(for: request)
+            (data, response) = try await transport(request)
         } catch let error as URLError where error.code == .cancelled {
             throw CancellationError()
         } catch is CancellationError {
