@@ -128,6 +128,148 @@ enum OpenRouterKey {
               !value.isEmpty else { return nil }
         return value
     }
+
+    /// Der Eintrag, den Lesen, Schreiben und Löschen gemeinsam meinen: genau ein generisches
+    /// Passwort je Dienstname. Ohne Konto-Attribut, damit derselbe Eintrag getroffen wird,
+    /// den Jonas auf dem Mac von Hand mit `security add-generic-password -s …` angelegt hat.
+    private static func entry(service: String) -> [String: Any] {
+        [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service]
+    }
+
+    /// Legt den Schlüssel an oder ersetzt einen vorhandenen Eintrag desselben Dienstes.
+    /// Bewusst erst `SecItemUpdate` und nur bei `errSecItemNotFound` ein `SecItemAdd`:
+    /// `SecItemAdd` allein legte beim zweiten Sichern einen zweiten Eintrag an
+    /// (beziehungsweise schlüge mit `errSecDuplicateItem` fehl), und `SecItemCopyMatching`
+    /// mit `kSecMatchLimitOne` läse anschließend einen beliebigen von beiden.
+    ///
+    /// `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`: nach dem ersten Entsperren des
+    /// Geräts lesbar, also auch wenn die App aus dem Hintergrund zurückkehrt — aber weder
+    /// in einem Backup noch auf einem anderen Gerät. Der Schlüssel verlässt dieses Gerät nicht.
+    ///
+    /// Gibt nur zurück, ob es geklappt hat. Der Wert selbst wird nirgends protokolliert.
+    @discardableResult
+    static func save(_ value: String, service: String) -> Bool {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return false }
+        let payload: [String: Any] = [
+            kSecValueData as String: Data(trimmed.utf8),
+            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+        ]
+        let updated = SecItemUpdate(entry(service: service) as CFDictionary, payload as CFDictionary)
+        if updated == errSecSuccess { return true }
+        guard updated == errSecItemNotFound else { return false }
+        let added = entry(service: service).merging(payload) { current, _ in current }
+        return SecItemAdd(added as CFDictionary, nil) == errSecSuccess
+    }
+
+    /// Entfernt den Eintrag. Ein nicht vorhandener Eintrag gilt als entfernt: für die
+    /// nutzende Person ist das Ergebnis dasselbe.
+    @discardableResult
+    static func remove(service: String) -> Bool {
+        let status = SecItemDelete(entry(service: service) as CFDictionary)
+        return status == errSecSuccess || status == errSecItemNotFound
+    }
+
+    /// Anzeigeform: nur die letzten vier Zeichen, damit der hinterlegte Schlüssel
+    /// wiedererkennbar bleibt, ohne je wieder vollständig auf dem Bildschirm zu stehen.
+    /// Kurze Eingaben werden vollständig verdeckt — sonst zeigte die Maske alles.
+    static func masked(_ value: String) -> String {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.count > 4 else { return "••••" }
+        return "•••• " + String(trimmed.suffix(4))
+    }
+
+    /// Maskierte Anzeige des im Schlüsselbund hinterlegten Schlüssels, sonst nil.
+    static func storedDisplay(service: String) -> String? {
+        keychain(service: service).map(masked)
+    }
+}
+
+// MARK: - Prüfung eines Schlüssels
+
+/// Ergebnis des Sicherns samt Prüfung. `accepted`, `rejected`, `offline` und
+/// `serviceProblem` kommen aus dem echten Prüfaufruf; `missing` und `notStored` betreffen
+/// die Eingabe und den Schlüsselbund. Keine der Meldungen enthält den Schlüssel.
+enum OpenRouterKeyOutcome: Equatable, Sendable {
+    case accepted
+    case rejected
+    case offline
+    case serviceProblem
+    case missing
+    case notStored
+
+    var isSuccess: Bool { self == .accepted }
+
+    var message: String {
+        switch self {
+        case .accepted:
+            "Der Schlüssel funktioniert. Gespräche laufen ab jetzt über OpenRouter."
+        case .rejected:
+            "OpenRouter hat diesen Schlüssel abgelehnt. Bitte prüfe, ob er vollständig kopiert wurde. Er wurde nicht gespeichert."
+        case .offline:
+            "Keine Internetverbindung. Der Schlüssel konnte deshalb nicht geprüft und nicht gespeichert werden."
+        case .serviceProblem:
+            "OpenRouter antwortet gerade nicht wie erwartet. Bitte versuche es später noch einmal. Der Schlüssel wurde nicht gespeichert."
+        case .missing:
+            "Bitte füge zuerst deinen OpenRouter-Schlüssel ein."
+        case .notStored:
+            "Der Schlüssel konnte nicht im Schlüsselbund dieses Geräts gespeichert werden."
+        }
+    }
+}
+
+/// Billigster echter Aufruf, den OpenRouter für einen Schlüssel anbietet: die
+/// Schlüsselauskunft unter `/api/v1/key`. Sie erzeugt keine Modellausgabe und kostet
+/// deshalb nichts. Bewertet wird allein der HTTP-Status — der Antwortkörper wird bewusst
+/// verworfen, damit nichts davon in eine Meldung geraten kann.
+enum OpenRouterKeyProbe {
+    static let endpoint = URL(string: "https://openrouter.ai/api/v1/key")!
+
+    /// Am 29.09.2026 selbst geprüft: ohne gültige Anmeldung antwortet die Auskunft mit 401.
+    static func outcome(status: Int) -> OpenRouterKeyOutcome {
+        switch status {
+        case 200: .accepted
+        case 401, 403: .rejected
+        default: .serviceProblem
+        }
+    }
+
+    /// „Schlüssel abgelehnt" und „kein Netz" sind für die nutzende Person völlig
+    /// verschiedene Probleme und werden deshalb getrennt gemeldet.
+    static func outcome(urlErrorCode code: URLError.Code) -> OpenRouterKeyOutcome {
+        switch code {
+        case .notConnectedToInternet, .networkConnectionLost, .cannotFindHost,
+             .cannotConnectToHost, .dnsLookupFailed, .timedOut,
+             .internationalRoamingOff, .dataNotAllowed:
+            .offline
+        default:
+            .serviceProblem
+        }
+    }
+
+    static func check(key: String) async -> OpenRouterKeyOutcome {
+        var request = URLRequest(url: endpoint)
+        request.httpMethod = "GET"
+        request.timeoutInterval = 20
+        request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
+        request.setValue("RogersRodeo", forHTTPHeaderField: "X-Title")
+        let settings = URLSessionConfiguration.ephemeral
+        settings.timeoutIntervalForRequest = 20
+        settings.timeoutIntervalForResource = 30
+        settings.urlCache = nil
+        let session = URLSession(configuration: settings)
+        defer { session.finishTasksAndInvalidate() }
+        do {
+            // Der Körper wird verworfen; geprüft wird nur der Status.
+            let (_, response) = try await session.data(for: request)
+            guard let http = response as? HTTPURLResponse else { return .serviceProblem }
+            return outcome(status: http.statusCode)
+        } catch let error as URLError {
+            return outcome(urlErrorCode: error.code)
+        } catch {
+            return .serviceProblem
+        }
+    }
 }
 
 // MARK: - Schema und Prompts

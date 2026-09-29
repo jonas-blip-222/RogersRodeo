@@ -13,6 +13,7 @@ struct RootView: View {
     @Bindable var model: AppModel
     @State private var deletion: UUID?
     @State private var showingHistory = false
+    @State private var showingSettings = false
     var body: some View {
         NavigationStack {
             Group {
@@ -54,9 +55,18 @@ struct RootView: View {
                         Text("Raum für gute Gespräche.").font(.subheadline).foregroundStyle(.secondary)
                     }
                     Spacer()
-                    Image(systemName: "quote.bubble").font(.title3)
-                        .frame(width: 46, height: 46).background(.white, in: Circle())
-                        .overlay(Circle().stroke(Palette.line)).accessibilityHidden(true)
+                    // Einstieg in die Einstellungen. Der Kreis behält Größe, Position,
+                    // Fläche und Linie des bisherigen Schmuckelements; nur das Sinnbild
+                    // wechselt, weil eine Schaltfläche erkennbar sein muss. Bewusst kein
+                    // zusätzlicher Knopf in der Navigationsleiste: das verschöbe den
+                    // abgenommenen Aufbau der Startseite.
+                    Button { showingSettings = true } label: {
+                        Image(systemName: "gearshape").font(.title3)
+                            .frame(width: 46, height: 46).background(.white, in: Circle())
+                            .overlay(Circle().stroke(Palette.line)).contentShape(Circle())
+                    }
+                    .buttonStyle(.plain).disabled(model.busy)
+                    .accessibilityLabel("Einstellungen")
                 }
                 HStack(spacing: 4) {
                     sectionButton("Entdecken", selected: !showingHistory) { showingHistory = false }
@@ -72,6 +82,7 @@ struct RootView: View {
                 if let error = model.errorMessage { ErrorNotice(text: error) }
             }.padding(24).frame(maxWidth: 560).frame(maxWidth: .infinity)
         }.navigationTitle("")
+            .sheet(isPresented: $showingSettings) { SettingsView(model: model) }
     }
 
     private func sectionButton(_ title: String, selected: Bool, action: @escaping () -> Void) -> some View {

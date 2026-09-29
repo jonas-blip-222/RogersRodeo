@@ -23,6 +23,7 @@
 		BA0650855BB1AB972EC21CD4 /* catalog.sha256 in Resources */ = {isa = PBXBuildFile; fileRef = 3591402605D4EB5C2DFF6A80 /* catalog.sha256 */; };
 		CC31A3E46E0B5EBD871E4A79 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A09DB7D8B0DACF0DF5548EC /* AppModel.swift */; };
 		D4F1A2B36C0E47A98B215E70 /* OpenRouterModelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7C60E4419D35A82F0D1C338 /* OpenRouterModelProvider.swift */; };
+		A1B2C3D40002SETTINGSVIEW /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D40001SETTINGSVIEW /* SettingsView.swift */; };
 		FE58A947ED89308035C18C43 /* TrainerStorage in Frameworks */ = {isa = PBXBuildFile; productRef = CA98A43EC3343B5EED7A7DD6 /* TrainerStorage */; };
 /* End PBXBuildFile section */
 
@@ -40,6 +41,7 @@
 		930A6D5AC75935B037C92EB9 /* BeratungstrainerApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = BeratungstrainerApp.swift; path = App/BeratungstrainerApp.swift; sourceTree = "<group>"; };
 		9411690D95CE510B79684F29 /* RootView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = RootView.swift; path = Features/RootView.swift; sourceTree = "<group>"; };
 		B7C60E4419D35A82F0D1C338 /* OpenRouterModelProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = OpenRouterModelProvider.swift; path = Services/Models/OpenRouterModelProvider.swift; sourceTree = "<group>"; };
+		A1B2C3D40001SETTINGSVIEW /* SettingsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SettingsView.swift; path = Features/SettingsView.swift; sourceTree = "<group>"; };
 		95FA5CF31E1C52BC16CBFE5A /* catalog.json */ = {isa = PBXFileReference; includeInIndex = 1; name = catalog.json; path = Resources/Content/catalog.json; sourceTree = "<group>"; };
 		DE2C7DC1CACEB6DAA7EEE587 /* ReviewView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ReviewView.swift; path = Features/ReviewView.swift; sourceTree = "<group>"; };
 		F15D9ABC0D155C02F5DC1882 /* mara-selvini-palazzoli-portrait.png */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = image.png; name = "mara-selvini-palazzoli-portrait.png"; path = "Resources/Illustrations/mara-selvini-palazzoli-portrait.png"; sourceTree = "<group>"; };
@@ -102,6 +104,7 @@
 				FE819A33C0C64E8ABCDC77B6 /* ConversationView.swift */,
 				DE2C7DC1CACEB6DAA7EEE587 /* ReviewView.swift */,
 				9411690D95CE510B79684F29 /* RootView.swift */,
+				A1B2C3D40001SETTINGSVIEW /* SettingsView.swift */,
 				B7C60E4419D35A82F0D1C338 /* OpenRouterModelProvider.swift */,
 				95FA5CF31E1C52BC16CBFE5A /* catalog.json */,
 				3591402605D4EB5C2DFF6A80 /* catalog.sha256 */,
@@ -201,6 +204,7 @@
 				516F61E5FC6A9197839A76DD /* ConversationView.swift in Sources */,
 				586732108FAB5CF36BCF58C0 /* ReviewView.swift in Sources */,
 				ADFA0D6172641CA57B9762D5 /* RootView.swift in Sources */,
+				A1B2C3D40002SETTINGSVIEW /* SettingsView.swift in Sources */,
 				D4F1A2B36C0E47A98B215E70 /* OpenRouterModelProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
