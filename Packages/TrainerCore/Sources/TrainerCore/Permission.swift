@@ -37,7 +37,7 @@ public enum PermissionStanding: String, Codable, Sendable, CaseIterable {
     case askedInSameInput = "im_selben_beitrag_gefragt"
     /// Die Figur hat selbst um einen Vorschlag gebeten.
     case clientRequested = "vom_klienten_erbeten"
-    /// Im verfügbaren Kontext ist keine Erlaubnisfrage und keine Bitte erkennbar.
+    /// Im verfügbaren Kontext ist keine passende Erlaubnis und keine Bitte für diesen Rat erkennbar.
     case notRequested = "nicht_eingeholt"
     /// Belege reichen für keine der Einordnungen; ausdrücklich keine Entwarnung.
     case unclear = "unklar"

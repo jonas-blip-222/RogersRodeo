@@ -92,8 +92,8 @@ statt lokaler Inferenz gemäß E01–E03. MI-03 und MI-04 bleiben insgesamt offe
       Person wie die übrige Oberfläche, die Beispiele im MI-Nachtrag siezen.
 - [ ] Prozessbeobachtungen ergänzen (Wanderfalle, Bubble Sheet, verlorener Fokus). Sie lassen
       sich nicht aus dem primären Figuren-Tag ableiten und gehören zu MI-03; die Fälle 7 bis 9
-      sowie 11 bis 14 sind dafür noch nicht abgedeckt. Die Erlaubnislage ist seit dem
-      30.09.2026 abgedeckt, siehe eigener Abschnitt.
+      sowie 11 bis 14 sind dafür noch nicht abgedeckt. Die Erlaubnislage wird seit dem
+      30.09.2026 im tatsächlich verfügbaren Kontext geprüft; die Grenzen stehen oben.
 
 ## 2. Oberfläche und Illustrationen – heute vorgesehen
 
@@ -177,9 +177,15 @@ stattdessen zu tun ist, steht in Abschnitt 5. Siehe `ENTSCHEIDUNGEN.md`, E01 bis
       ungültiger zweiter Stufe und Abbruch erhalten. Offline-Auswertung: `Tools/model_trace.py`.
       Alte `ModelCallMetrics`/Snapshots bleiben Erfolgsmetriken; für vollständige Messungen
       die neue Messspur verwenden. Bedienung und Grenzen siehe neuesten Eintrag in STATUS.md.
-- [ ] **Kosten und Routenverträglichkeit live bestätigen.** `usage.include=true` wird gesendet;
-      Kombination mit `require_parameters`, `deny` und `ignore` nur offline am Anfragekörper
-      geprüft. Gemeldetes `usage.cost` ist USD, fehlende Angaben sind unbekannt, nicht null.
+- [x] **Kosten und Routenverträglichkeit in einer Stichprobe bestätigt.** Vorhandener Lauf
+      vom 29.09.2026 auf `79dd498`: 34/34 abgeschlossene Aufrufe mit Kostenangaben,
+      0,0234130391 USD, 15/15 Runden und 14/14 Erwartungen. Details im neuesten STATUS.
+      Keine neue Messung und keine Freigabe des Erlaubnisvertrags 0.6 daraus ableiten.
+- [ ] **Kosten/Routen für weitere Vertragsstände prüfen.** `usage.include=true` wird
+      zusammen mit `require_parameters`, `deny` und `ignore` gesendet. Die genannte
+      Stichprobe bestätigt diese Kombination für den damaligen Lauf; Verhalten und Kosten
+      des neuen Erlaubnisvertrags sind nicht live geprüft. Gemeldetes `usage.cost` ist USD,
+      fehlende Angaben sind unbekannt, nicht null.
       Kein automatischer Abruf des Generierungs-Endpunkts: IDs liegen für einen späteren
       Abgleich vor. Der laut Auftrag gebührenfreie Endpunkt braucht zusätzliche Netzaufrufe;
       Kosten nach Abbruch ohne Antwort-ID lassen sich damit nicht sicher rekonstruieren.

@@ -3,6 +3,66 @@
 Neueste Prüfungen zuerst. Ältere Abschnitte bleiben als Verlauf erhalten und werden nicht
 rückwirkend umgeschrieben.
 
+## 30. September 2026 · Unabhängige Abnahme des begrenzten Erlaubnisschritts
+
+Codex hat Claudes Commit `ea4c178` in den eigenen Prüf-Worktree übernommen
+(`codex/mi03-erlaubnis-pruefung`, Übernahmecommit `f967920`). Hauptrepo unverändert auf
+`claude/integration-probe` / `ab66292`; kein Push und kein Merge ins Hauptrepo.
+
+Die drei unabhängig reproduzierten Validatorfehler aus dem ersten Entwurf wurden korrigiert.
+Dieselben Gegenproben bestehen anschließend mit Exit 0; ihre geprüften Core-Quellen sind
+bytegleich mit dem Implementierungscommit. Codex hat zusätzlich den Gegenstandsbezug im
+Prompt ausdrücklich benannt und zwei kontrollierte Adapterfälle ergänzt: Zustimmung zu
+Notizen legitimiert keinen Rat zur Beziehung; Zustimmung zum Sammeln eigener Ideen auf
+einem Blatt legitimiert keine Berateridee. Das ist eine technische Prüfung mit vorgegebenen
+Modelleinschätzungen, kein Nachweis zuverlässiger semantischer Modellerkennung.
+
+Unabhängige lokale Prüfungen, alle Exit 0:
+
+- TrainerCore: 100 Tests; TrainerStorage: 3 Tests.
+- App: zunächst 72, nach Codex' Ergänzung 73 Tests; beide Live-Tests deaktiviert/übersprungen.
+- `swift build` erfolgreich, nach der Prompt-/Testergänzung erneut erfolgreich.
+- `xcodebuild` für `generic/platform=iOS Simulator`, ohne Codesignierung: erfolgreich,
+  nach der Ergänzung erneut erfolgreich. Kein Start der Oberfläche und kein Gerätetest.
+- `git diff --check` erfolgreich; TrainerCore importiert weiterhin ausschließlich Foundation.
+  ModelTrace, atomarer Turn-Commit, Rollenverhalten und Offenheitsregel bleiben erhalten.
+
+Vollständige Befehle, direkt erfasste Prozess-Exitcodes und Logs liegen unter
+`/private/tmp/rr-codex-permission-zuuawwxr/` (`results.json`, `results-final.json`) und
+`/private/tmp/rr-codex-permission-ios-8mbnh845/` (`result.json`, `result-final.json`).
+Gegenproben: `/private/tmp/rr-codex-counterprobe-tlrf79n1/`, fachlicher Fehlernachweis
+`probe-3.log`/`result-3.json`, erfolgreiche Wiederholung `probe-4.log`/`result-4.json`.
+Die beiden früheren Gegenprobenversuche scheiterten am Test-Compile und zählen nicht als
+fachlicher Fehlernachweis. Die übergebenen fünf Keychain-Tests plus
+`leererUmgebungswertZaehltNicht` wurden bei der Implementierungsprüfung ausgeschlossen;
+`RR_RUN_GOAL_LIVE` und `RR_MODEL_TRACE_FILE` wurden aus der Prozessumgebung entfernt.
+
+Auch die Basis `ab66292` wurde unabhängig geprüft: 81 Core-, 3 Storage-, 71 App-Tests,
+Swift-Build und iOS-Kompilierung erfolgreich. Dort enthielt die übergebene Ausschlussliste
+noch nicht den sechsten Keychain-Test: er fragte das Fehlen eines fiktiven Testdienstes ab.
+Deshalb keine Behauptung eines vollständig Keychain-freien ersten Basislaufs. Basislogs:
+`/private/tmp/rr-codex-baseline-hjoq8q5m/`.
+
+Die Abnahme betrifft den begrenzten technischen Schritt im verfügbaren Kontext. Fachliche
+Freigabe der Entwurfstexte, Live-Prüfung des neuen Vertrags, freie Rollenqualität und UI-/
+iPhone-Prüfung bleiben offen. Alte Sitzungen sind lesbar/exportierbar, wegen der erhöhten
+Prompt-/Regelversion aber nicht fortsetzbar. MI-04 bleibt geplant.
+
+### Nachtrag zur bereits bezahlten Messung vom 29. September
+
+Vorhandene Artefakte wurden nur gelesen, kein neuer OpenRouter-Aufruf ausgeführt. Der Lauf
+auf `79dd498` mit `python3 Tools/run_goal_memory_live.py long` bestand 15/15 Runden und
+14/14 Erwartungen, Exit 0. Prozessdauer inklusive Build: 199,431675 Sekunden. Die Messspur
+enthält 34 gestartete und 34 abgeschlossene Aufrufe; gemeldete Kosten insgesamt
+0,0234130391 USD. Wiederholungen sind darin enthalten. `usage.include=true` war in dieser
+Stichprobe mit den Anbieterfiltern routbar; keine allgemeine Routengarantie und kein
+Rechnungsabgleich. Das waren echte Analysen mit vorgegebenen Rollenreaktionen, keine
+Prüfung freier Rollenqualität und kein Nachweis für den neuen Erlaubnisvertrag.
+
+Artefakte unverändert zusammen unter
+`/Users/jonasortmanns/Developer/Agents/codex/worktrees/messung/Evaluation/results/goal-live-20260929T215102Z-5c1ecf2c/`.
+`model-calls.jsonl` und `model-calls.jsonl.run.json` gehören zusammen.
+
 ## 30. September 2026 · MI-03-Teilschritt: Erlaubnis vor einem Ratschlag
 
 Branch `claude/mi03-erlaubnis`, Basis `ab66292`. Kein Modellaufruf, kein Push, keine

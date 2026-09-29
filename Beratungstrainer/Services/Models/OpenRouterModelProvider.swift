@@ -526,8 +526,11 @@ enum OpenRouterSchema {
         Eine Frage ohne abgewartete Antwort ist NIE eine Erlaubnis.
         vom_klienten_erbeten: die Figur hat selbst um einen Vorschlag gebeten; response zitiert
         diese Bitte, request=null. Das ist kein Vorwurf und keine förmliche Erlaubnis.
-        nicht_eingeholt: im verfügbaren Kontext ist keine Frage und keine Bitte erkennbar;
-        request/response/consumedBy=null. Nur wählen, wenn der gezeigte Verlauf das trägt.
+        nicht_eingeholt: im verfügbaren Kontext ist keine passende Erlaubnis für genau diesen
+        Ratschlag in dieser Situation und keine entsprechende direkte Bitte erkennbar;
+        request/response/consumedBy=null. Eine Zustimmung zu einem anderen Gegenstand trägt
+        diesen Rat nicht. Prüfe den Gegenstand der Frage gegen den konkreten Ratschlag.
+        Nur wählen, wenn der gezeigte Verlauf das trägt.
         unklar: Belege reichen nicht; alle drei Referenzen null. Bei abgeschnittenem oder
         lückenhaftem Verlauf unklar statt nicht_eingeholt. Erfinde nie eine Zustimmung und
         nie eine Ablehnung; leite Zustimmung niemals aus einer noch nicht erzeugten Antwort ab.

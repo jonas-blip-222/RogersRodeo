@@ -643,3 +643,38 @@ private let erteilteErlaubnis = """
     #expect(try await repository.load(id: session.id).turns.isEmpty)
     #expect(await stub.callCount == 1)
 }
+
+
+// Unabhängige Ergänzung von Codex: kontrollierte Modelleinschätzungen, keine Prüfung
+// semantischer Modellqualität. Der Adapter muss Gegenstands- und Methodengrenzen bis
+// zur Rückmeldung erhalten, ohne aus dem früheren Ja selbst eine Erlaubnis abzuleiten.
+@Test func andereGegenstaendeUndMethodenzustimmungErteilenKeineRatserlaubnis() async throws {
+    let cases: [(String, String, String)] = [
+        ("Möchten Sie eine Idee hören, wie Sie Ihre Notizen ordnen?", "Ja, gerne.",
+         "Sie könnten Sarah einen Brief schreiben."),
+        ("Möchten Sie Ihre eigenen Ideen auf einem Blatt sammeln?", "Ja, das machen wir.",
+         "Sie könnten am Freitag zu Hause bleiben.")]
+    for (question, answer, advice) in cases {
+        let context: [DialogueMessage] = [.init(speaker: .counselor, text: question),
+                                          .init(speaker: .client, text: answer)]
+        let analysis = TurnAnalysis(segments: [.init(quote: advice, code: .adviceWithoutPermission,
+                                                     isUncertain: false)], permissions: [
+            .init(advice: .init(source: .currentInput, speaker: .counselor, messageIndex: nil,
+                               quote: advice, occurrence: 1), standing: .notRequested)])
+        let output = String(decoding: try JSONEncoder().encode(analysis), as: UTF8.self)
+        let stub = StubTransport([modelAnswer(leereZielstufe), modelAnswer(output)])
+        let provider = stubProvider(stub)
+        try await provider.prepare()
+        let result = try await provider.analyze(.init(codingGuide: "G", recentMessages: context,
+                                                       currentInput: advice))
+        #expect(result.contextMessagesUsed == context)
+        let findings = FeedbackEngine.findings(analysis: result.value, input: advice, context: context,
+            characterName: "Lukas", rulesVersion: ConversationCoordinator.rulesVersion,
+            permission: .init(entries: PermissionTracker.resolve(result.value.permissions ?? [], context: context),
+                              contextIsComplete: true))
+        #expect(findings.count == 1)
+        #expect(findings.first?.ruleID == "warnung.rat_ohne_erlaubnis")
+        #expect(findings.first?.certainty == .confirmed)
+        #expect(findings.first?.reviewStatus == .draft)
+    }
+}
