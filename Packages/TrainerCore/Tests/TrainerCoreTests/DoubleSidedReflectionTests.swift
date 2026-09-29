@@ -31,7 +31,7 @@ private func findings(_ analysis: TurnAnalysis, _ input: String) -> [FeedbackFin
     #expect(praise.message.contains("Gut angeordnet"))
     #expect(praise.message.contains("Change Talk am Ende"))
     #expect(praise.evidence.count == 4)
-    #expect(praise.templateVersion == "0.2")
+    #expect(praise.templateVersion == FeedbackTemplates.version)
     #expect(praise.sourceID == "E04")
     #expect(!result.contains { $0.ruleID == "rueckmeldung.komplexe_reflexion" })
     for reference in praise.evidence { try OutputValidator.validateEvidence(reference, input: input, context: context) }

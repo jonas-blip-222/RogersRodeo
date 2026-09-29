@@ -27,7 +27,7 @@ private func object(_ data: Data) throws -> [String: Any] {
 @Test func einordnungsschemaEnthaeltBelegteDoppelseitigeReflexion() throws {
     let schema = try object(try OpenRouterSchema.analysis.serialized())
     #expect(schema["additionalProperties"] as? Bool == false)
-    #expect(schema["required"] as? [String] == ["segments", "doubleSidedReflection", "characterObservations", "goalUpdates"])
+    #expect(schema["required"] as? [String] == ["segments", "doubleSidedReflection", "permissions", "characterObservations", "goalUpdates"])
     let properties = try #require(schema["properties"] as? [String: Any])
     let segments = try #require(properties["segments"] as? [String: Any])
     #expect(segments["type"] as? String == "array")
@@ -380,7 +380,7 @@ private func envelope(content: String?, finish: String?, refusal: String? = nil,
     #expect(!OpenRouterSchema.memoryPrompt(request).contains("NOCH_UNBEANTWORTETER_VORSCHLAG"))
     #expect(OpenRouterSchema.analysisPrompt(request).contains("NOCH_UNBEANTWORTETER_VORSCHLAG"))
     for (schema, expected) in [(OpenRouterSchema.memoryAnalysis, Set(["goalUpdates", "characterObservations"])),
-                                (OpenRouterSchema.counselorAnalysis, Set(["segments", "doubleSidedReflection"]))] {
+                                (OpenRouterSchema.counselorAnalysis, Set(["segments", "doubleSidedReflection", "permissions"]))] {
         let root = try object(schema.serialized())
         #expect(Set(try #require(root["required"] as? [String])) == expected)
         #expect(Set(try #require(root["properties"] as? [String: Any]).keys) == expected)
@@ -518,6 +518,60 @@ private let pruefAnfrage = ReplyRequest(publicProfile: "P", behaviorInstruction:
     await #expect(throws: TrainerFailure.invalidAnalysis) { _ = try await provider.analyze(request) }
     #expect(await stub.callCount == 2)
     #expect(try await stub.sentBudgets() == [1500, 4000])
+}
+
+// MARK: - Erlaubnisvertrag der Beraterstufe
+
+private let erlaubnisKontext: [DialogueMessage] = [
+    .init(speaker: .counselor, text: "Möchten Sie eine Idee hören?"),
+    .init(speaker: .client, text: "Ja, gerne.")]
+private let erlaubnisRat = "Sie könnten es kurz notieren."
+private func erlaubnisAnfrage() -> AnalysisRequest {
+    AnalysisRequest(codingGuide: "G", recentMessages: erlaubnisKontext, currentInput: erlaubnisRat)
+}
+private func beraterstufe(_ permissions: String) -> String {
+    """
+    {"segments":[{"quote":"\(erlaubnisRat)","code":"ratschlag_mit_erlaubnis","isUncertain":false,\
+    "supportingClientQuote":null}],"doubleSidedReflection":null\(permissions)}
+    """
+}
+private let erteilteErlaubnis = """
+    ,"permissions":[{"advice":{"source":"aktuelle_eingabe","speaker":"counselor","messageIndex":null,\
+    "quote":"\(erlaubnisRat)","occurrence":1},"standing":"erteilt","request":{"source":"kontextnachricht",\
+    "speaker":"counselor","messageIndex":0,"quote":"Möchten Sie eine Idee hören?","occurrence":1},\
+    "response":{"source":"kontextnachricht","speaker":"client","messageIndex":1,"quote":"Ja, gerne.",\
+    "occurrence":1},"consumedBy":null,"isUncertain":false}]
+    """
+
+@Test func dieBeraterstufeVerlangtDenErlaubnisvertragUndNimmtIhnAuf() async throws {
+    let stub = StubTransport([modelAnswer(leereZielstufe), modelAnswer(beraterstufe(erteilteErlaubnis))])
+    let provider = stubProvider(stub)
+    try await provider.prepare()
+    let result = try await provider.analyze(erlaubnisAnfrage())
+    let permissions = try #require(result.value.permissions)
+    #expect(permissions.count == 1)
+    #expect(permissions[0].standing == .granted)
+    #expect(permissions[0].response?.quote == "Ja, gerne.")
+    // Das Schema der Stufe fordert das Feld ausdrücklich an.
+    let requests = await stub.requests
+    let raw = try #require(requests[1].httpBody)
+    let body = try #require(JSONSerialization.jsonObject(with: raw) as? [String: Any])
+    let format = try #require(body["response_format"] as? [String: Any])
+    let wrapper = try #require(format["json_schema"] as? [String: Any])
+    let schema = try #require(wrapper["schema"] as? [String: Any])
+    let required = try #require(schema["required"] as? [String])
+    #expect(Set(required) == ["segments", "doubleSidedReflection", "permissions"])
+}
+
+@Test func fehlendeOderLeereErlaubnisAntwortGiltNichtAlsAltvertrag() async throws {
+    // Ein weggelassenes oder auf null gesetztes Feld sähe im Core wie eine ältere Analyse
+    // ohne diesen Vertrag aus — und damit ein Ratschlag ohne jede Erlaubnisprüfung.
+    for antwort in [beraterstufe(""), beraterstufe(",\"permissions\":null"), beraterstufe(",\"permissions\":[]")] {
+        let stub = StubTransport([modelAnswer(leereZielstufe)] + Array(repeating: modelAnswer(antwort), count: 2))
+        let provider = stubProvider(stub)
+        try await provider.prepare()
+        await #expect(throws: TrainerFailure.invalidAnalysis) { _ = try await provider.analyze(erlaubnisAnfrage()) }
+    }
 }
 
 @Test func ohneBrauchbareAntwortAberMitTransportfehlerKommtKeinSchemafehler() async throws {

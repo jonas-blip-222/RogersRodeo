@@ -126,7 +126,7 @@ public struct FeedbackTemplate: Sendable, Equatable {
 /// Der Bestand der Textbausteine. Eigene Version, damit eine Formulierungsänderung nicht die
 /// `rulesVersion` der Sitzung anfassen muss — die entscheidet über die Fortsetzbarkeit.
 public enum FeedbackTemplates {
-    public static let version = "0.2"
+    public static let version = "0.3"
 
     /// Fachlicher Entwurf. Formulierungen sind an Abschnitt 7.1 angelehnt und noch nicht
     /// fachlich geprüft; Quellenkennungen verweisen auf Abschnitt 14 des MI-Nachtrags; E04 auf die Produktentscheidung.
@@ -150,6 +150,36 @@ public enum FeedbackTemplates {
         .init(ruleID: "warnung.rat_ohne_erlaubnis", kind: .warning, certainty: .possible,
               title: "Möglicher Rat ohne Erlaubnis",
               format: "„{zitat}“ wirkt wie ein Rat. Ob dafür eine Erlaubnis vorliegt, ist unsicher.",
+              sourceID: "S3"),
+        // Erlaubnis: ein Ja trägt genau einen Ratschlag in genau dieser Situation.
+        // Alle Formulierungen sind Entwurf und fachlich ungeprüft.
+        .init(ruleID: "rueckmeldung.rat_mit_erlaubnis", kind: .observation, certainty: .confirmed,
+              title: "Rat mit Erlaubnis",
+              format: "Du hast vorher gefragt, {figur} hat mit „{beleg}“ zugestimmt, und „{zitat}“ ist der eine Vorschlag dazu.",
+              sourceID: "S3"),
+        .init(ruleID: "rueckmeldung.rat_auf_bitte", kind: .observation, certainty: .confirmed,
+              title: "Vorschlag auf Bitte",
+              format: "{figur} hat mit „{beleg}“ selbst um einen Vorschlag gebeten. „{zitat}“ kommt damit nicht unaufgefordert.",
+              sourceID: "S3"),
+        .init(ruleID: "warnung.erlaubnis_nicht_abgewartet", kind: .warning, certainty: .confirmed,
+              title: "Antwort nicht abgewartet",
+              format: "Du fragst mit „{beleg}“ um Erlaubnis und gibst den Rat „{zitat}“ noch vor der Antwort von {figur}.",
+              sourceID: "S3"),
+        .init(ruleID: "warnung.rat_trotz_ablehnung", kind: .warning, certainty: .confirmed,
+              title: "Rat trotz Ablehnung",
+              format: "{figur} hat mit „{beleg}“ abgelehnt. „{zitat}“ gibt den Rat trotzdem.",
+              sourceID: "S3"),
+        .init(ruleID: "warnung.rat_nach_widerruf", kind: .warning, certainty: .confirmed,
+              title: "Rat nach Widerruf",
+              format: "{figur} hat die Zustimmung mit „{beleg}“ zurückgenommen. „{zitat}“ knüpft trotzdem daran an.",
+              sourceID: "S3"),
+        .init(ruleID: "warnung.erlaubnis_bereits_verbraucht", kind: .warning, certainty: .confirmed,
+              title: "Zustimmung schon genutzt",
+              format: "Die Zustimmung „{beleg}“ galt für einen Vorschlag, den du schon gegeben hast. Für „{zitat}“ brauchst du eine neue Frage und eine neue Antwort.",
+              sourceID: "S3"),
+        .init(ruleID: "warnung.erlaubnis_aus_frueherer_situation", kind: .warning, certainty: .confirmed,
+              title: "Zustimmung aus früherer Situation",
+              format: "„{beleg}“ gehört zu einer früheren Stelle im Gespräch. Für „{zitat}“ gilt sie hier nicht weiter.",
               sourceID: "S3"),
         .init(ruleID: "rueckmeldung.komplexe_reflexion", kind: .observation, certainty: .confirmed,
               title: "Komplexe Reflexion",
@@ -194,7 +224,8 @@ public enum FeedbackEngine {
     static let observationLimit = 2
 
     public static func findings(analysis: TurnAnalysis?, input: String, context: [DialogueMessage],
-                                characterName: String, rulesVersion: String) -> [FeedbackFinding] {
+                                characterName: String, rulesVersion: String,
+                                permission: PermissionReport = .unavailable) -> [FeedbackFinding] {
         // Ohne Analyse gibt es keinen Befund — und ausdrücklich auch keine Entwarnung.
         // Den Unterschied trägt `PreliminaryFeedback.analysisAvailable` in die Oberfläche.
         guard let analysis, !analysis.segments.isEmpty,
@@ -205,13 +236,21 @@ public enum FeedbackEngine {
 
         var results: [(position: String.Index, finding: FeedbackFinding)] = []
 
+        // Ratschläge mit eigener, belegter Erlaubniseinschätzung zuerst: Ihr Befund ersetzt
+        // die allgemeine Warnung aus dem bloßen Segmentcode für dasselbe Segment.
+        let assessed = permissionFindings(permission, placed: placed, input: input, context: context,
+                                          characterName: characterName, rulesVersion: rulesVersion)
+        results += assessed.results
+
         for (code, ruleID) in warningRules {
             // Ein sicherer Befund schlägt den unsicheren: sonst stünde „Möglicher Druck“
             // neben derselben, bereits belegten Warnung.
-            let candidate = placed.first { $0.0.code == code && !$0.0.isUncertain }
-                ?? placed.first { $0.0.code == code }
-            guard let candidate else { continue }
-            let certainty: FeedbackCertainty = candidate.0.isUncertain ? .possible : .confirmed
+            let open = placed.enumerated().filter { $0.element.0.code == code && !assessed.covered.contains($0.offset) }
+            guard let candidate = (open.first { !$0.element.0.isUncertain } ?? open.first)?.element else { continue }
+            // Ohne Erlaubniseinschätzung und ohne vollständigen Kontext bleibt offen, ob
+            // eine frühere Zustimmung außerhalb des Fensters liegt: dann kein sicherer Vorwurf.
+            let unsureContext = code == .adviceWithoutPermission && !permission.contextIsComplete
+            let certainty: FeedbackCertainty = candidate.0.isUncertain || unsureContext ? .possible : .confirmed
             guard let finding = build(segment: candidate.0, range: candidate.1, ruleID: ruleID,
                                       certainty: certainty, requiresSupport: false, input: input,
                                       context: context, characterName: characterName,
@@ -238,7 +277,10 @@ public enum FeedbackEngine {
             // Die ausdrücklich gewünschte Reihenfolge darf nicht durch das Anzeigelimit verschwinden.
             results.append(doubleSided)
         }
-        results += observations.prefix(observationLimit - (doubleSided == nil ? 0 : 1))
+        // Belegte Erlaubnis und doppelseitige Reflexion sind die spezifischeren Rückmeldungen
+        // und zählen gegen dasselbe knappe Anzeigebudget.
+        let reserved = (doubleSided == nil ? 0 : 1) + assessed.results.filter { $0.finding.kind == .observation }.count
+        results += observations.prefix(max(0, observationLimit - reserved))
 
         // Warnungen zuerst, innerhalb einer Art in der Reihenfolge des eigenen Beitrags.
         return results.sorted { left, right in
@@ -246,6 +288,78 @@ public enum FeedbackEngine {
             if leftWarning != rightWarning { return leftWarning }
             return left.position < right.position
         }.map(\.finding)
+    }
+
+    /// Ein Befund je belegter Erlaubniseinschätzung. Die Zuordnung Lage → Textbaustein ist
+    /// die einzige Stelle, an der aus der semantischen Einschätzung eine Aussage wird; sie
+    /// ist bewusst vollständig und ohne Auffangzweig geschrieben.
+    ///
+    /// Unsicherheit — ob vom Modell gemeldet oder von `PermissionTracker` ergänzt — führt
+    /// immer in dieselbe zurückhaltende Formulierung: weder Lob noch Vorwurf. Genauso wird
+    /// aus einer fehlenden Erlaubnisfrage nur dann ein sicherer Befund, wenn der Analyse das
+    /// ganze bisherige Gespräch vorlag. Eine Kontextlücke bleibt eine Lücke.
+    private static func permissionFindings(_ report: PermissionReport,
+                                           placed: [(AnalysisSegment, Range<String.Index>)],
+                                           input: String, context: [DialogueMessage],
+                                           characterName: String, rulesVersion: String)
+        -> (covered: Set<Int>, results: [(position: String.Index, finding: FeedbackFinding)]) {
+        var covered: Set<Int> = []
+        var results: [(position: String.Index, finding: FeedbackFinding)] = []
+        for entry in report.entries {
+            let assessment = entry.assessment
+            guard let advice = try? OutputValidator.evidenceRange(assessment.advice, input: input, context: context),
+                  let segment = placed.enumerated().first(where: { item in
+                      [.adviceWithPermission, .adviceWithoutPermission].contains(item.element.0.code)
+                          && item.element.1.lowerBound <= advice.lowerBound
+                          && advice.upperBound <= item.element.1.upperBound
+                  }) else { continue }
+
+            let rule: (id: String, certainty: FeedbackCertainty, support: EvidenceReference?)
+            if entry.isUncertain || segment.element.0.isUncertain {
+                rule = ("warnung.rat_ohne_erlaubnis", .possible, nil)
+            } else {
+                switch entry.standing {
+                case .granted:
+                    rule = ("rueckmeldung.rat_mit_erlaubnis", .confirmed, assessment.response)
+                case .clientRequested:
+                    rule = ("rueckmeldung.rat_auf_bitte", .confirmed, assessment.response)
+                case .askedInSameInput:
+                    rule = ("warnung.erlaubnis_nicht_abgewartet", .confirmed, assessment.request)
+                case .refused:
+                    rule = ("warnung.rat_trotz_ablehnung", .confirmed, assessment.response)
+                case .withdrawn:
+                    rule = ("warnung.rat_nach_widerruf", .confirmed, assessment.response)
+                case .consumed:
+                    rule = ("warnung.erlaubnis_bereits_verbraucht", .confirmed, assessment.response)
+                case .pastSituation:
+                    rule = ("warnung.erlaubnis_aus_frueherer_situation", .confirmed, assessment.response)
+                case .notRequested:
+                    rule = ("warnung.rat_ohne_erlaubnis", report.contextIsComplete ? .confirmed : .possible, nil)
+                case .unclear:
+                    rule = ("warnung.rat_ohne_erlaubnis", .possible, nil)
+                }
+            }
+            guard let template = FeedbackTemplates.template(rule.id, rule.certainty) else { continue }
+            // Jede Aussage der Formulierung muss belegt sein: „Du hast vorher gefragt“
+            // trägt deshalb auch die Erlaubnisfrage, nicht nur die Zustimmung. Nur bei den
+            // zurückhaltenden Formulierungen ohne Bezug bleibt es beim eigenen Zitat.
+            let cited: [EvidenceReference?] = rule.support == nil
+                ? [] : [assessment.request, assessment.response, assessment.consumedBy]
+            let evidence = [assessment.advice] + cited.compactMap { $0 }
+            // Gegenprobe gegen die tatsächlich übergebenen Texte: ein erfundener oder falsch
+            // verorteter Beleg lässt den Befund entfallen, statt ihn zu tragen.
+            guard evidence.allSatisfy({
+                (try? OutputValidator.validateEvidence($0, input: input, context: context)) != nil
+            }) else { continue }
+            covered.insert(segment.offset)
+            results.append((advice.lowerBound, .init(
+                ruleID: template.ruleID, kind: template.kind, certainty: rule.certainty, title: template.title,
+                message: template.render(character: characterName, quote: assessment.advice.quote,
+                                         support: rule.support?.quote),
+                evidence: evidence, templateVersion: FeedbackTemplates.version, rulesVersion: rulesVersion,
+                sourceID: template.sourceID, reviewStatus: .draft)))
+        }
+        return (covered, results)
     }
 
     private static func doubleSidedFinding(_ analysis: TurnAnalysis, input: String,

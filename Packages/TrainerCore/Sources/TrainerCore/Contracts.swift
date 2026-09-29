@@ -67,10 +67,15 @@ public struct TurnAnalysis: Codable, Sendable, Equatable {
     /// nil: alter Stand/nicht erhoben; leer: im gesehenen Kontext keine Beobachtung.
     public var characterObservations: [CharacterObservation]?
     public var goalUpdates: [GoalUpdate]?
+    /// Erlaubnislage je Ratschlagssegment dieses Beitrags. nil: alter Stand/nicht erhoben;
+    /// leer: kein Ratschlag oder keine belegbare Einschätzung. Siehe `PermissionAssessment`.
+    public var permissions: [PermissionAssessment]?
     public init(segments: [AnalysisSegment], doubleSidedReflection: DoubleSidedReflection? = nil,
-                characterObservations: [CharacterObservation]? = nil, goalUpdates: [GoalUpdate]? = nil) {
+                characterObservations: [CharacterObservation]? = nil, goalUpdates: [GoalUpdate]? = nil,
+                permissions: [PermissionAssessment]? = nil) {
         self.segments = segments; self.doubleSidedReflection = doubleSidedReflection
         self.characterObservations = characterObservations; self.goalUpdates = goalUpdates
+        self.permissions = permissions
     }
 }
 

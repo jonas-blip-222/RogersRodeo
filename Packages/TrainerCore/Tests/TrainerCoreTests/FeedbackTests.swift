@@ -15,11 +15,15 @@ import Testing
 
 private let figur = "Lukas"
 
+// Die Fixtures stellen den jeweils vollständig bekannten Austausch dar; deshalb ist die
+// Vorgabe `contextIsComplete: true`. Die Abstufung bei gekürztem Kontext hat eigene Prüfungen
+// in PermissionTests.swift.
 private func befunde(_ analysis: TurnAnalysis?, _ input: String,
-                     _ context: [String] = [], counselorContext: [DialogueMessage] = []) -> [FeedbackFinding] {
+                     _ context: [String] = [], counselorContext: [DialogueMessage] = [],
+                     permission: PermissionReport = .init(contextIsComplete: true)) -> [FeedbackFinding] {
     let messages = context.map { DialogueMessage(speaker: .client, text: $0) } + counselorContext
     return FeedbackEngine.findings(analysis: analysis, input: input, context: messages,
-                                   characterName: figur, rulesVersion: "0.1")
+                                   characterName: figur, rulesVersion: "0.1", permission: permission)
 }
 
 // MARK: - Warnungen

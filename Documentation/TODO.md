@@ -23,6 +23,21 @@ MI-03 bleibt teilweise offen. Der Sitzungsrahmen ist dokumentiert, noch nicht in
 - [x] MI-03: doppelseitige Reflexion mit belegten Sustain-/Change-Seiten und ausdrücklichem
       Lob für Sustain zuerst, Change danach. Produktentscheidung E04; Prompt und Bausteine 0.2.
 - [ ] Neues Analyseschema mit echtem Modell und aktuelle Feedbackanzeige im Simulator prüfen.
+- [x] MI-03: Erlaubnis vor einem Ratschlag belegt einordnen und zurückmelden (30.09.2026).
+      Jonas’ Festlegungen: Eine Erlaubnis gilt nur für die aktuelle Situation, und ein Ja
+      erlaubt genau einen Ratschlag; danach ist es verbraucht — auch beim selben Thema und
+      auch innerhalb desselben Beitrags. Neun Lagen je Ratschlagssegment, Modell entscheidet
+      semantisch mit Belegen, Validator prüft Herkunft, Sprecher, Reihenfolge, Zitate und die
+      Wiederverwendung der Zustimmung. Prompt 0.6, Regeln 0.5, Bausteine 0.3.
+- [ ] **Zweiter Schritt der Erlaubnis:** dauerhaftes, belegtes Erlaubnisgedächtnis über das
+      Kontextfenster hinaus, nach dem Vorbild des Zielgedächtnisses mit sitzungsstabiler
+      Herkunft im `SimulationState`. Heute arbeitet die Einordnung nur auf dem tatsächlich
+      gesehenen Kontext; eine weiter zurückliegende Zustimmung bleibt deshalb unsicher statt
+      sicher fortgeschrieben. Erst damit lässt sich der Verbrauch über viele Runden hinweg
+      sicher statt vorsichtig beurteilen.
+- [ ] Offen bleibt die strengere Produktregel aus Abschnitt 13: Muss nach einer direkten Bitte
+      („Welchen Vorschlag haben Sie?") zusätzlich rückversichert werden? Bis zur Entscheidung
+      erzeugt sie eine neutrale Rückmeldung und keinen Vorwurf.
 - [x] MI-03: Veränderungsbereitschaft, Zuversicht und Rapport getrennt als belegte
       Beobachtungen speichern. Bereitschaft/Zuversicht sind an einen konkreten Zielbeleg
       gebunden, Rapport ist eigenständig. Dauerhafte Nachrichtenherkunft, Unsicherheit,
@@ -75,9 +90,10 @@ statt lokaler Inferenz gemäß E01–E03. MI-03 und MI-04 bleiben insgesamt offe
 - [ ] Formulierungen der Textbausteine fachlich prüfen und freigeben. Sie tragen bis dahin
       `reviewStatus: .draft`. Zu klären ist auch die Anrede: die Bausteine duzen die übende
       Person wie die übrige Oberfläche, die Beispiele im MI-Nachtrag siezen.
-- [ ] Prozessbeobachtungen ergänzen (Wanderfalle, Erlaubnislage über mehrere Turns, Bubble
-      Sheet, verlorener Fokus). Sie lassen sich nicht aus dem primären Figuren-Tag ableiten
-      und gehören zu MI-03; die Fälle 7 bis 14 sind dafür noch nicht abgedeckt.
+- [ ] Prozessbeobachtungen ergänzen (Wanderfalle, Bubble Sheet, verlorener Fokus). Sie lassen
+      sich nicht aus dem primären Figuren-Tag ableiten und gehören zu MI-03; die Fälle 7 bis 9
+      sowie 11 bis 14 sind dafür noch nicht abgedeckt. Die Erlaubnislage ist seit dem
+      30.09.2026 abgedeckt, siehe eigener Abschnitt.
 
 ## 2. Oberfläche und Illustrationen – heute vorgesehen
 

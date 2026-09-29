@@ -9,7 +9,7 @@ public enum OutputValidator {
 
     public static func decodeAnalysis(_ data: Data, input: String, context: [DialogueMessage]) throws -> TurnAnalysis {
         do {
-            let object = try exactKeys(JSONSerialization.jsonObject(with: data), required: ["segments"], optional: ["doubleSidedReflection", "characterObservations", "goalUpdates"])
+            let object = try exactKeys(JSONSerialization.jsonObject(with: data), required: ["segments"], optional: ["doubleSidedReflection", "characterObservations", "goalUpdates", "permissions"])
             guard let segments = object["segments"] as? [Any] else { throw TrainerFailure.invalidAnalysis }
             for value in segments {
                 _ = try exactKeys(value, required: ["quote", "code", "isUncertain"], optional: ["supportingClientQuote"])
@@ -49,6 +49,19 @@ public enum OutputValidator {
                     }
                 }
             }
+            if let raw = object["permissions"], !(raw is NSNull) {
+                guard let entries = raw as? [Any] else { throw TrainerFailure.invalidAnalysis }
+                for value in entries {
+                    let entry = try exactKeys(value, required: ["advice", "standing", "isUncertain"],
+                                              optional: ["request", "response", "consumedBy"])
+                    for field in ["advice", "request", "response", "consumedBy"] {
+                        if let reference = entry[field], !(reference is NSNull) {
+                            _ = try exactKeys(reference, required: ["source", "speaker", "quote", "occurrence"],
+                                              optional: ["messageIndex"])
+                        }
+                    }
+                }
+            }
             let analysis = try JSONDecoder().decode(TurnAnalysis.self, from: data)
             try validateAnalysis(analysis, input: input, context: context)
             return analysis
@@ -80,6 +93,7 @@ public enum OutputValidator {
     public static func validateAnalysis(_ analysis: TurnAnalysis, input: String, context: [DialogueMessage]) throws {
         try validateGoalUpdates(analysis.goalUpdates ?? [], input: input, context: context)
         let ranges = try locations(analysis, input: input)
+        try validatePermissions(analysis, input: input, context: context, ranges: ranges)
         for segment in analysis.segments {
             if let quote = segment.supportingClientQuote {
                 guard !quote.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,

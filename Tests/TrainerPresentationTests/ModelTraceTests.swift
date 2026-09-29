@@ -15,7 +15,7 @@ private final class TraceCollector: @unchecked Sendable {
 
 private let traceReply = #"{"text":"Vielleicht.","primaryTag":null,"disclosedFactIDs":[]}"#
 private let traceMemory = #"{"goalUpdates":[],"characterObservations":[]}"#
-private let traceAnalysis = #"{"segments":[{"quote":"Hallo","code":"sonstiges","isUncertain":false,"supportingClientQuote":null}],"doubleSidedReflection":null}"#
+private let traceAnalysis = #"{"segments":[{"quote":"Hallo","code":"sonstiges","isUncertain":false,"supportingClientQuote":null}],"doubleSidedReflection":null,"permissions":[]}"#
 private let traceRequest = ReplyRequest(publicProfile: "PRIVATE_PROFILE", behaviorInstruction: "PRIVATE_BEHAVIOR",
     visibleFacts: [], recentMessages: [], currentInput: "PRIVATE_INPUT", analysis: nil)
 

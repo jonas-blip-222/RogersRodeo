@@ -3,6 +3,108 @@
 Neueste Prüfungen zuerst. Ältere Abschnitte bleiben als Verlauf erhalten und werden nicht
 rückwirkend umgeschrieben.
 
+## 30. September 2026 · MI-03-Teilschritt: Erlaubnis vor einem Ratschlag
+
+Branch `claude/mi03-erlaubnis`, Basis `ab66292`. Kein Modellaufruf, kein Push, keine
+Änderung an E07 oder den MI-04-Entscheidungen. MI-04 ist weiterhin nur geplant.
+
+### Zwei Festlegungen von Jonas
+
+1. „Generell gilt eine Erlaubnis in so einem Kontext nur für die aktuelle Situation." Der
+   gleiche Gegenstand trägt eine Zustimmung also nicht in eine spätere Gesprächssituation;
+   es gibt keine pauschale und keine dauerhafte Erlaubnis.
+2. „Wenn ich jemanden frage, ob ich ihm einen Ratschlag geben darf und er sagt ja, dann gebe
+   ich ihm 1! Ratschlag." Danach ist die Zustimmung verbraucht — auch beim selben Thema, auch
+   in derselben Situation und auch dann, wenn beide Ratschläge im selben Beitrag stehen.
+
+Beides steht jetzt als verbindliche Regel im Analysevertrag und im Prompt. Unverändert offen
+bleibt die strengere Produktfrage aus Abschnitt 13: ob nach einer direkten Bitte wie „Welchen
+Vorschlag haben Sie?" zusätzlich rückversichert werden muss. Diese Bitte erzeugt deshalb
+weiterhin keinen Vorwurf.
+
+### Was jetzt geschieht
+
+`TurnAnalysis.permissions` ist eine Einschätzung je Ratschlagssegment des gesendeten Beitrags
+mit neun möglichen Lagen: erteilt, bereits verbraucht, frühere Situation, abgelehnt,
+widerrufen, im selben Beitrag gefragt, vom Klienten erbeten, nicht eingeholt, unklar. Das
+Modell trifft die semantische Einschätzung und muss sie mit wörtlichen Belegen ausweisen;
+`OutputValidator.validatePermissions` prüft ausschließlich Nachprüfbares: Herkunft, Sprecher,
+Reihenfolge, Zitate, Zuordnung zum Segment, Widerspruch zum Segmentcode und die
+Wiederverwendung derselben Zustimmung. Es gibt bewusst keine Stichwortliste, die „ja" oder
+„Darf ich" als Erlaubnisdetektor benutzt, und keine Turnzahl als fachliche Regel.
+
+Daraus entstehen Rückmeldungen mit eigenen Textbausteinen (alle `reviewStatus: .draft`):
+belegte Erlaubnis und Vorschlag auf Bitte als Rückmeldung, dazu Warnungen für nicht
+abgewartete Antwort, Rat trotz Ablehnung, Rat nach Widerruf, verbrauchte Zustimmung und
+Zustimmung aus einer früheren Situation. Unsicherheit — gemeldet oder ergänzt — führt immer
+in dieselbe zurückhaltende Formulierung, also weder Lob noch Vorwurf.
+
+### Grenzen, die absichtlich so gezogen sind
+
+- **Ein Ja, ein Ratschlag, strukturell geprüft.** Eine Zustimmung wird über die Nachricht
+  geführt, nicht über die Zeichenfolge des Zitats: „Ja, gerne." und „gerne" sind dieselbe
+  Zusage und tragen zusammen genau einen Ratschlag. Ein zweiter Ratschlag muss als
+  „bereits verbraucht" ausgewiesen werden und den aufbrauchenden früheren Ratschlag zitieren;
+  im selben Beitrag muss dieser in einem vorangehenden Ratschlagssegment liegen, das genau
+  diese Zustimmung genutzt hat. Eine vorangehende Frage verbraucht nichts.
+- **Situationsbezug bleibt semantisch.** Ob dieselbe Zustimmung noch zur aktuellen Situation
+  gehört, entscheidet das Modell mit Belegen. Strukturell geprüft wird nur eine Vorsichtsregel:
+  Sicher ist eine Zustimmung nur, wenn sie die letzte Nachricht des gesehenen Kontexts ist.
+  Steht danach noch etwas, bleibt die Einschätzung unsicher — der eine erlaubte Ratschlag
+  könnte dort schon gefallen, die Situation weitergezogen oder die Zustimmung zurückgenommen
+  worden sein. Diese Regel nimmt nur Sicherheit aus einem Freispruch; sie erzeugt nie einen
+  sicheren Vorwurf.
+- **Kontextlücke bleibt Lücke.** „Nicht eingeholt" wird nur dann ein sicherer Befund, wenn der
+  Analyse das ganze bisherige Gespräch vorlag; `ContextBuilder.covers` prüft das über die
+  dauerhafte Herkunft jeder Nachricht, nicht über ihre Anzahl. Sonst bleibt es bei „möglich".
+  Dasselbe gilt für einen Ratschlag ganz ohne Erlaubniseinschätzung, etwa aus einer älteren
+  Analyse. Belegte Vorwürfe wie Ablehnung oder Widerruf bleiben dagegen sicher: Sie stützen
+  sich auf ein vorhandenes Zitat und nicht auf ein Schweigen.
+- **Kein dauerhaftes Erlaubnisgedächtnis.** Dieser Schritt arbeitet ausschließlich auf dem
+  tatsächlich gesehenen Kontext. Ein über das Kontextfenster hinaus belegter Erlaubnisverlauf
+  nach dem Vorbild des Zielgedächtnisses — mit sitzungsstabiler Herkunft im `SimulationState`
+  — ist ein eigener zweiter Schritt und ausdrücklich noch nicht gebaut. Bis dahin ist eine
+  weiter zurückliegende Zustimmung unsicher statt sicher fortgeschrieben.
+- Rollenverhalten, Offenheitsmodell, `StateReducer` und die Tippauswahl sind unverändert.
+  Die Figurenantwort entsteht weiterhin nach der Rückmeldung und kann sie nicht färben.
+
+### Versionen und Bestandsdaten
+
+Prompt 0.6, Regeln 0.5, Textbausteine 0.3. Ältere Sitzungen bleiben lesbar und exportierbar;
+`permissions: nil` heißt „nicht erhoben" und erzeugt keine Scheinbefunde. Wegen der neuen
+Regel- und Promptstände sind vorhandene Sitzungen nicht fortsetzbar — das ist der
+dokumentierte Weg statt einer stillen Übersetzung. Im Adapter gilt umgekehrt: Eine fehlende
+oder auf `null` gesetzte Liste wird nicht still als Altvertrag akzeptiert, sondern abgewiesen.
+
+### Unabhängige Gegenprobe von Codex
+
+Codex hat drei Gegenproben gegen den ersten Entwurf ausgeführt; alle drei deckten echte
+Lücken auf und wurden übernommen: zwei Ausschnitte derselben Zustimmung trugen zwei
+Ratschläge, eine vorangehende offene Frage galt als aufbrauchender Ratschlag, und eine leere
+Liste neben einem Ratschlag wurde als gültig akzeptiert. Zusätzlich korrigiert: Die belegte
+Erlaubnis führt jetzt auch die Erlaubnisfrage als Beleg mit, weil die Formulierung sie
+behauptet, und eine bereits aufgebrauchte Zustimmung kann in derselben Analyse nicht später
+wieder als erteilt gelten.
+
+### Prüfungen
+
+Alle vier Läufe Exit 0, vollständige Logs im Arbeitsbaum unter
+`.build/rr-mi03-permission-logs/` (ignoriert). Der vorgesehene Ablageort `/private/tmp/` ließ
+sich nicht beschreiben, weil die Sitzung nur im Arbeitsbaum schreiben darf; der
+Schutzmechanismus wurde nicht umgangen.
+
+- `swift build`: erfolgreich.
+- TrainerCore: **100 Tests bestanden** (81 vorher, 19 neu in `PermissionTests.swift`).
+- TrainerStorage: **3 Tests bestanden.**
+- App/TrainerPresentation: **72 Tests bestanden**, Live-Tests übersprungen. Ausgenommen sind
+  sechs Schlüsselbundtests — die fünf bekannten aus `SettingsTests.swift` und zusätzlich
+  `leererUmgebungswertZaehltNicht` aus `OpenRouterTests.swift`, das ebenfalls den
+  Schlüsselbund abfragt. Kein schlüsselbundfreier Gesamtlauf behauptet.
+
+Nicht geprüft: kein Modellaufruf, keine Live-Rolle, kein Simulator-/Gerätelauf, keine
+fachliche Validierung der Formulierungen und keine Aussage darüber, wie zuverlässig ein
+echtes Modell diese Erlaubnislagen trifft.
+
 ## 29. September 2026 · MI-04-Sitzungsrahmen dokumentiert
 
 Jonas hat festgelegt: typischer Gesprächseinstieg mit Begrüßung und offener Frage;

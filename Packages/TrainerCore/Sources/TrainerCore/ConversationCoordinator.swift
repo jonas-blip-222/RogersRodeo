@@ -56,8 +56,10 @@ public enum RoundDeadline {
 }
 
 public actor ConversationCoordinator {
-    public static let promptVersion = "0.5"
-    public static let rulesVersion = "0.4"
+    /// 0.6: Erlaubnislage je Ratschlag als eigener Belegvertrag in der Beraterstufe.
+    public static let promptVersion = "0.6"
+    /// 0.5: Erlaubnisbefunde und die Abstufung bei unvollständigem Kontext.
+    public static let rulesVersion = "0.5"
     private let repository: any SessionRepository
     private let provider: any TrainerModelProvider
     private var generation: UUID?
@@ -200,9 +202,16 @@ public actor ConversationCoordinator {
         // Sitzung, PendingTurn, erwartete Revision und diesen Ausführungsversuch gebunden.
         // Die Befunde entstehen allein aus Eingabe und bereits vorhandenem Kontext; die
         // Antwort von Lukas existiert an dieser Stelle noch nicht und kann sie nicht färben.
+        // Die Erlaubnislage wird am tatsächlich gesehenen Kontext nachgeprüft, bevor sie in
+        // eine Formulierung eingeht. `covers` beantwortet dabei, ob überhaupt das ganze
+        // Gespräch vorlag — ein gekürztes Fenster darf keinen sicheren Vorwurf tragen.
+        let permission = PermissionReport(
+            entries: PermissionTracker.resolve(analysis?.permissions ?? [], context: analysisContext),
+            contextIsComplete: ContextBuilder.covers(analysisContext, session: session))
         let findings = FeedbackEngine.findings(analysis: analysis, input: text, context: analysisContext,
                                                characterName: session.content.scenario.name,
-                                               rulesVersion: session.identity.rulesVersion)
+                                               rulesVersion: session.identity.rulesVersion,
+                                               permission: permission)
         if let onFeedback {
             await onFeedback(.init(sessionID: sessionID, turnID: pending.id,
                                    expectedRevision: session.revision, attempt: token, input: text,
