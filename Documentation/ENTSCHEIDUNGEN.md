@@ -246,7 +246,9 @@ Wirkung der Einstellung nur über die Zusage von OpenRouter; eine eigene Prüfun
 
 ## E07 · Aufklärung über einen einmaligen Disclaimer statt Dauerhinweisen
 
-**Datum:** 29.09.2026 · **Entschieden von:** Jonas · **Status:** beschlossen, noch nicht gebaut
+**Datum:** 29.09.2026 · **Entschieden von:** Jonas · **Status:** beschlossen und gebaut; der
+Text ist ein **Entwurf und von Jonas noch nicht abgenommen**
+(`DisclaimerText.reviewStatus == .draft`)
 
 Die Aufklärung der übenden Person läuft über einen einmaligen Disclaimer, durch den man sich
 klicken muss, bevor die App benutzbar ist. Sie läuft **nicht** über dauerhafte Hinweistexte in
@@ -267,8 +269,8 @@ einmaliger, bewusst zu bestätigender Schritt erreicht die Aufklärung zuverläs
 verstreute Randnotizen.
 
 **Grenzen.** Eine Bestätigung ist kein Nachweis, dass gelesen und verstanden wurde, und sie ist
-keine rechtliche Prüfung der Aufklärungspflichten. Der Text ist noch nicht geschrieben und nicht
-fachlich abgenommen.
+keine rechtliche Prüfung der Aufklärungspflichten. Der Text ist inzwischen geschrieben, aber
+**nicht fachlich abgenommen**; er trägt deshalb sichtbar einen Entwurfsvermerk.
 
 **Folgen.**
 
@@ -279,4 +281,23 @@ fachlich abgenommen.
 - Der Punkt in [TODO.md](TODO.md) zu `RootView` („Nur auf diesem Gerät gespeichert") bleibt
   davon unberührt: Das ist eine sachlich missverständliche Aussage in der Oberfläche, kein
   Aufklärungshinweis.
-- Bau und Text stehen aus.
+- **Umgesetzt am 29.09.2026.** Der Wortlaut steht in `DisclaimerText`
+  (`Beratungstrainer/App/DisclaimerConsent.swift`), die Ansicht in
+  `Beratungstrainer/Features/DisclaimerView.swift`. `RootView` zeigt vor der Bestätigung
+  ausschließlich diese Ansicht; zusätzlich verweigern `AppModel.start`, `.open` und `.send`
+  die Arbeit, damit die Sperre nicht allein an der Oberfläche hängt. Sonst wurde nichts an
+  der Oberfläche ergänzt — keine neuen Dauerhinweise, und der Satz „Nur auf diesem Gerät
+  gespeichert" in `RootView` bleibt unangetastet.
+- **Die Bestätigung liegt in `UserDefaults`** (`DisclaimerConsent`, Schlüssel
+  `disclaimer.acceptedVersion` und `disclaimer.acceptedAt`), nicht in SwiftData: eine einzelne
+  Geräteeinstellung ohne Sitzungsbezug, wie die Porträtrotation in `HomePortrait.swift`. Sie
+  überlebt den Neustart, geht aber mit der App verloren — für eine Aufklärung, die dann
+  ohnehin erneut zu zeigen wäre, ist das richtig.
+- **Die Fassung wird mitgespeichert.** `DisclaimerText.version` steht derzeit auf `"1"`. Wird
+  der Text wesentlich geändert, bekommt er eine neue Kennung und wird dadurch erneut vorgelegt;
+  redaktionelle Kleinigkeiten behalten die Kennung. Die Entscheidung darüber trifft, wer den
+  Text ändert.
+- **Offen: die fachliche Abnahme des Wortlauts durch Jonas.** Bis dahin bleibt
+  `DisclaimerText.reviewStatus` auf `.draft`, und die Ansicht trägt sichtbar den Vermerk
+  „Entwurf · fachlich nicht abgenommen". Mit der Abnahme entfällt der Vermerk; ob die Fassung
+  dabei auf `"2"` steigt, entscheidet Jonas mit.
