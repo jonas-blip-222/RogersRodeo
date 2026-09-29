@@ -1,12 +1,17 @@
 # Rogers Rodeo
 
-Native Übungs-App für Gesprächsführung in der Drogenberatung. Der erste Stand enthält eine **ausprobierbare Text-Demo mit festen Antworten**, noch keine KI. Die Figur Lukas und das MI-Lernschema sind fachliche Entwürfe.
+Native Übungs-App für Gesprächsführung in der Drogenberatung. Die Analyse und die Antworten der
+Figur kommen von einem Sprachmodell über OpenRouter; ohne hinterlegten Zugangsschlüssel läuft die
+App stattdessen mit **festen Demo-Antworten** und weist das aus. Die Figur Lukas und das
+MI-Lernschema sind fachliche Entwürfe.
 
 Aktueller Zwischenstand und nächste Schritte: [Übergabe](Documentation/UEBERGABE.md).
 
 Fachliche und architektonische Grundlage: [Bauplan v0.1](Documentation/Bauplan-v0.1/README.md) und der
-[MI-Nachtrag vom 29.09.2026](Documentation/MI-UEBERGABE.md). Bei Widerspruch gilt der MI-Nachtrag;
-seine Abschnitte 3 und 12 benennen die abgelösten Annahmen und die nächsten Arbeitspakete.
+[MI-Nachtrag vom 29.09.2026](Documentation/MI-UEBERGABE.md). Bei Widerspruch gilt der MI-Nachtrag
+in **fachlichen** Fragen; für Architektur- und Betriebsentscheidungen gilt
+[ENTSCHEIDUNGEN.md](Documentation/ENTSCHEIDUNGEN.md). Die Abschnitte 3 und 12 des Nachtrags
+benennen die abgelösten Annahmen und die nächsten Arbeitspakete.
 
 > **Wichtige Änderung am 29.09.2026: keine lokale Modellausführung mehr.**
 > Die Modellaufrufe laufen über die OpenRouter-API statt über ein Modell auf dem Gerät. Damit
@@ -19,18 +24,28 @@ seine Abschnitte 3 und 12 benennen die abgelösten Annahmen und die nächsten Ar
 
 - SwiftUI: Figur auswählen, Gespräch führen, Entwürfe sichern, Sitzungen fortsetzen und abschließen, Verlauf und Rückblick.
 - Gesprächsdaten werden ausschließlich lokal per SwiftData gespeichert; kein Konto, keine
-  CloudKit-Synchronisation. Das gilt weiterhin. Die **Modellaufrufe** gehen dagegen an einen
-  externen Dienst, siehe Hinweis oben.
+  CloudKit-Synchronisation. Das gilt weiterhin. Die **eingetippten Beiträge und der bisherige
+  Gesprächsverlauf verlassen dagegen das Gerät**: sie gehen als Teil der Modellaufrufe an
+  OpenRouter und von dort an den jeweils gewählten Anbieter. Nichts, was hier eingegeben wird,
+  bleibt auf dem iPhone. Echtes Fall-, Klienten- oder Mandatsmaterial gehört deshalb nicht in
+  die App.
 - Markdown-Protokoll speichern oder ausdrücklich teilen.
 - Schwarz-weiße Startseite mit vier wechselnden Cartoon-Motiven; Porträts bleiben aus dem Gespräch ausgeblendet.
-- Getesteter Regelkern: verborgene Offenheit, segmentbezogene Regeln, Faktenfreigabe, Wiederholungsschutz und Ausgabevalidierung.
+- Getesteter Regelkern: verborgene Offenheit, segmentbezogene Regeln, Faktenfreigabe,
+  Wiederholungsschutz und Ausgabevalidierung. Getestet heißt hier: die deterministische Logik ist
+  durch Unit-Tests abgedeckt. Es ist **keine** Aussage über die fachliche Richtigkeit der
+  MI-Einordnung; ein fachlich geprüfter Referenzsatz fehlt weiterhin.
 - Abbruch, verspätete Modellantworten, Speicherfehler und idempotente Übernahme vollständiger Runden.
 - Ein gemeinsamer, deterministisch erzeugter Inhaltskatalog mit SHA-256-Prüfung.
+- Angebundene Modellinferenz: `Beratungstrainer/Services/Models/OpenRouterModelProvider.swift`
+  mit zweistufiger Analyse und Rollenantwort, Schlüsselablage im Schlüsselbund und einer
+  Einstellungsansicht zur Schlüsseleingabe.
 
-**Noch nicht vorhanden:** angebundene Modellinferenz in der App — der Adapter auf die API entsteht
-gerade, die App verwendet bis dahin weiter feste Demo-Antworten. Ebenfalls offen: Spracheingabe und
--ausgabe, PDF-Export, fachlich geprüfte Tipps und Gerätefreigabe. Die Demo liefert keine fachliche
-Einordnung und bewertet keine Beratungskompetenz.
+**Noch nicht vorhanden:** Lauf des angebundenen Modells im Simulator und auf einem echten Gerät,
+eine Zeitgrenze je Gesprächsrunde, der einmalige Disclaimer nach E07, die Anbieterbeschränkung
+nach E06, Spracheingabe und -ausgabe, PDF-Export, fachlich geprüfte Tipps und Gerätefreigabe.
+Ohne hinterlegten Schlüssel greift der Demo-Betrieb; dessen feste Antworten liefern keine
+fachliche Einordnung. Auch die Modellanalyse bewertet keine Beratungskompetenz.
 
 Was am Modell bereits gemessen ist und was ausdrücklich nicht, steht in
 [STATUS.md](Documentation/STATUS.md) unter dem 29. September 2026.
