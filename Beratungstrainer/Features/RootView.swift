@@ -15,6 +15,13 @@ struct RootView: View {
     @State private var showingHistory = false
     @State private var showingSettings = false
     var body: some View {
+        // Vor der ersten bestätigten Aufklärung gibt es nichts anderes zu sehen (E07).
+        // Bewusst statt eines Sheets: ein Sheet lässt sich wegziehen, und danach stünde
+        // die App unaufgeklärt offen.
+        if model.disclaimerAccepted { main } else { DisclaimerView(accept: model.acceptDisclaimer) }
+    }
+
+    private var main: some View {
         NavigationStack {
             Group {
                 if let session = model.session {

@@ -84,6 +84,11 @@ enum FeedbackGate {
     private(set) var pendingFeedback: PreliminaryFeedback?
     var showFinishConfirmation = false
     var homePortrait: HomePortrait
+    /// Wahr, sobald die Aufklärung nach E07 in ihrer aktuellen Fassung bestätigt wurde.
+    /// Solange sie falsch ist, zeigt `RootView` nur den Disclaimer, und `start`, `open`
+    /// und `send` verweigern die Arbeit — die Sperre hängt damit nicht allein an der
+    /// Oberfläche.
+    private(set) var disclaimerAccepted: Bool
     /// Wahr, solange kein OpenRouter-Schlüssel vorliegt und deshalb die festen Demo-Antworten
     /// laufen. Der Hinweistext auf der Startseite richtet sich danach. Seit der
     /// Einstellungsansicht kann sich der Wert zur Laufzeit ändern; die Oberfläche folgt ihm
@@ -98,16 +103,24 @@ enum FeedbackGate {
     /// verglichen, um beim Öffnen früh zu warnen.
     @ObservationIgnored private var modelIdentity: ModelDescriptor
     @ObservationIgnored private let portraitRotation: HomePortraitRotation
+    @ObservationIgnored private let consent: DisclaimerConsent
     @ObservationIgnored private var wasInBackground = false
     @ObservationIgnored private var task: Task<Void, Never>?
     @ObservationIgnored private var operation: UUID?
 
-    init() throws {
+    /// `defaults` ist überschreibbar, damit Tests die leichtgewichtigen Einstellungen
+    /// (Porträtrotation, Bestätigung des Disclaimers) in einem eigenen Bereich führen
+    /// können. Die App benutzt weiterhin `.standard`.
+    init(defaults: UserDefaults = .standard) throws {
         let content = try ContentCatalog.load()
         catalog = content.catalog; contentHash = content.hash
-        let rotation = HomePortraitRotation(pool: try HomePortrait.loadPool())
+        let rotation = HomePortraitRotation(pool: try HomePortrait.loadPool(), defaults: defaults)
         portraitRotation = rotation
         homePortrait = rotation.next()
+        // Vor der ersten bestätigten Aufklärung bleibt die App gesperrt (E07).
+        let consent = DisclaimerConsent(defaults: defaults)
+        self.consent = consent
+        disclaimerAccepted = consent.isAccepted
         let root: URL
         #if DEBUG
         if let path = ProcessInfo.processInfo.environment["ROGERS_RODEO_TEST_STORAGE"] {
@@ -142,6 +155,16 @@ enum FeedbackGate {
         let adapter = OpenRouterModelProvider(configuration: settings)
         // `descriptor()` ist nonisolated und deshalb ohne await lesbar.
         return (adapter, adapter.descriptor())
+    }
+
+    // MARK: Aufklärung
+
+    /// Nimmt die Bestätigung der aktuellen Textfassung entgegen und hält sie dauerhaft
+    /// fest (E07). Danach erscheint der Disclaimer nicht wieder — es sei denn, der Text
+    /// bekommt eine neue Fassungskennung.
+    func acceptDisclaimer() {
+        consent.accept()
+        disclaimerAccepted = consent.isAccepted
     }
 
     // MARK: Zugangsschlüssel
@@ -213,7 +236,10 @@ enum FeedbackGate {
         do { history = try repository.list() } catch { failure(error) }
     }
     func start(_ scenario: ScenarioDefinition) {
-        guard !busy else { return }
+        // Ohne bestätigte Aufklärung kein Gespräch (E07). Die Oberfläche kommt hier gar
+        // nicht erst hin; die Prüfung steht trotzdem hier, damit die Sperre nicht allein
+        // an der Ansicht hängt.
+        guard DisclaimerGate.allowsConversation(disclaimerAccepted: disclaimerAccepted, busy: busy) else { return }
         let token = UUID(); operation = token; busy = true; errorMessage = nil
         pendingFeedback = nil
         task = Task {
@@ -226,7 +252,7 @@ enum FeedbackGate {
         }
     }
     func open(_ id: UUID) {
-        guard !busy else { return }
+        guard DisclaimerGate.allowsConversation(disclaimerAccepted: disclaimerAccepted, busy: busy) else { return }
         do {
             let loaded = try repository.load(id: id)
             let pending = try repository.loadPending(sessionID: id)
@@ -264,7 +290,8 @@ enum FeedbackGate {
     }
 
     func send(skipAnalysis: Bool = false) {
-        guard !busy, let session, session.status == .active else { return }
+        guard DisclaimerGate.allowsConversation(disclaimerAccepted: disclaimerAccepted, busy: busy),
+              let session, session.status == .active else { return }
         let token = UUID(); operation = token; busy = true; errorMessage = nil; maySkipAnalysis = false
         pendingFeedback = nil
         let text = input
