@@ -1,0 +1,16 @@
+{
+  "segments": [
+    {
+      "quote": "Sie sind genervt von Sarahs Druck und trotzdem ist Ihnen die Beziehung wichtig.",
+      "code": "komplexe_reflexion",
+      "isUncertain": false,
+      "supportingClientQuote": "Sarah nervt mit ihrem Druck. Aber verlieren will ich sie auch nicht."
+    },
+    {
+      "quote": "Was würden Sie sich von diesem Gespräch wünschen?",
+      "code": "offene_frage",
+      "isUncertain": false,
+      "supportingClientQuote": null
+    }
+  ]
+}

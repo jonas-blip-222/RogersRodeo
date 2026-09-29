@@ -25,7 +25,9 @@ struct ReviewView: View {
                     Text("Zeit zum Zurückschauen.").font(.largeTitle.weight(.semibold))
                     Text("Was hat den Kontakt erleichtert? An welcher Stelle würdest du gern etwas anderes ausprobieren?").foregroundStyle(.secondary)
                 }
-                DemoNotice()
+                // Im Rückblick zählt, womit diese Sitzung tatsächlich gelaufen ist, nicht was
+                // gerade eingestellt ist. Dieselbe Regel wie in ReviewBuilder.markdown.
+                DemoNotice(usesDemoResponses: session.identity.model.id == DemoModelProvider.identity.id)
                 VStack(alignment: .leading, spacing: 14) {
                     Text("Dein Gespräch").font(.headline)
                     LabeledContent("Abgeschlossene Runden", value: "\(review.totalTurns)")

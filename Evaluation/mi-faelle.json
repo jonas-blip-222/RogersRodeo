@@ -1,0 +1,190 @@
+{
+  "schemaVersion": 1,
+  "quelle": "Documentation/MI-UEBERGABE.md, Abschnitt 8",
+  "status": "draft",
+  "istGoldreferenz": false,
+  "hinweis": "Fachliche Arbeitsentwuerfe, ausdruecklich keine geprueften Soll-Ausgaben. Der MI-Nachtrag verlangt, dass diese Faelle nicht wortwoertlich als einzig erlaubte Einordnung getestet werden. Das Auswertungsskript berechnet daher nur mechanische Kennzahlen und stellt die Modellausgabe der fachlichen Erwartung gegenueber, ohne daraus eine Trefferquote zu bilden.",
+  "faelle": [
+    {
+      "id": "fall01_einstieg_unter_druck",
+      "titel": "Einstieg unter aeusserem Druck",
+      "art": "segment",
+      "kontext": [
+        { "speaker": "client", "text": "Sarah hat gesagt, ich soll hierher. Ich finde das völlig übertrieben." }
+      ],
+      "eingabe": "Sie entscheiden selbst, ob Sie etwas verändern möchten. Was stört Sie daran, heute hier zu sein?",
+      "erwarteteWarnung": false,
+      "fachlicheErwartung": "autonomie_betonen fuer den ersten Satz, offene_frage fuer den zweiten. Bei diesem vollstaendigen Kontext geringe Zuordnungsunsicherheit.",
+      "gegenprobe": "Kein Wechsel des Veraenderungsstadiums wegen einer einzelnen Autonomieformulierung. Keine Annahme einer bereits gelungenen Arbeitsbeziehung."
+    },
+    {
+      "id": "fall02_ambivalenz_reflektieren",
+      "titel": "Ambivalenz reflektieren",
+      "art": "segment",
+      "kontext": [
+        { "speaker": "client", "text": "Mit den Jungs kann ich abschalten. Aber die Filmrisse machen mir schon Angst. Und Sarah will ich nicht verlieren." }
+      ],
+      "eingabe": "Sie wünschen sich einen Weg, mit Ihren Freunden abzuschalten, ohne dafür Ihre Sicherheit und die Beziehung zu Sarah aufs Spiel zu setzen.",
+      "erwarteteWarnung": false,
+      "fachlicheErwartung": "Kandidat komplexe_reflexion mit der gesamten Ausgangsaeusserung als Kontextbeleg. Die Begriffe 'einen Weg wuenschen' und 'Sicherheit' sind Deutungen, daher vorlaeufig unsicher. Nicht als unstrittige Goldreferenz verwenden.",
+      "gegenprobe": "Eine doppelseitige Satzform allein belegt keine komplexe Reflexion. 'Sie wollen also aufhoeren zu trinken' waere durch den Kontext nicht belegt."
+    },
+    {
+      "id": "fall03_wuerdigung_und_ressourcen",
+      "titel": "Wuerdigung und Ressourcen",
+      "art": "segment",
+      "kontext": [
+        { "speaker": "client", "text": "Im Urlaub mit Sarah habe ich zwei Wochen fast nichts getrunken. Das war eigentlich schön. Aber mit den Jungs ist das was anderes." }
+      ],
+      "eingabe": "Sie haben im Urlaub etwas geschafft, das Ihnen im Alltag schwierig erscheint. Was hat Ihnen dort geholfen?",
+      "erwarteteWarnung": false,
+      "fachlicheErwartung": "Erster Satz Kandidat wuerdigung mit exaktem Beleg aus der Ausgangsnachricht, vorlaeufig unsicher wegen der erschlossenen Schwierigkeit. Zweiter Satz offene_frage.",
+      "gegenprobe": "Eine neutrale Wiederholung der Urlaubserfahrung wird nicht allein dadurch zur Wuerdigung. 'Dann koennen Sie ja jederzeit aufhoeren' waere eine unbelegte Verallgemeinerung."
+    },
+    {
+      "id": "fall04a_rat_mit_erlaubnis",
+      "titel": "Erlaubnis vor einem Rat, Zustimmung liegt vor",
+      "art": "segment",
+      "kontext": [
+        { "speaker": "client", "text": "Ich weiß nicht, wie ich beim nächsten Mal sagen soll, was daran geholfen hat." },
+        { "speaker": "counselor", "text": "Möchten Sie eine Idee hören, wie Sie das festhalten könnten?" },
+        { "speaker": "client", "text": "Ja, gerne." }
+      ],
+      "eingabe": "Sie könnten kurz notieren, was Ihnen bei Ihrem Versuch geholfen hat und was schwierig war.",
+      "erwarteteWarnung": false,
+      "fachlicheErwartung": "ratschlag_mit_erlaubnis. Die Erlaubnisfrage und 'Ja, gerne.' sind die Kontextbelege. Lukas hat zuvor selbst einen ersten Versuch ausgewaehlt.",
+      "gegenprobe": "Der Vorschlag ist keine vollstaendige Pro-und-Contra-Bilanz einer noch offenen Entscheidung."
+    },
+    {
+      "id": "fall04b_rat_ohne_erlaubnis",
+      "titel": "Derselbe Rat ohne Erlaubnis im vollstaendig bekannten Austausch",
+      "art": "segment",
+      "kontext": [
+        { "speaker": "client", "text": "Ich weiß nicht, wie ich beim nächsten Mal sagen soll, was daran geholfen hat." }
+      ],
+      "eingabe": "Sie könnten kurz notieren, was Ihnen bei Ihrem Versuch geholfen hat und was schwierig war.",
+      "erwarteteWarnung": true,
+      "fachlicheErwartung": "ratschlag_ohne_erlaubnis und unmittelbarer Hinweis, weil weder Frage noch Zustimmung noch eine direkte Bitte vorliegen. Der Austausch gilt hier als vollstaendig bekannt.",
+      "gegenprobe": "Bei tatsaechlich fehlender oder gekuerzter Vorgeschichte muss die Erlaubnislage unsicher bleiben, statt zu einem sicheren Vorwurf zu werden."
+    },
+    {
+      "id": "fall05_konfrontation",
+      "titel": "Konfrontation und Reparatur",
+      "art": "segment",
+      "kontext": [
+        { "speaker": "client", "text": "Sarah ist mir wichtig. Aber ich will mir auch nicht jedes Wochenende vorschreiben lassen." }
+      ],
+      "eingabe": "Wenn Ihnen Sarah wirklich wichtig wäre, würden Sie endlich mit dem Trinken aufhören.",
+      "erwarteteWarnung": true,
+      "fachlicheErwartung": "konfrontation mit klarem Textbeleg 'Wenn Ihnen Sarah wirklich wichtig wäre', im Widerspruch zu seinem ausgesprochenen Anliegen. Unmittelbare Warnung, nicht nur ein spaeterer Beziehungstipp.",
+      "gegenprobe": "Die Warnung haengt nicht davon ab, dass die Figur protestiert. Auch Schweigen oder oberflaechliche Zustimmung sind plausible Reaktionen."
+    },
+    {
+      "id": "fall06_zu_frueh_ins_planning",
+      "titel": "Zu frueh ins Planning springen",
+      "art": "segment",
+      "kontext": [
+        { "speaker": "client", "text": "Die Filmrisse machen mir schon Gedanken. Aber ich weiß nicht, ob ich deswegen meine Wochenenden komplett ändern will." }
+      ],
+      "eingabe": "Dann legen wir jetzt fest, dass Sie ab Freitag nicht mehr mit Ihren Freunden trinken gehen.",
+      "erwarteteWarnung": true,
+      "fachlicheErwartung": "Die Entscheidung wird mit 'Dann legen wir jetzt fest' vorweggenommen; 'ich weiß nicht' belegt die offene Haltung. Je Segment Rat ohne Erlaubnis und/oder draengendes Ueberstimmen pruefen. Keine kuenstlich eindeutige Gesamtcode-Vorgabe bei fachlicher Ueberlappung. Prozessbeobachtung: verfruehte Festlegung, Fixing Reflex.",
+      "gegenprobe": "Wenn Lukas bereits konkret planen moechte, ist gemeinsames Planen nicht allein deshalb Druck."
+    },
+    {
+      "id": "fall07_wanderfalle",
+      "titel": "Wanderfalle: Arbeit, Nachbarin, weitere Geschichte",
+      "art": "prozess",
+      "vereinbarterFokus": "Lukas möchte verstehen, warum seine Freitage häufig anders verlaufen, als er sich vorgenommen hat.",
+      "kontext": [
+        { "speaker": "client", "text": "Auf der Arbeit ist gerade ständig Ärger. Und dann meine Nachbarin – gestern hat sie sich schon wieder wegen der Fahrräder im Flur beschwert …" }
+      ],
+      "eingabe": "Das mit der Nachbarin klingt anstrengend.",
+      "erwarteteWarnung": false,
+      "fachlicheErwartung": "Verlorener gemeinsamer Fokus ist eine mehrturnige Prozessbeobachtung, kein Einzelsegment-Code. Die einzelne Paraphrase kann korrekt als einfache_reflexion kodiert sein. Bei unklarem Zusammenhang oder fehlender Zielvereinbarung unsicher bleiben.",
+      "gegenprobe": "Ein einzelner Themenwechsel ist kein Fehler. Arbeits- und Nachbarschaftsstress kann fuer das Trinken relevant sein. Nicht nach starrer Anzahl von Themen oder Minuten ausloesen."
+    },
+    {
+      "id": "fall08_entscheidungsbilanz",
+      "titel": "Entscheidungsbilanz trotz vorhandenem Change Talk",
+      "art": "segment",
+      "kontext": [
+        { "speaker": "client", "text": "Ich würde schon gern weniger trinken. Ich möchte die Sonntage wieder mitkriegen. Aber die Abende mit den Jungs sind mir wichtig." }
+      ],
+      "eingabe": "Wir sammeln jetzt ausführlich alle Vorteile und Nachteile des Weitertrinkens und des Wenigertrinkens.",
+      "erwarteteWarnung": null,
+      "fachlicheErwartung": "'Ich möchte die Sonntage wieder mitkriegen' belegt eine eigene Veraenderungsmotivation; die vollstaendige Bilanz ist in diesem gerichteten Kontext fachlich zu hinterfragen. Die tatsaechliche Wirkung ist aus dem Satz nicht sicher ableitbar. Fehlende Erlaubnis separat pruefen, nicht mit der Prozessfrage verwechseln.",
+      "gegenprobe": "Bewusst ergebnisoffene Entscheidungsbegleitung ist ein anderer Kontext. Jede Erwaehnung von Vorteilen oder Bedenken pauschal abzuwerten waere falsch."
+    },
+    {
+      "id": "fall09_sustain_talk_verstaerken",
+      "titel": "Sustain Talk verstaerken und beschaemen",
+      "art": "segment",
+      "kontext": [
+        { "speaker": "client", "text": "Mit ein paar Bier bin ich einfach lockerer." }
+      ],
+      "eingabe": "Sie brauchen also Alkohol, um locker zu sein. Aber wenn Ihnen Sarah wirklich wichtig wäre, würden Sie endlich etwas ändern.",
+      "erwarteteWarnung": true,
+      "fachlicheErwartung": "'Sie brauchen also Alkohol' erweitert die Aussage zur Notwendigkeit; diese Deutung ist nicht belegt. Der zweite Satz ist klarer moralischer Druck und loest die Warnung aus.",
+      "gegenprobe": "'Mit Alkohol fällt Ihnen das Lockerwerden leichter' kann eine passende Reflexion sein. Das Spiegeln von Sustain Talk allein darf keine Warnung ausloesen."
+    },
+    {
+      "id": "fall10_erlaubnis_nur_scheinbar",
+      "titel": "Erlaubnis nur scheinbar einholen",
+      "art": "segment",
+      "kontext": [
+        { "speaker": "client", "text": "Freitags läuft das halt immer gleich ab." }
+      ],
+      "eingabe": "Darf ich Ihnen einen Tipp geben? Sie sollten Ihre Freunde am Wochenende einfach nicht mehr treffen.",
+      "erwarteteWarnung": true,
+      "fachlicheErwartung": "Eine Erlaubnisfrage liegt vor, die Zustimmung fehlt. Der Ratschlag im zweiten Satz erhaelt deshalb keine Erlaubnis allein durch den ersten. Unmittelbare Warnung mit genauem Bezug.",
+      "gegenprobe": "Eine Frage in einem vorherigen Turn samt passender Zustimmung im verfuegbaren Kontext muss erkannt werden. Fehlender Kontext ist keine sichere Ablehnung."
+    },
+    {
+      "id": "fall11_bubble_sheet",
+      "titel": "Bubble Sheet als Wege zum Ziel",
+      "art": "segment",
+      "kontext": [
+        { "speaker": "client", "text": "Ich möchte den Sonntag wieder nutzen können. Wie ich da hinkomme, weiß ich noch nicht." }
+      ],
+      "eingabe": "Möchten Sie verschiedene Wege zu diesem Ziel auf einem Blatt sammeln? Welche Möglichkeiten fallen Ihnen selbst ein?",
+      "erwarteteWarnung": false,
+      "fachlicheErwartung": "Gemeinsames Erkunden von Wegen zu einem vorhandenen Ziel. Je Segment zusammenarbeit_suchen beziehungsweise offene_frage. Die Annahme der Arbeitsmethode ist keine pauschale Erlaubnis fuer eigene Ratschlaege.",
+      "gegenprobe": "Ein Blatt mit verschiedenen Beratungsthemen erfuellt diesen Fall nicht. Nicht freigegebene Vater-, Hausflur- oder Alternativthemen nicht in das Blatt einschmuggeln."
+    },
+    {
+      "id": "fall12_schweigen_und_vermutung",
+      "titel": "Schweigen und korrigierbare Vermutung",
+      "art": "segment",
+      "kontext": [
+        { "speaker": "client", "text": "…" }
+      ],
+      "eingabe": "Sie wollen gerade lieber nicht hier sein.",
+      "erwarteteWarnung": false,
+      "fachlicheErwartung": "Vermutung ueber sein Erleben, keine festgestellte Tatsache. Ohne unterstuetzende Aeusserung unsicher; keine positive komplexe Reflexion nur wegen der Formulierung gutschreiben.",
+      "gegenprobe": "Schweigen beweist weder Ablehnung noch mangelnde Motivation. Eine lange technische Antwortlatenz ist kein Schweigen von Lukas."
+    },
+    {
+      "id": "fall13_zusammenfassen_und_planning",
+      "titel": "Zusammenfassen, Planning und Zuversicht",
+      "art": "segment",
+      "kontext": [
+        { "speaker": "client", "text": "Die Sonntage fehlen mir. Ich möchte am Wochenende weniger trinken, weiß aber noch nicht, wie." }
+      ],
+      "eingabe": "Sie möchten Ihre Sonntage zurückgewinnen. Welche Idee haben Sie selbst für einen ersten Versuch?",
+      "erwarteteWarnung": false,
+      "fachlicheErwartung": "Reflexion plus offene Einladung. Kein zuverlaessiger Wechsel des Veraenderungsstadiums allein aus 'vielleicht' oder einer hohen Zuversichtszahl.",
+      "gegenprobe": "'Dann machen Sie das ab jetzt jedes Wochenende' waere eine nicht vereinbarte Erweiterung."
+    },
+    {
+      "id": "fall14_planung_ist_keine_action",
+      "titel": "Planung ist noch keine Action oder Maintenance",
+      "art": "verlauf",
+      "kontext": [],
+      "eingabe": null,
+      "erwarteteWarnung": null,
+      "fachlicheErwartung": "Mehrterminiger Verlauf, nicht als Einzeleinordnung pruefbar. Termin A: selbst gewaehlter Versuch, also Plan und Absicht, keine ausgefuehrte Handlung. Termin B nach explizitem fiktionalem Zeitabstand: berichtete Erfahrung. Maintenance erst nach laenger aufrechterhaltener Veraenderung.",
+      "gegenprobe": "Einmalige Zustimmung, hohe Offenheit, viele OARS-Beitraege oder das Erreichen des Turnlimits beenden die Geschichte nicht als Erfolg. Dieser Fall ist erst mit MI-04 pruefbar."
+    }
+  ]
+}

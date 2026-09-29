@@ -1,5 +1,12 @@
 # Architektur des ersten Implementierungsstands
 
+> **Hinweis vom 29.09.2026.** Der Abschnitt „Nächster verbindlicher Meilenstein" am Ende dieses
+> Dokuments verlangt einen lokalen Modelladapter und schließt Cloud-Inferenz aus. Das gilt nicht
+> mehr: die Modellaufrufe laufen über die OpenRouter-API, die eingegebenen Beratungsäußerungen
+> verlassen also das Gerät. Der Rest dieses Dokuments — Abhängigkeiten, Turn-Transaktion,
+> Persistenz, Datumscodierung — bleibt unverändert gültig, weil er nicht an der Modellherkunft
+> hängt. Begründung und Grenzen in [ENTSCHEIDUNGEN.md](ENTSCHEIDUNGEN.md), E01 bis E03.
+
 ## Abhängigkeiten
 
 SwiftUI → AppModel → ConversationCoordinator → TrainerModelProvider und SessionRepository.
