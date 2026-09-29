@@ -68,8 +68,22 @@ stattdessen zu tun ist, steht in Abschnitt 5. Siehe `ENTSCHEIDUNGEN.md`, E01 bis
       selbe Ergebnis.
 - [ ] Echte Gesamtfrist, begrenzte Wiederholungen und verständliche Fehlermeldung statt hängender
       Oberfläche. Anbieter ohne verwertbare Antworten ausschließen.
-- [ ] Schlüsselverwaltung in der App über den Schlüsselbund; eine `.env` ist auf dem iPhone nicht
-      lesbar.
+- [ ] **Schlüsseleingabe auf dem iPhone.** Der `security`-Eintrag vom Mac existiert dort nicht, die
+      App bleibt deshalb auf dem iPhone im Demo-Betrieb. Nötig ist eine Einstellungsansicht, die
+      den Schlüssel per `SecItemAdd` unter `rogersrodeo-openrouter` mit
+      `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly` ablegt.
+- [ ] **Zeitpunkt der Schlüsselsuche auf dem Mac.** `OpenRouterKey.lookup` läuft in
+      `AppModel.init`; bei der nur lokal signierten Mac-App löst der Schlüsselbundzugriff einen
+      Systemdialog aus, der damit beim App-Start erscheint und den Main Actor blockiert. Besser
+      erst beim Start einer Sitzung. Behelf bis dahin: Mac-App mit `OPENROUTER_API_KEY` starten
+      oder im Dialog einmal „Immer erlauben" wählen. Auf iOS tritt das nicht auf.
+- [ ] **Kosten je Runde messen.** Es sind bis zu vier Modellaufrufe möglich: Der Adapter erhöht
+      das Budget bei Abschneidung einmal, und der Coordinator wiederholt zusätzlich einmal. Ein
+      realer Kostenrahmen je Sitzung fehlt.
+- [ ] Simulatorlauf mit echtem Modell durchführen. Bisher wurde der Adapter nur außerhalb der App
+      gegen die Schnittstelle geprüft, nicht im laufenden Gespräch.
+- [ ] `RootView` „Nur auf diesem Gerät gespeichert" prüfen: Die Aussage stimmt für die
+      Gesprächsdaten, kann aber neben dem neuen Hinweis zur Modellnutzung missverstanden werden.
 - [ ] Offline-Aussagen in README, `ARCHITEKTUR.md` und Oberfläche anpassen. Eine App, die Text an
       einen Dienst sendet, darf nicht weiter vollständig lokale Verarbeitung versprechen.
 - [ ] Deployment-Target neu bestimmen. Ohne MLX und ohne FoundationModels-Brücke gibt es keinen
