@@ -67,7 +67,7 @@ struct RootView: View {
                 } else {
                     portraitCard
                     ForEach(model.catalog.scenarios, id: \.id) { scenario in practiceCard(scenario) }
-                    DemoNotice()
+                    DemoNotice(usesDemoResponses: model.usesDemoResponses)
                 }
                 if let error = model.errorMessage { ErrorNotice(text: error) }
             }.padding(24).frame(maxWidth: 560).frame(maxWidth: .infinity)
@@ -112,14 +112,17 @@ struct RootView: View {
             HStack {
                 Text("DEIN ÜBUNGSRAUM").font(.caption2.weight(.semibold)).tracking(1.7)
                 Spacer()
-                Text("TEXT · DEMO").font(.caption2.weight(.medium))
+                Text(model.usesDemoResponses ? "TEXT · DEMO" : "TEXT · KI").font(.caption2.weight(.medium))
             }.foregroundStyle(.secondary)
             Text("\(scenario.name), \(scenario.age)").font(.title2.weight(.semibold)).tracking(-0.5)
             Text("„Meine Freundin übertreibt.“").font(.headline)
             Text("Motivierende Gesprächsführung üben – mit einem Gegenüber, das noch nicht überzeugt ist.")
                 .font(.subheadline).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             Button { model.start(scenario) } label: {
-                HStack { Text(model.busy ? "Wird vorbereitet …" : "Demo-Gespräch starten"); Spacer(); Image(systemName: "arrow.up.right") }
+                HStack {
+                    Text(model.busy ? "Wird vorbereitet …" : (model.usesDemoResponses ? "Demo-Gespräch starten" : "Gespräch starten"))
+                    Spacer(); Image(systemName: "arrow.up.right")
+                }
                     .font(.subheadline.weight(.semibold)).padding(.horizontal, 20).padding(.vertical, 17)
                     .foregroundStyle(.white).background(Palette.ink, in: Capsule())
             }.buttonStyle(.plain).disabled(model.busy)
@@ -184,10 +187,17 @@ struct PortraitIllustration: View {
     }
 }
 
+/// Hinweis auf die Herkunft der Antworten. Gleiche Fläche und Typografie in beiden
+/// Betriebsarten, nur ein anderer Text: Ohne hinterlegten Schlüssel laufen die festen
+/// Demo-Antworten, sonst gehen die Eingaben an ein Sprachmodell im Netz
+/// (Documentation/ENTSCHEIDUNGEN.md, E01).
 struct DemoNotice: View {
+    let usesDemoResponses: Bool
     var body: some View {
         Label {
-            Text("Demo mit festen Antworten. Noch keine KI und keine fachliche Bewertung.")
+            Text(usesDemoResponses
+                 ? "Demo mit festen Antworten. Noch keine KI und keine fachliche Bewertung."
+                 : "Antworten kommen von einem Sprachmodell über das Internet. Deine Eingaben verlassen dafür dieses Gerät. Keine fachlich geprüfte Bewertung.")
         } icon: { Image(systemName: "info.circle") }
             .font(.footnote).foregroundStyle(.secondary).padding(14)
             .frame(maxWidth: .infinity, alignment: .leading)

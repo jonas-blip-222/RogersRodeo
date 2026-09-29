@@ -18,6 +18,10 @@ import TrainerStorage
     var showHints = true
     var showFinishConfirmation = false
     var homePortrait: HomePortrait
+    /// Wahr, solange kein OpenRouter-Schlüssel vorliegt und deshalb die festen Demo-Antworten
+    /// laufen. Der Hinweistext auf der Startseite muss sich danach richten; er behauptet
+    /// derzeit unbedingt „Demo mit festen Antworten" und ist mit echtem Modell falsch.
+    let usesDemoResponses: Bool
     @ObservationIgnored private let portraitRotation: HomePortraitRotation
     @ObservationIgnored private var wasInBackground = false
     @ObservationIgnored private var task: Task<Void, Never>?
@@ -41,7 +45,17 @@ import TrainerStorage
         #endif
         let storeURL = root.appendingPathComponent("RogersRodeo/Conversations/sessions.store")
         repository = try SwiftDataSessionRepository(storeURL: storeURL)
-        coordinator = ConversationCoordinator(repository: repository, provider: DemoModelProvider())
+        // Echte Modellaufrufe laufen über OpenRouter (Documentation/ENTSCHEIDUNGEN.md, E01).
+        // Ohne hinterlegten Schlüssel bleibt es bei den festen Demo-Antworten, statt jede
+        // Sitzung mit „Modell nicht verfügbar" abzubrechen. Die beiden Wege sind
+        // unterscheidbar: `usesDemoResponses` hier, die abweichende Modellkennung in der
+        // Sitzungsidentität und der Demo-Hinweis im Rückblick.
+        let settings = OpenRouterConfiguration()
+        usesDemoResponses = OpenRouterKey.lookup(service: settings.keychainService) == nil
+        let provider: any TrainerModelProvider = usesDemoResponses
+            ? DemoModelProvider()
+            : OpenRouterModelProvider(configuration: settings)
+        coordinator = ConversationCoordinator(repository: repository, provider: provider)
         history = try repository.list()
     }
 

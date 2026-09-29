@@ -81,7 +81,7 @@ extension TrainerFailure: LocalizedError {
         case .operationInProgress: "Eine Antwort wird bereits vorbereitet."
         case .invalidAnalysis: "Deine Äußerung konnte nicht zuverlässig eingeordnet werden. Du kannst es erneut versuchen oder ohne Einordnung fortsetzen."
         case .invalidReply, .modelRefusal: "Lukas konnte gerade keine passende Antwort geben. Bitte versuche es erneut."
-        case .modelUnavailable: "Das lokale Modell ist noch nicht verfügbar."
+        case .modelUnavailable: "Das Sprachmodell ist gerade nicht erreichbar. Prüfe deine Internetverbindung."
         case .artifactInvalid: "Eine benötigte Datei ist beschädigt oder unvollständig."
         case .contextLimit: "Der Gesprächskontext ist zu groß. Bitte kürze deine Eingabe."
         case .revisionConflict: "Die Sitzung wurde inzwischen verändert. Bitte lade sie erneut."

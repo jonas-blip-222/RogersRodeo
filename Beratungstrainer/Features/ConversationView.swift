@@ -8,7 +8,7 @@ struct ConversationView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            DemoNotice().padding(.horizontal).padding(.bottom, 8)
+            DemoNotice(usesDemoResponses: model.usesDemoResponses).padding(.horizontal).padding(.bottom, 8)
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 20) {
