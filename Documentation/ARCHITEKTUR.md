@@ -1,8 +1,9 @@
 # Architektur des ersten Implementierungsstands
 
 > **Hinweis vom 29.09.2026.** Der Abschnitt „Nächster verbindlicher Meilenstein" am Ende dieses
-> Dokuments verlangt einen lokalen Modelladapter und schließt Cloud-Inferenz aus. Das gilt nicht
-> mehr: die Modellaufrufe laufen über die OpenRouter-API, die eingegebenen Beratungsäußerungen
+> Dokuments verlangte einen lokalen Modelladapter und schloss Cloud-Inferenz aus. Das gilt nicht
+> mehr; der Abschnitt ist auf den heutigen Stand umgearbeitet, der alte Text steht dort als
+> Verlauf. Die Modellaufrufe laufen über die OpenRouter-API, die eingegebenen Beratungsäußerungen
 > verlassen also das Gerät. Der Rest dieses Dokuments — Abhängigkeiten, Turn-Transaktion,
 > Persistenz, Datumscodierung — bleibt unverändert gültig, weil er nicht an der Modellherkunft
 > hängt. Begründung und Grenzen in [ENTSCHEIDUNGEN.md](ENTSCHEIDUNGEN.md), E01 bis E03.
@@ -61,8 +62,24 @@ SwiftData speichert einen versionierten SessionRecord mit eingefrorenem SessionC
 
 ## Nächster verbindlicher Meilenstein
 
-Ein realer lokaler Modelladapter hinter TrainerModelProvider. Dafür zuerst passende Xcode-/SDK-Version und den Ladeversuch klären. Keine ungetestete main-Abhängigkeit und keine automatisch heruntergeladenen Gewichte beim App-Start einbauen.
+Hinter `TrainerModelProvider` steht der OpenRouter-Adapter unter
+`Beratungstrainer/Services/Models/OpenRouterModelProvider.swift`. Er ist gebaut, gegen die
+Schnittstelle gemessen und in `AppModel` verdrahtet; ohne hinterlegten Schlüssel greift der
+Demo-Provider. Offen bleiben: Lauf im Simulator und auf einem echten Gerät, eine Frist je Runde
+statt nur je Aufruf, `provider.data_collection: "deny"` nach E06, der einmalige Disclaimer nach
+E07 sowie vollständige Kosten- und Routenerfassung. Die Einzelpunkte stehen in
+[TODO.md](TODO.md), der geprüfte Stand in [STATUS.md](STATUS.md).
 
-Vor einer Freigabe erforderlich: genaue Modellrevision und Lizenz, Datei-Hashes, lokaler Loader, gemeinsam gehaltene Gewichte für getrennte Einordnungs-/Rollenkontexte, echte Tokenzählung mit reserviertem Ausgabebudget, Cancellation, Offline-Erststart und Messungen auf iPhone 17. Ein am Mac recherchierter MLX-Release ist noch kein bestätigter Pin.
+Erst nach ausreichender Rollen-/Einordnungsqualität: fachlich geprüfte Tipps, Sprache mit
+Transkription und Textkorrektur, PDF-Export, Tests auf älteren iPhones.
 
-Erst nach ausreichender Rollen-/Einordnungsqualität: fachlich geprüfte Tipps, Sprache mit lokaler Transkription und Textkorrektur, PDF-Export, Tests auf älteren iPhones. Keine Cloud-Inferenz als stiller Ersatz.
+### Historisch: der abgelöste lokale Meilenstein
+
+Der folgende Absatz galt bis zum 29.09.2026 und ist durch E01 vollständig abgelöst. Er bleibt als
+Verlauf stehen, ist aber keine Anweisung mehr — insbesondere das Verbot am Ende gilt nicht mehr.
+
+> Ein realer lokaler Modelladapter hinter TrainerModelProvider. Dafür zuerst passende Xcode-/SDK-Version und den Ladeversuch klären. Keine ungetestete main-Abhängigkeit und keine automatisch heruntergeladenen Gewichte beim App-Start einbauen.
+>
+> Vor einer Freigabe erforderlich: genaue Modellrevision und Lizenz, Datei-Hashes, lokaler Loader, gemeinsam gehaltene Gewichte für getrennte Einordnungs-/Rollenkontexte, echte Tokenzählung mit reserviertem Ausgabebudget, Cancellation, Offline-Erststart und Messungen auf iPhone 17. Ein am Mac recherchierter MLX-Release ist noch kein bestätigter Pin.
+>
+> Erst nach ausreichender Rollen-/Einordnungsqualität: fachlich geprüfte Tipps, Sprache mit lokaler Transkription und Textkorrektur, PDF-Export, Tests auf älteren iPhones. Keine Cloud-Inferenz als stiller Ersatz.

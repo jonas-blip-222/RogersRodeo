@@ -6,6 +6,17 @@ Dieses Dokument bündelt die MI-Recherche, Jonas’ Notizen, seine Korrekturen u
 
 **Status:** Produktentscheidungen und fachlicher Arbeitsentwurf für die nächste Entwicklungsphase. Keine validierte MI-/MITI-Bewertung, keine Geräte- oder Modellfreigabe. Die Erstellung dieser Übergabe verändert keinen Anwendungscode.
 
+> **Hinweis vom 29.09.2026: keine lokale Modellausführung mehr.** Die Modellaufrufe laufen über
+> die OpenRouter-API statt über ein Modell auf dem Gerät. Damit verlassen die eingegebenen
+> Beratungsäußerungen das Gerät, und ein Offline-Betrieb ist nicht mehr vorgesehen. Überholt sind
+> allein die Aussagen zur Modellherkunft: der Startauftrag in Abschnitt 1 („Keine
+> Cloud-Inferenz"), die Überschrift und Einleitung von 9.2 und das Arbeitspaket MI-02. Die
+> fachlichen Inhalte dieses Nachtrags — MI-Konzept, Fälle, Belegregeln, Prüfaussagen — bleiben
+> vollständig gültig und sind weiterhin die fachliche Grundlage. Begründung, Grenzen und die
+> gemessenen Folgen stehen in [ENTSCHEIDUNGEN.md](ENTSCHEIDUNGEN.md), E01 bis E03. Bei
+> Widerspruch zwischen diesem Nachtrag und ENTSCHEIDUNGEN.md gilt in fachlichen Fragen der
+> Nachtrag, in Architektur- und Betriebsfragen ENTSCHEIDUNGEN.md.
+
 ## 1. Startauftrag zum Kopieren
 
 > Entwickle Rogers Rodeo im bestehenden Repository `/Users/jonasortmanns/Developer/RogersRodeo` auf Grundlage dieses MI-Nachtrags und des Bauplans v0.1 weiter. Lies zuerst `/Users/jonasortmanns/Developer/AGENTS.md`, die projektbezogene AGENTS.md, Documentation/ARCHITEKTUR.md, Documentation/STATUS.md, Documentation/UEBERGABE.md und Documentation/TODO.md sowie diesen Nachtrag. Prüfe den tatsächlichen Git- und Werkzeugstand; bewahre vorhandene Änderungen. Baue die App nicht neu auf. Die abgenommene Schwarz-Weiß-Oberfläche bleibt erhalten, Porträts erscheinen ausschließlich auf der Startseite.
@@ -14,7 +25,8 @@ Dieses Dokument bündelt die MI-Recherche, Jonas’ Notizen, seine Korrekturen u
 >
 > Zentrale Anforderungen: Lukas behält die Entscheidung über seine Ziele und Veränderungen. Drängen und ungefragte Ratschläge sollen unmittelbar und mit Gesprächsbelegen rückgemeldet werden. Erlaubnis muss vor dem eigenen Vorschlag vorliegen. Das **Bubble Sheet sammelt mehrere Wege zu einem bereits vereinbarten Ziel von Lukas**. MI-Prozesse, Veränderungsstadien und Offenheit sind getrennte Konzepte. Vollständige Entwicklung bis Maintenance erfordert einen Verlauf über mehrere fiktionale Termine; sie darf nicht durch wenige passende Sätze oder hohe Offenheit erzeugt werden.
 >
-> Keine Cloud-Inferenz, keine erfundenen Testergebnisse oder Quellen, keine heimliche Änderung der Zielgeräte und keine automatischen Kompetenznoten. Inhalte und Zuordnungen aus dieser Übergabe sind zunächst Entwürfe. Nenne offene Produktfragen, bearbeite davon unabhängige Arbeit weiter und erfinde keine angebliche Freigabe. Quellen- und Versionsangaben für neu verwendete Bibliotheken/Modelle bei der Integration anhand offizieller Dokumentation prüfen.
+> ~~Keine Cloud-Inferenz~~ (überholt seit 29.09.2026, siehe Hinweis oben und E01: die Modellaufrufe
+> laufen über OpenRouter), keine erfundenen Testergebnisse oder Quellen, keine heimliche Änderung der Zielgeräte und keine automatischen Kompetenznoten. Inhalte und Zuordnungen aus dieser Übergabe sind zunächst Entwürfe. Nenne offene Produktfragen, bearbeite davon unabhängige Arbeit weiter und erfinde keine angebliche Freigabe. Quellen- und Versionsangaben für neu verwendete Bibliotheken/Modelle bei der Integration anhand offizieller Dokumentation prüfen.
 
 ## 2. Tatsächlicher Ausgangsstand
 
@@ -492,9 +504,14 @@ Die bestehenden zwölf Codes sind weiterhin ein angepasstes Lernschema. Prozessb
 | `ReviewBuilder.swift` / `ReviewView.swift` | Gespeicherte Rückmeldungen mit Belegen und Unsicherheit zeigen. |
 | `ContentSource`, `Tools/compile_content.py`, `ContentCatalog` | Quellenfähigen Hinweis-/Feedbackbestand und zusätzliche Felder durchgehend validieren. |
 
-### 9.2 Empfohlene Verarbeitung — Entwurf, keine externe API
+### 9.2 Empfohlene Verarbeitung — Entwurf ~~, keine externe API~~
 
-Ein lokales Modell erkennt Bedeutung und liefert strukturierte Beobachtungen. Deterministische Logik prüft Belege, entscheidet über Hinweise und verwendet versionierte Textbausteine. Freie Umformulierungen sind für den ersten Ablauf nicht erforderlich.
+> **Überholt in einem Punkt (29.09.2026).** Die Verarbeitung läuft über eine externe API
+> (OpenRouter), nicht über ein lokales Modell. Alles Weitere in diesem Abschnitt — die zwei
+> Analyseebenen, die Belegdaten, die Trennung von Rollen- und Bewertungskontext — gilt
+> unverändert und ist im Adapter so umgesetzt.
+
+Das Modell erkennt Bedeutung und liefert strukturierte Beobachtungen. Deterministische Logik prüft Belege, entscheidet über Hinweise und verwendet versionierte Textbausteine. Freie Umformulierungen sind für den ersten Ablauf nicht erforderlich.
 
 Die technische Analyse benötigt zwei unterschiedliche Ebenen:
 
@@ -616,7 +633,14 @@ Die folgende Reihenfolge konkretisiert den nächsten Schritt; sie ist kein Auftr
 
 **Abnahme:** Relevante Tests aus 11.2 einschließlich langsamer Antwort, Abbruch, Kontextlücke und Commit-Wiederholung bestehen. Demo bleibt ausdrücklich Demo. Kein vorgetäuschter semantischer Detektor durch Stichwortlisten. Aktualisierte Dokumentation nennt alle noch nicht erfüllten fachlichen und Geräteprüfungen.
 
-### MI-02 — Echtes lokales Modell anschließen und messen
+### MI-02 — ~~Echtes lokales Modell anschließen und messen~~ (überholt)
+
+> **Überholt seit 29.09.2026 (E01).** Statt eines lokalen Modells ist der OpenRouter-Adapter
+> gebaut und gemessen worden; MLX-Runtime, Modellgewichte, Lizenz-/Hash-Pins und der
+> Offline-Erststart entfallen ersatzlos. Der Zweck des Pakets — derselbe Ablauf mit echter
+> Rollen- und Einordnungsleistung, getrennt ausgewertet nach technischer Struktur,
+> Rollenpassung und fachlicher Einordnung — bleibt gültig und ist teilweise erfüllt; Stand
+> in [STATUS.md](STATUS.md). Der Text unten bleibt als Verlauf stehen.
 
 **Ziel:** Derselbe Ablauf mit echter Rollen- und Einordnungsleistung.
 
