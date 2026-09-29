@@ -20,9 +20,11 @@ Die folgenden Punkte sind eine Diskussionsgrundlage, keine bereits fachlich frei
       Parallelziel-Sperre und enge JSON-Hüllenbehandlung. Finale Abnahme: 15/15 Runden,
       alle 14 Verlaufserwartungen und danach 7/7 unabhängige Gegenproben bestanden.
 - [ ] Weitere unabhängige Formulierungen und reale freie Rollen-/Simulatorprüfung belegen.
-- [ ] Lange Wartezeiten/Wiederholungen untersuchen: finaler Verlauf 327 Sekunden trotz nur
-      100,7 Sekunden erfasster erfolgreicher Analysestufen. Vollständige Anbieter-/Kostenmessung
-      ergänzen. Zwei Analysestufen sind ein bewusster Mehraufwand, keine Latenzverbesserung.
+- [ ] Lange Wartezeiten/Wiederholungen: **untersucht am 29.09.2026, keine risikoarme
+      Einzelmaßnahme gefunden.** Befund und verworfene Wege siehe „Leerzeichenlauf" weiter
+      unten. Die Gesamtwirkung ist seit der Rundenfrist auf 120 Sekunden je Runde begrenzt.
+      Vollständige Anbieter-/Kostenmessung weiterhin offen. Zwei Analysestufen sind ein
+      bewusster Mehraufwand, keine Latenzverbesserung.
 - [ ] Die drei Dimensionen nachvollziehbar in Rollenverhalten und Termine einbinden (MI-04).
       Keine Umrechnung aus Offenheit und keine automatischen SOC-Schwellen. Aktuell wird
       Lukas' jeweils neue Antwort erst beim nächsten Analyseaufruf berücksichtigt; kein
@@ -161,6 +163,69 @@ stattdessen zu tun ist, steht in Abschnitt 5. Siehe `ENTSCHEIDUNGEN.md`, E01 bis
       `replyPayload` unterscheiden nur noch, welcher `TrainerFailure` nach außen geht.
       Unverändert bleibt die enge Auslegung: kein Herausgreifen eines JSON-Fragments aus
       Prosa und keine Reparatur von Inhalten.
+- [ ] **Leerzeichenlauf — untersucht, bewusst nicht „behoben".** Der teuerste Einzelposten
+      der Wartezeit. Untersuchung am 29.09.2026 anhand der Rohdaten in `Evaluation/results/`.
+
+      *Was belegt ist.* Das Modell erzeugt einen gültigen JSON-Anfang und füllt danach das
+      restliche Ausgabebudget mit Leerraum, bis abgeschnitten wird. Der nicht-leere Anteil
+      ist dabei **derselbe**, unabhängig vom Budget: Fall 03 liefert in jeder Messung 463
+      Zeichen echten Inhalt, Fall 13 immer 348. Das Budget ändert also nicht, *ob* es
+      passiert, sondern nur, *wie lange* es dauert — und zwar etwa linear:
+      Fall 03 bei 768 Token 18,4 s (Phala), bei 4000 Token 148,0 s (Phala);
+      Fall 13 bei 768 Token 9,9 s (AkashML), bei 4000 Token 74,8 s (Reka).
+      Das entspricht grob 27 Ausgabetoken je Sekunde. Das erste Budget ist damit die
+      **einzige** nachweislich wirksame Stellschraube für diese Wartezeit, und die
+      Eskalation auf das höhere Budget gibt es bereits.
+
+      *Was geprüft und verworfen wurde.*
+      1. **Stoppsequenz.** Zwei Gründe. Erstens kann eine lange Einrückung in regulär
+         hübsch gesetztem JSON dieselbe Zeichenfolge enthalten; das Analyseschema ist
+         mehrfach verschachtelt. Zweitens und schwerer: Ein `stop`-Treffer meldet
+         `finish_reason: "stop"`, `OpenRouterResponse.evaluate` gäbe also `.content` mit
+         abgeschnittenem JSON zurück. Daraus würde `invalidAnalysis` statt `.unusable` —
+         und damit fiele genau die Budget-Eskalation aus, die den Fall heute rettet. Ein
+         wiederholbarer Fall würde zum harten Fehlschlag. Zusätzlich verengt
+         `require_parameters: true` die Routen dann auf solche, die `stop` unterstützen.
+      2. **Reasoning-Token begrenzen.** Bereits geschehen: `analysisReasoning` und
+         `replyReasoning` stehen beide auf `false`. Die 344 bis 3742 Überlegungstoken aus
+         E03 wurden mit eingeschaltetem Überlegen gemessen. `reasoning.max_tokens` ist bei
+         `enabled: false` gegenstandslos. Hier ist nichts mehr zu holen.
+      3. **Früher Abbruch bei fast nur Leerraum.** Setzt Streaming voraus. Der Adapter
+         nutzt `URLSession.data(for:)`; Streaming hieße SSE-Auswertung, Umgang mit
+         unvollständigem JSON, geänderte Abbruchbehandlung und eine neue Fehlerfläche.
+         Großer Eingriff ohne jede Messung, die ihn trüge.
+      4. **Weitere Anbieter ausschließen.** An den Daten geprüft und **an den Daten
+         verworfen**: nach dem bestehenden Ausschluss von Wafer, Mancer 2 und Parasail gibt
+         es keinen Anbieter mehr mit schlechter Bilanz. Über die Reihen 4 bis 6 zusammen:
+         Phala 16 von 19 brauchbar, DekaLLM 9 von 11, AkashML 6 von 7, Reka 5 von 6, alle
+         übrigen ohne Fehlschlag bei kleinen Stichproben. Phala oder DekaLLM wegen zwei bis
+         drei Ereignissen auszuschließen, nähme überwiegend funktionierende Routen weg.
+         Unabhängig davon ist jede Anbieterstatistik von vor E06 jetzt veraltet, weil
+         `data_collection: "deny"` die Routenmenge gerade verändert hat.
+      5. **Erstes Budget senken (768 statt 1500 bzw. deutlich unter 2000 für die Antwort).**
+         Der Mechanismus trägt das — die Wartezeit hängt linear am Budget —, aber ob 768
+         für den **zweistufigen** Vertrag 0.5 reicht, ist nicht gemessen. Die Zahl „25 von
+         28 bei 768" stammt vom älteren einstufigen Vertrag. Eine Änderung wäre hier eine
+         Vermutung über die fachliche Qualität und unterbleibt deshalb.
+
+      *Was Jonas messen müsste, um es zu entscheiden* (eine Reihe, gleiche Fälle, zwei
+      Läufe): dieselbe Reihe einmal mit 768/4000 und einmal mit 1500/4000, mit Prompt 0.5
+      und beiden Stufen, und je Erstversuch `finish_reason`, Dauer, `completion_tokens`
+      und Anbieter festhalten. Daraus lässt sich das erste Budget belegt wählen.
+
+      *Unsicher bzw. nicht bestätigt.* Die „größte Einzellücke von 84,6 Sekunden" ließ sich
+      aus den gespeicherten Dateien nicht nachrechnen: sie enthalten nur Start und Ende des
+      ganzen Laufs sowie Dauern je Runde, keine Zeitstempel je Runde. Die „5,7 Sekunden
+      Median einer erfolgreichen Analysestufe" sind in `goal-fix-long-02.json` der Median
+      **je Runde** (beide Stufen zusammen), nicht je Stufe. Und die Lücke geht nicht
+      vollständig auf Leerzeichenläufe zurück: der Parallellauf `goal-fix-long-01.json`
+      zeigt bei sauberem Verlauf ebenfalls 40,2 von 161 Sekunden (25 %) unerfasst, gegen
+      226,3 von 327 Sekunden (69 %) im auffälligen Lauf.
+
+      *Voraussetzung für jede künftige Messung:* Die Metriken der abgeschnittenen Versuche
+      werden vom Adapter weiterhin verworfen (siehe Punkt „Tatsächlich abgerechnete Kosten
+      erfassen"). Solange das so ist, zeigt jeder Lauf wieder eine unerklärte Lücke.
+
 - [ ] **Der gesamte Vorschlagspfad ist tot.** `Beratungstrainer/App/ContentCatalog.swift` erzwingt
       beim Laden `catalog.tips.isEmpty`; ein Katalog mit Tipps wird als ungültiges Artefakt
       abgelehnt. `TipSelector.select` im `ConversationCoordinator` bekommt damit dauerhaft eine
