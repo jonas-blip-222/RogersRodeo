@@ -19,6 +19,10 @@ dasselbe gemessen wird, was die App spaeter akzeptiert.
 Aufruf:
     python3 Tools/openrouter_eval.py [--laeufe 2] [--nur fall05_konfrontation]
 
+Mit `--faelle` laesst sich eine andere Falldatei derselben Form verwenden, etwa
+Evaluation/lange-faelle.json fuer die Laengenstaffelung. Die fachliche
+Fallsammlung Evaluation/mi-faelle.json bleibt dabei unberuehrt.
+
 Der API-Schluessel wird aus dem macOS-Schluesselbund gelesen
 (`security find-generic-password -a "$USER" -s rogersrodeo-openrouter -w`),
 ersatzweise aus der Umgebungsvariablen OPENROUTER_API_KEY. Er wird nirgends
@@ -819,11 +823,18 @@ def fehlerliste(titel: str, fehler: list[str]) -> list[str]:
 
 
 def bericht_schreiben(ergebnisse: list[dict[str, Any]], laeufe: int, pfad: Path,
-                      max_tokens: int = MAX_TOKENS) -> None:
+                      max_tokens: int = MAX_TOKENS,
+                      falldatei: Path = FAELLE,
+                      fallhinweis: str = "") -> None:
+    try:
+        quelle = falldatei.relative_to(REPO)
+    except ValueError:
+        quelle = falldatei
     z: list[str] = []
     z.append("# Modell-Auswertung: MI-Einordnung über OpenRouter")
     z.append("")
     z.append(f"Modell: `{MODELL}` · Endpunkt: `{ENDPUNKT}`")
+    z.append(f"Falldatei: `{quelle}`")
     gesendete_ueberlegung = sorted(
         {l.get("ueberlegen") or "unbekannt" for e in ergebnisse for l in e["laeufe"]}
     ) or ["unbekannt"]
@@ -838,10 +849,23 @@ def bericht_schreiben(ergebnisse: list[dict[str, Any]], laeufe: int, pfad: Path,
         "`OutputValidator.validateAnalysis` aus `Validation.swift` nach."
     )
     z.append("")
+    # Die Herkunftsangabe gehoert zur jeweiligen Falldatei und darf nicht mitwandern:
+    # der Verweis auf den MI-Nachtrag gilt nur fuer Evaluation/mi-faelle.json. Fuer jede
+    # andere Datei steht deren eigener `hinweis` im Bericht, damit die Auswertung keine
+    # Herkunft behauptet, die sie nicht hat.
+    if falldatei == FAELLE:
+        herkunft = (
+            "sind laut MI-Nachtrag (Abschnitt 8 und 11.1) fachliche Arbeitsentwürfe "
+            "und ausdrücklich keine Goldreferenz"
+        )
+    elif fallhinweis.strip():
+        herkunft = ("sind keine Goldreferenz. Die Datei selbst vermerkt: "
+                    + fallhinweis.strip().rstrip("."))
+    else:
+        herkunft = "sind keine Goldreferenz"
     z.append(
-        "**Keine Trefferquote.** Die Fälle aus `Evaluation/mi-faelle.json` sind laut "
-        "MI-Nachtrag (Abschnitt 8 und 11.1) fachliche Arbeitsentwürfe und ausdrücklich "
-        "keine Goldreferenz. Modellausgabe und fachliche Erwartung stehen deshalb "
+        f"**Keine Trefferquote.** Die Fälle aus `{quelle}` {herkunft}. "
+        "Modellausgabe und fachliche Erwartung stehen deshalb "
         "nebeneinander; die fachliche Beurteilung bleibt bei Jonas. Diese Auswertung "
         "belegt **nicht** die fachliche Eignung des Modells."
     )
@@ -1502,6 +1526,10 @@ def main() -> int:
              "nicht (Vorgabe, so wurden die Reihen 1 bis 3 gemessen)",
     )
     parser.add_argument(
+        "--faelle", type=str, default=None,
+        help=f"Falldatei derselben Form (Vorgabe {FAELLE.relative_to(REPO)})",
+    )
+    parser.add_argument(
         "--ordner", type=str, default=None,
         help="Unterordner unter Evaluation/results für eine getrennt ausgewiesene Messreihe",
     )
@@ -1511,7 +1539,13 @@ def main() -> int:
     if not isinstance(leitfaden, str) or not leitfaden.strip():
         raise SystemExit(f"Kein 'codingGuide' in {KATALOG}")
 
-    falldaten = json.loads(FAELLE.read_text(encoding="utf-8"))
+    falldatei = Path(args.faelle) if args.faelle else FAELLE
+    if not falldatei.is_absolute():
+        falldatei = REPO / falldatei
+    if not falldatei.is_file():
+        raise SystemExit(f"Falldatei nicht gefunden: {falldatei}")
+    falldaten = json.loads(falldatei.read_text(encoding="utf-8"))
+    fallhinweis = falldaten.get("hinweis") or ""
     faelle = faelle_auswaehlen(falldaten, args.nur)
     if not faelle:
         raise SystemExit("Keine Fälle ausgewählt.")
@@ -1524,7 +1558,8 @@ def main() -> int:
     if args.nur_bericht:
         ergebnisse = aus_rohdaten(faelle, rohordner, args.laeufe)
         bericht_pfad = ziel / "bericht.md"
-        bericht_schreiben(ergebnisse, args.laeufe, bericht_pfad, args.max_tokens)
+        bericht_schreiben(ergebnisse, args.laeufe, bericht_pfad, args.max_tokens,
+                          falldatei, fallhinweis)
         print(f"Bericht aus Rohdaten neu gebaut: {bericht_pfad}", file=sys.stderr)
         return 0
 
@@ -1654,7 +1689,8 @@ def main() -> int:
     )
 
     bericht_pfad = ziel / "bericht.md"
-    bericht_schreiben(ergebnisse, args.laeufe, bericht_pfad, args.max_tokens)
+    bericht_schreiben(ergebnisse, args.laeufe, bericht_pfad, args.max_tokens, falldatei,
+                      fallhinweis)
     print(f"\nBericht: {bericht_pfad}", file=sys.stderr)
     print(f"Rohantworten: {rohordner}", file=sys.stderr)
 

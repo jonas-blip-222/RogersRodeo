@@ -1,0 +1,457 @@
+{
+  "schemaVersion": 1,
+  "quelle": "Eigens für die Messlücke aus Evaluation/results/reihe4-ohne-ueberlegen/bericht.md geschrieben: dort waren alle 14 Fälle kurze Beiträge mit ein bis zwei Segmenten, lange Äußerungen mit vielen Segmenten blieben ungetestet.",
+  "status": "messfaelle",
+  "istGoldreferenz": false,
+  "hinweis": "Technische Messfälle, keine fachliche Fallsammlung. Sie ergänzen Evaluation/mi-faelle.json und ersetzen sie nicht. Zweck ist doppelt: (1) den Zusammenhang zwischen Eingabelänge, Segmentzahl und Ausgabetoken staffeln (rund 300, 600, 1000 und 1400 Zeichen; die App begrenzt die Eingabe auf 1500 Zeichen), und (2) prüfen, ob die wörtliche Zitat-Treue auch bei realistischen Tippfehlern hält. Jedes Paar besteht aus derselben Aussage in sauberer und in fehlerbehafteter Fassung. Szenario ist die Katalogfigur Lukas, 28, Elektriker. Aus dieser Datei wird keine Trefferquote gebildet.",
+  "faelle": [
+    {
+      "id": "lang01_zusammenfassung_300_sauber",
+      "titel": "Zusammenfassung, rund 300 Zeichen — saubere Fassung",
+      "art": "segment",
+      "variante": "sauber",
+      "paar": "lang01_zusammenfassung_300",
+      "eingabelaenge": 311,
+      "kontext": [
+        {
+          "speaker": "client",
+          "text": "Ich trinke eigentlich nur am Wochenende, das machen bei uns alle so. Unter der Woche rühre ich nichts an, ich muss ja morgens auf die Baustelle."
+        },
+        {
+          "speaker": "client",
+          "text": "Sarah sagt, ich wäre sonntags überhaupt nicht ansprechbar. Von letztem Samstag weiß ich ab irgendeinem Punkt ehrlich gesagt nichts mehr."
+        }
+      ],
+      "eingabe": "Ich fasse kurz zusammen, was ich bis jetzt verstanden habe. Unter der Woche rühren Sie nichts an, weil die Arbeit sonst nicht liefe. Am Samstag gehört das Trinken für Sie dazu, so wie für die anderen auch. Und dann gibt es diesen einen Abend, von dem Ihnen ein Stück fehlt. Habe ich etwas Wichtiges ausgelassen?",
+      "erwarteteWarnung": false,
+      "fachlicheErwartung": "Nicht fachlich geprüft. Diese Datei misst Ausgabelänge, Segmentzahl und Zitat-Treue, nicht die Richtigkeit der Codes.",
+      "gegenprobe": "Keine Goldreferenz. Aus dieser Datei darf keine Trefferquote gebildet werden."
+    },
+    {
+      "id": "lang01_zusammenfassung_300_tippfehler",
+      "titel": "Zusammenfassung, rund 300 Zeichen — mit Eingabefehlern",
+      "art": "segment",
+      "variante": "tippfehler",
+      "fehlerprofil": "Buchstabendreher (verstandne, nciht, villeicht, besporchen, komsich, Arbiet), doppelte Leerzeichen, vereinzelt fehlendes Satzzeichen, »regelmässig« statt »regelmäßig«, »fuer« statt »für«. Groß- und Kleinschreibung bleibt erhalten.",
+      "paar": "lang01_zusammenfassung_300",
+      "eingabelaenge": 321,
+      "kontext": [
+        {
+          "speaker": "client",
+          "text": "Ich trinke eigentlich nur am Wochenende, das machen bei uns alle so. Unter der Woche rühre ich nichts an, ich muss ja morgens auf die Baustelle."
+        },
+        {
+          "speaker": "client",
+          "text": "Sarah sagt, ich wäre sonntags überhaupt nicht ansprechbar. Von letztem Samstag weiß ich ab irgendeinem Punkt ehrlich gesagt nichts mehr."
+        }
+      ],
+      "eingabe": "Ich fasse kurz zusammen, was ich bis jetzt verstandne habe. Unter der Woche  rühren Sie nichts an, weil die Arbeit sonst nciht liefe. Am Samstag gehört das Trinken für Sie dazu, so wie für die anderen auch. Und dann gibt es diesen einen Abend, von dem Ihnen ein Stück fehlt villeicht habe ich etwas Wichtiges ausgelassen?",
+      "erwarteteWarnung": false,
+      "fachlicheErwartung": "Nicht fachlich geprüft. Gleiche Aussage wie die saubere Fassung desselben Paares; gemessen wird, ob die wörtliche Zitat-Treue auch bei Eingabefehlern hält.",
+      "gegenprobe": "Keine Goldreferenz. Ein stillschweigend korrigiertes Zitat ist ein Befund, kein Fehler der Fallsammlung."
+    },
+    {
+      "id": "lang02_doppelseite_300_sauber",
+      "titel": "Zwei Seiten nebeneinander, rund 300 Zeichen — saubere Fassung",
+      "art": "segment",
+      "variante": "sauber",
+      "paar": "lang02_doppelseite_300",
+      "eingabelaenge": 307,
+      "kontext": [
+        {
+          "speaker": "client",
+          "text": "Ich trinke eigentlich nur am Wochenende, das machen bei uns alle so. Unter der Woche rühre ich nichts an, ich muss ja morgens auf die Baustelle."
+        },
+        {
+          "speaker": "client",
+          "text": "Der Sonntag ist danach komplett weg. Ich liege den ganzen Tag flach, und dann ist auch schon wieder Montag."
+        }
+      ],
+      "eingabe": "Sie haben zwei Dinge nebeneinandergestellt. Das eine ist, dass Sie jede Woche zuverlässig auf der Baustelle stehen, ohne Ausnahme. Das andere ist der Sonntag, der Ihnen dabei verloren geht. Beides stimmt gleichzeitig, und Sie entscheiden selbst, was Sie damit anfangen. Was davon beschäftigt Sie heute mehr?",
+      "erwarteteWarnung": false,
+      "fachlicheErwartung": "Nicht fachlich geprüft. Diese Datei misst Ausgabelänge, Segmentzahl und Zitat-Treue, nicht die Richtigkeit der Codes.",
+      "gegenprobe": "Keine Goldreferenz. Aus dieser Datei darf keine Trefferquote gebildet werden."
+    },
+    {
+      "id": "lang02_doppelseite_300_tippfehler",
+      "titel": "Zwei Seiten nebeneinander, rund 300 Zeichen — mit Eingabefehlern",
+      "art": "segment",
+      "variante": "tippfehler",
+      "fehlerprofil": "Durchgehende Kleinschreibung, Umlaute als ue/ae/oe geschrieben, ß als ss, keine Satzzeichen.",
+      "paar": "lang02_doppelseite_300",
+      "eingabelaenge": 299,
+      "kontext": [
+        {
+          "speaker": "client",
+          "text": "Ich trinke eigentlich nur am Wochenende, das machen bei uns alle so. Unter der Woche rühre ich nichts an, ich muss ja morgens auf die Baustelle."
+        },
+        {
+          "speaker": "client",
+          "text": "Der Sonntag ist danach komplett weg. Ich liege den ganzen Tag flach, und dann ist auch schon wieder Montag."
+        }
+      ],
+      "eingabe": "sie haben zwei dinge nebeneinandergestellt das eine ist dass sie jede woche zuverlaessig auf der baustelle stehen ohne ausnahme das andere ist der sonntag der ihnen dabei verloren geht beides stimmt gleichzeitig und sie entscheiden selbst was sie damit anfangen was davon beschaeftigt sie heute mehr",
+      "erwarteteWarnung": false,
+      "fachlicheErwartung": "Nicht fachlich geprüft. Gleiche Aussage wie die saubere Fassung desselben Paares; gemessen wird, ob die wörtliche Zitat-Treue auch bei Eingabefehlern hält.",
+      "gegenprobe": "Keine Goldreferenz. Ein stillschweigend korrigiertes Zitat ist ein Befund, kein Fehler der Fallsammlung."
+    },
+    {
+      "id": "lang03_zusammenfassung_600_sauber",
+      "titel": "Zusammenfassung mit Würdigung, rund 600 Zeichen — saubere Fassung",
+      "art": "segment",
+      "variante": "sauber",
+      "paar": "lang03_zusammenfassung_600",
+      "eingabelaenge": 560,
+      "kontext": [
+        {
+          "speaker": "client",
+          "text": "Ich trinke eigentlich nur am Wochenende, das machen bei uns alle so. Unter der Woche rühre ich nichts an, ich muss ja morgens auf die Baustelle."
+        },
+        {
+          "speaker": "client",
+          "text": "Sarah sagt, ich wäre sonntags überhaupt nicht ansprechbar. Von letztem Samstag weiß ich ab irgendeinem Punkt ehrlich gesagt nichts mehr."
+        },
+        {
+          "speaker": "client",
+          "text": "Der Sonntag ist danach komplett weg. Ich liege den ganzen Tag flach, und dann ist auch schon wieder Montag."
+        }
+      ],
+      "eingabe": "Ich möchte kurz zusammenfassen, was wir bis hierher besprochen haben, und Sie sagen mir, wo ich danebenliege. Sie haben gesagt, dass das Trinken für Sie zum Wochenende gehört, so wie bei Ihren Freunden auch, und dass Sie unter der Woche nichts anrühren, weil Sie morgens auf die Baustelle müssen. Gleichzeitig steht da der Samstag, von dem Ihnen ein Stück fehlt, und der Sonntag, der regelmäßig draufgeht. Dass Sie trotzdem hergekommen sind, obwohl Sie das Ganze für übertrieben halten, rechne ich Ihnen hoch an. Was davon beschäftigt Sie im Moment am meisten?",
+      "erwarteteWarnung": false,
+      "fachlicheErwartung": "Nicht fachlich geprüft. Diese Datei misst Ausgabelänge, Segmentzahl und Zitat-Treue, nicht die Richtigkeit der Codes.",
+      "gegenprobe": "Keine Goldreferenz. Aus dieser Datei darf keine Trefferquote gebildet werden."
+    },
+    {
+      "id": "lang03_zusammenfassung_600_tippfehler",
+      "titel": "Zusammenfassung mit Würdigung, rund 600 Zeichen — mit Eingabefehlern",
+      "art": "segment",
+      "variante": "tippfehler",
+      "fehlerprofil": "Buchstabendreher (verstandne, nciht, villeicht, besporchen, komsich, Arbiet), doppelte Leerzeichen, vereinzelt fehlendes Satzzeichen, »regelmässig« statt »regelmäßig«, »fuer« statt »für«. Groß- und Kleinschreibung bleibt erhalten.",
+      "paar": "lang03_zusammenfassung_600",
+      "eingabelaenge": 562,
+      "kontext": [
+        {
+          "speaker": "client",
+          "text": "Ich trinke eigentlich nur am Wochenende, das machen bei uns alle so. Unter der Woche rühre ich nichts an, ich muss ja morgens auf die Baustelle."
+        },
+        {
+          "speaker": "client",
+          "text": "Sarah sagt, ich wäre sonntags überhaupt nicht ansprechbar. Von letztem Samstag weiß ich ab irgendeinem Punkt ehrlich gesagt nichts mehr."
+        },
+        {
+          "speaker": "client",
+          "text": "Der Sonntag ist danach komplett weg. Ich liege den ganzen Tag flach, und dann ist auch schon wieder Montag."
+        }
+      ],
+      "eingabe": "Ich möchte kurz zusammenfassen, was wir bis hierher besporchen haben, und Sie sagen mir, wo ich danebenliege. Sie haben gesagt, dass das Trinken für Sie zum Wochenende gehört, so wie bei Ihren Freunden auch, und dass Sie unter der Woche  nichts anrühren, weil Sie morgens auf die Baustelle müssen. Gleichzeitig steht da der Samstag, von dem Ihnen ein Stück fehlt, und der Sonntag, der regelmässig draufgeht. Dass Sie trotzdem hergekommen sind, obwohl Sie das Ganze fuer übertrieben halten, rechne ich Ihnen hoch an Was davon beschäftigt Sie im Moment am meisten?",
+      "erwarteteWarnung": false,
+      "fachlicheErwartung": "Nicht fachlich geprüft. Gleiche Aussage wie die saubere Fassung desselben Paares; gemessen wird, ob die wörtliche Zitat-Treue auch bei Eingabefehlern hält.",
+      "gegenprobe": "Keine Goldreferenz. Ein stillschweigend korrigiertes Zitat ist ein Befund, kein Fehler der Fallsammlung."
+    },
+    {
+      "id": "lang04_ambivalenz_600_sauber",
+      "titel": "Ambivalenz und Autonomie, rund 600 Zeichen — saubere Fassung",
+      "art": "segment",
+      "variante": "sauber",
+      "paar": "lang04_ambivalenz_600",
+      "eingabelaenge": 620,
+      "kontext": [
+        {
+          "speaker": "client",
+          "text": "Ich trinke eigentlich nur am Wochenende, das machen bei uns alle so. Unter der Woche rühre ich nichts an, ich muss ja morgens auf die Baustelle."
+        },
+        {
+          "speaker": "client",
+          "text": "Sarah sagt, ich wäre sonntags überhaupt nicht ansprechbar. Von letztem Samstag weiß ich ab irgendeinem Punkt ehrlich gesagt nichts mehr."
+        },
+        {
+          "speaker": "client",
+          "text": "Aufhören kommt für mich nicht infrage. Weniger vielleicht, aber ohne meine Leute am Samstag wäre das schon komisch."
+        }
+      ],
+      "eingabe": "Auf der einen Seite steht für Sie, dass Sie Ihre Arbeit zuverlässig hinbekommen und dass der Samstag mit Ihren Leuten etwas ist, das Sie nicht aufgeben möchten. Auf der anderen Seite steht ein Abend, an den Sie sich nicht erinnern, und ein Sonntag, der Ihnen jedes Mal durch die Finger geht. Beides gehört Ihnen, und beides zählt. Sie haben außerdem klar gesagt, dass Aufhören für Sie nicht infrage kommt, und das nehme ich ernst; von weniger war dagegen schon die Rede. Ob Sie daran etwas ändern, entscheiden Sie und niemand sonst. Wenn Sie sich vorstellen, es bliebe genau so wie jetzt: Wie sähe das in einem Jahr aus?",
+      "erwarteteWarnung": false,
+      "fachlicheErwartung": "Nicht fachlich geprüft. Diese Datei misst Ausgabelänge, Segmentzahl und Zitat-Treue, nicht die Richtigkeit der Codes.",
+      "gegenprobe": "Keine Goldreferenz. Aus dieser Datei darf keine Trefferquote gebildet werden."
+    },
+    {
+      "id": "lang04_ambivalenz_600_tippfehler",
+      "titel": "Ambivalenz und Autonomie, rund 600 Zeichen — mit Eingabefehlern",
+      "art": "segment",
+      "variante": "tippfehler",
+      "fehlerprofil": "Durchgehende Kleinschreibung, Umlaute als ue/ae/oe geschrieben, ß als ss, keine Satzzeichen.",
+      "paar": "lang04_ambivalenz_600",
+      "eingabelaenge": 612,
+      "kontext": [
+        {
+          "speaker": "client",
+          "text": "Ich trinke eigentlich nur am Wochenende, das machen bei uns alle so. Unter der Woche rühre ich nichts an, ich muss ja morgens auf die Baustelle."
+        },
+        {
+          "speaker": "client",
+          "text": "Sarah sagt, ich wäre sonntags überhaupt nicht ansprechbar. Von letztem Samstag weiß ich ab irgendeinem Punkt ehrlich gesagt nichts mehr."
+        },
+        {
+          "speaker": "client",
+          "text": "Aufhören kommt für mich nicht infrage. Weniger vielleicht, aber ohne meine Leute am Samstag wäre das schon komisch."
+        }
+      ],
+      "eingabe": "auf der einen seite steht fuer sie dass sie ihre arbeit zuverlaessig hinbekommen und dass der samstag mit ihren leuten etwas ist das sie nicht aufgeben moechten auf der anderen seite steht ein abend an den sie sich nicht erinnern und ein sonntag der ihnen jedes mal durch die finger geht beides gehoert ihnen und beides zaehlt sie haben ausserdem klar gesagt dass aufhoeren fuer sie nicht infrage kommt und das nehme ich ernst von weniger war dagegen schon die rede ob sie daran etwas aendern entscheiden sie und niemand sonst wenn sie sich vorstellen es bliebe genau so wie jetzt wie saehe das in einem jahr aus",
+      "erwarteteWarnung": false,
+      "fachlicheErwartung": "Nicht fachlich geprüft. Gleiche Aussage wie die saubere Fassung desselben Paares; gemessen wird, ob die wörtliche Zitat-Treue auch bei Eingabefehlern hält.",
+      "gegenprobe": "Keine Goldreferenz. Ein stillschweigend korrigiertes Zitat ist ein Befund, kein Fehler der Fallsammlung."
+    },
+    {
+      "id": "lang05_zusammenfassung_1000_sauber",
+      "titel": "Lange Zusammenfassung, rund 1000 Zeichen — saubere Fassung",
+      "art": "segment",
+      "variante": "sauber",
+      "paar": "lang05_zusammenfassung_1000",
+      "eingabelaenge": 1002,
+      "kontext": [
+        {
+          "speaker": "client",
+          "text": "Ich trinke eigentlich nur am Wochenende, das machen bei uns alle so. Unter der Woche rühre ich nichts an, ich muss ja morgens auf die Baustelle."
+        },
+        {
+          "speaker": "client",
+          "text": "Sarah sagt, ich wäre sonntags überhaupt nicht ansprechbar. Von letztem Samstag weiß ich ab irgendeinem Punkt ehrlich gesagt nichts mehr."
+        },
+        {
+          "speaker": "client",
+          "text": "Der Sonntag ist danach komplett weg. Ich liege den ganzen Tag flach, und dann ist auch schon wieder Montag."
+        },
+        {
+          "speaker": "client",
+          "text": "Aufhören kommt für mich nicht infrage. Weniger vielleicht, aber ohne meine Leute am Samstag wäre das schon komisch."
+        }
+      ],
+      "eingabe": "Ich fasse einmal zusammen, was ich bisher von Ihnen gehört habe, und Sie korrigieren mich, wo es nicht stimmt. Angefangen haben wir damit, dass das Trinken für Sie zum Wochenende dazugehört, genauso wie für Ihre Freunde, und dass Sie unter der Woche nichts anrühren, weil Sie morgens auf die Baustelle müssen. Darauf sind Sie zu Recht stolz, denn zuverlässig zur Arbeit zu kommen ist für Sie keine Kleinigkeit. Dann kam der Samstag, von dem Ihnen ab einem bestimmten Punkt ein Stück fehlt, und Sie haben selbst gesagt, dass Ihnen das komisch vorkam. Dazu der Sonntag, der regelmäßig draufgeht, weil Sie den ganzen Tag flachliegen und dann schon wieder Montag ist. Aufhören steht für Sie nicht zur Debatte, weniger könnten Sie sich eher vorstellen. Sarah taucht dabei immer wieder auf, mal als die, die Sie hergeschickt hat, mal als die, der Sie eigentlich nicht wehtun wollen. Das ist Ihre Entscheidung, nicht meine, und Sie müssen sich heute zu gar nichts verpflichten. Was habe ich falsch verstanden?",
+      "erwarteteWarnung": false,
+      "fachlicheErwartung": "Nicht fachlich geprüft. Diese Datei misst Ausgabelänge, Segmentzahl und Zitat-Treue, nicht die Richtigkeit der Codes.",
+      "gegenprobe": "Keine Goldreferenz. Aus dieser Datei darf keine Trefferquote gebildet werden."
+    },
+    {
+      "id": "lang05_zusammenfassung_1000_tippfehler",
+      "titel": "Lange Zusammenfassung, rund 1000 Zeichen — mit Eingabefehlern",
+      "art": "segment",
+      "variante": "tippfehler",
+      "fehlerprofil": "Buchstabendreher (verstandne, nciht, villeicht, besporchen, komsich, Arbiet), doppelte Leerzeichen, vereinzelt fehlendes Satzzeichen, »regelmässig« statt »regelmäßig«, »fuer« statt »für«. Groß- und Kleinschreibung bleibt erhalten.",
+      "paar": "lang05_zusammenfassung_1000",
+      "eingabelaenge": 1013,
+      "kontext": [
+        {
+          "speaker": "client",
+          "text": "Ich trinke eigentlich nur am Wochenende, das machen bei uns alle so. Unter der Woche rühre ich nichts an, ich muss ja morgens auf die Baustelle."
+        },
+        {
+          "speaker": "client",
+          "text": "Sarah sagt, ich wäre sonntags überhaupt nicht ansprechbar. Von letztem Samstag weiß ich ab irgendeinem Punkt ehrlich gesagt nichts mehr."
+        },
+        {
+          "speaker": "client",
+          "text": "Der Sonntag ist danach komplett weg. Ich liege den ganzen Tag flach, und dann ist auch schon wieder Montag."
+        },
+        {
+          "speaker": "client",
+          "text": "Aufhören kommt für mich nicht infrage. Weniger vielleicht, aber ohne meine Leute am Samstag wäre das schon komisch."
+        }
+      ],
+      "eingabe": "Ich fasse einmal zusammen, was ich bisher von Ihnen gehört habe, und Sie korrigieren mich, wo es nicht stimmt. Angefangen haben wir damit, dass das Trinken für Sie zum Wochenende dazugehört, genauso wie für Ihre Freunde, und dass Sie unter der Woche  nichts anrühren, weil Sie morgens auf die Baustelle müssen. Darauf sind Sie zu Recht stolz, denn zuverlässig zur Arbiet zu kommen ist für Sie keine Kleinigkeit. Dann kam der Samstag, von dem Ihnen ab einem bestimmten Punkt ein Stück fehlt, und Sie haben selbst gesagt, dass Ihnen das komsich vorkam. Dazu der Sonntag, der regelmässig draufgeht, weil Sie den ganzen Tag flachliegen und dann schon wieder Montag ist Aufhören steht für Sie nicht zur Debatte, weniger könnten Sie sich villeicht eher vorstellen. Sarah taucht dabei immer wieder auf, mal als die, die Sie hergeschickt hat, mal als die, der Sie eigentlich nicht wehtun wollen. Das ist Ihre Entscheidung, nicht meine, und Sie müssen sich heute zu gar nichts verpflcihten. Was habe ich falsch verstandne?",
+      "erwarteteWarnung": false,
+      "fachlicheErwartung": "Nicht fachlich geprüft. Gleiche Aussage wie die saubere Fassung desselben Paares; gemessen wird, ob die wörtliche Zitat-Treue auch bei Eingabefehlern hält.",
+      "gegenprobe": "Keine Goldreferenz. Ein stillschweigend korrigiertes Zitat ist ein Befund, kein Fehler der Fallsammlung."
+    },
+    {
+      "id": "lang06_uebergang_1000_sauber",
+      "titel": "Zusammenfassung vor dem Übergang, rund 1000 Zeichen — saubere Fassung",
+      "art": "segment",
+      "variante": "sauber",
+      "paar": "lang06_uebergang_1000",
+      "eingabelaenge": 902,
+      "kontext": [
+        {
+          "speaker": "client",
+          "text": "Ich trinke eigentlich nur am Wochenende, das machen bei uns alle so. Unter der Woche rühre ich nichts an, ich muss ja morgens auf die Baustelle."
+        },
+        {
+          "speaker": "client",
+          "text": "Sarah sagt, ich wäre sonntags überhaupt nicht ansprechbar. Von letztem Samstag weiß ich ab irgendeinem Punkt ehrlich gesagt nichts mehr."
+        },
+        {
+          "speaker": "client",
+          "text": "Wir hatten deswegen letzte Woche Streit. Sarah hat gesagt, sie weiß nicht mehr, worauf sie sich bei mir verlassen kann."
+        }
+      ],
+      "eingabe": "Bevor wir weitergehen, halte ich kurz fest, wo wir stehen. Sie sind hergekommen, obwohl Sie die ganze Sache für übertrieben halten, und das finde ich bemerkenswert. Sie haben beschrieben, dass Sie unter der Woche nichts anrühren und morgens zuverlässig auf der Baustelle stehen. Sie haben aber auch erzählt, dass Sarah sagt, sie wisse nicht mehr, worauf sie sich bei Ihnen verlassen kann, und dass der Streit von letzter Woche noch nachwirkt. Dazwischen liegt der Samstagabend, von dem ein Stück fehlt. Ich höre bei Ihnen zwei Dinge gleichzeitig: Sie wollen den Samstag mit Ihren Leuten behalten, und Sie hätten gern, dass Sarah Ihnen wieder glaubt. Dass beides zusammen schwierig wird, haben Sie selbst angedeutet, ohne dass ich danach gefragt hätte. Ich will Ihnen hier nichts vorschreiben; wohin wir gehen, bestimmen Sie. Was von beidem wäre Ihnen wichtiger, wenn Sie sich heute entscheiden müssten?",
+      "erwarteteWarnung": false,
+      "fachlicheErwartung": "Nicht fachlich geprüft. Diese Datei misst Ausgabelänge, Segmentzahl und Zitat-Treue, nicht die Richtigkeit der Codes.",
+      "gegenprobe": "Keine Goldreferenz. Aus dieser Datei darf keine Trefferquote gebildet werden."
+    },
+    {
+      "id": "lang06_uebergang_1000_tippfehler",
+      "titel": "Zusammenfassung vor dem Übergang, rund 1000 Zeichen — mit Eingabefehlern",
+      "art": "segment",
+      "variante": "tippfehler",
+      "fehlerprofil": "Durchgehende Kleinschreibung, Umlaute als ue/ae/oe geschrieben, ß als ss, keine Satzzeichen.",
+      "paar": "lang06_uebergang_1000",
+      "eingabelaenge": 886,
+      "kontext": [
+        {
+          "speaker": "client",
+          "text": "Ich trinke eigentlich nur am Wochenende, das machen bei uns alle so. Unter der Woche rühre ich nichts an, ich muss ja morgens auf die Baustelle."
+        },
+        {
+          "speaker": "client",
+          "text": "Sarah sagt, ich wäre sonntags überhaupt nicht ansprechbar. Von letztem Samstag weiß ich ab irgendeinem Punkt ehrlich gesagt nichts mehr."
+        },
+        {
+          "speaker": "client",
+          "text": "Wir hatten deswegen letzte Woche Streit. Sarah hat gesagt, sie weiß nicht mehr, worauf sie sich bei mir verlassen kann."
+        }
+      ],
+      "eingabe": "bevor wir weitergehen halte ich kurz fest wo wir stehen sie sind hergekommen obwohl sie die ganze sache fuer uebertrieben halten und das finde ich bemerkenswert sie haben beschrieben dass sie unter der woche nichts anruehren und morgens zuverlaessig auf der baustelle stehen sie haben aber auch erzaehlt dass sarah sagt sie wisse nicht mehr worauf sie sich bei ihnen verlassen kann und dass der streit von letzter woche noch nachwirkt dazwischen liegt der samstagabend von dem ein stueck fehlt ich hoere bei ihnen zwei dinge gleichzeitig sie wollen den samstag mit ihren leuten behalten und sie haetten gern dass sarah ihnen wieder glaubt dass beides zusammen schwierig wird haben sie selbst angedeutet ohne dass ich danach gefragt haette ich will ihnen hier nichts vorschreiben wohin wir gehen bestimmen sie was von beidem waere ihnen wichtiger wenn sie sich heute entscheiden muessten",
+      "erwarteteWarnung": false,
+      "fachlicheErwartung": "Nicht fachlich geprüft. Gleiche Aussage wie die saubere Fassung desselben Paares; gemessen wird, ob die wörtliche Zitat-Treue auch bei Eingabefehlern hält.",
+      "gegenprobe": "Keine Goldreferenz. Ein stillschweigend korrigiertes Zitat ist ein Befund, kein Fehler der Fallsammlung."
+    },
+    {
+      "id": "lang07_zusammenfassung_1400_sauber",
+      "titel": "Sammelzusammenfassung, nahe der Eingabegrenze — saubere Fassung",
+      "art": "segment",
+      "variante": "sauber",
+      "paar": "lang07_zusammenfassung_1400",
+      "eingabelaenge": 1416,
+      "kontext": [
+        {
+          "speaker": "client",
+          "text": "Ich trinke eigentlich nur am Wochenende, das machen bei uns alle so. Unter der Woche rühre ich nichts an, ich muss ja morgens auf die Baustelle."
+        },
+        {
+          "speaker": "client",
+          "text": "Sarah sagt, ich wäre sonntags überhaupt nicht ansprechbar. Von letztem Samstag weiß ich ab irgendeinem Punkt ehrlich gesagt nichts mehr."
+        },
+        {
+          "speaker": "client",
+          "text": "Der Sonntag ist danach komplett weg. Ich liege den ganzen Tag flach, und dann ist auch schon wieder Montag."
+        },
+        {
+          "speaker": "client",
+          "text": "Aufhören kommt für mich nicht infrage. Weniger vielleicht, aber ohne meine Leute am Samstag wäre das schon komisch."
+        },
+        {
+          "speaker": "client",
+          "text": "Wir hatten deswegen letzte Woche Streit. Sarah hat gesagt, sie weiß nicht mehr, worauf sie sich bei mir verlassen kann."
+        }
+      ],
+      "eingabe": "Ich möchte an dieser Stelle einmal zusammenfassen, was wir in der letzten halben Stunde besprochen haben, und Sie sagen mir bitte, wo ich danebenliege. Begonnen haben Sie damit, dass das Trinken für Sie zum Wochenende gehört, so wie für alle in Ihrem Freundeskreis, und dass Sie unter der Woche nichts anrühren, weil Sie morgens auf die Baustelle müssen. Das ist Ihnen wichtig, und ich höre darin auch, dass Sie sich auf sich selbst verlassen können. Dann haben Sie von dem Samstag erzählt, von dem Ihnen ab einem bestimmten Punkt nichts mehr geblieben ist, und Sie haben dazu gesagt, dass Ihnen das komisch vorkam. Danach ging es um den Sonntag, der Ihnen regelmäßig verloren geht, weil Sie flachliegen und dann schon wieder Montag ist. Auf der anderen Seite steht Sarah, die sagt, sie wisse nicht mehr, worauf sie sich bei Ihnen verlassen kann, und der Streit von letzter Woche sitzt Ihnen noch nach. Sie haben deutlich gesagt, dass Aufhören für Sie nicht infrage kommt; weniger, das könnten Sie sich eher vorstellen. Ob und was Sie ändern, entscheiden Sie, nicht ich und auch nicht Sarah. Mir fällt auf, dass Sie trotzdem hergekommen sind, obwohl Sie das Ganze für übertrieben halten, und dass Sie hier sehr offen über den Samstag gesprochen haben. Das ist nicht selbstverständlich, und ich sage Ihnen das ausdrücklich. Was habe ich falsch verstanden, und was ist Ihnen wichtig, das ich bisher nicht genannt habe?",
+      "erwarteteWarnung": false,
+      "fachlicheErwartung": "Nicht fachlich geprüft. Diese Datei misst Ausgabelänge, Segmentzahl und Zitat-Treue, nicht die Richtigkeit der Codes.",
+      "gegenprobe": "Keine Goldreferenz. Aus dieser Datei darf keine Trefferquote gebildet werden."
+    },
+    {
+      "id": "lang07_zusammenfassung_1400_tippfehler",
+      "titel": "Sammelzusammenfassung, nahe der Eingabegrenze — mit Eingabefehlern",
+      "art": "segment",
+      "variante": "tippfehler",
+      "fehlerprofil": "Buchstabendreher (verstandne, nciht, villeicht, besporchen, komsich, Arbiet), doppelte Leerzeichen, vereinzelt fehlendes Satzzeichen, »regelmässig« statt »regelmäßig«, »fuer« statt »für«. Groß- und Kleinschreibung bleibt erhalten.",
+      "paar": "lang07_zusammenfassung_1400",
+      "eingabelaenge": 1428,
+      "kontext": [
+        {
+          "speaker": "client",
+          "text": "Ich trinke eigentlich nur am Wochenende, das machen bei uns alle so. Unter der Woche rühre ich nichts an, ich muss ja morgens auf die Baustelle."
+        },
+        {
+          "speaker": "client",
+          "text": "Sarah sagt, ich wäre sonntags überhaupt nicht ansprechbar. Von letztem Samstag weiß ich ab irgendeinem Punkt ehrlich gesagt nichts mehr."
+        },
+        {
+          "speaker": "client",
+          "text": "Der Sonntag ist danach komplett weg. Ich liege den ganzen Tag flach, und dann ist auch schon wieder Montag."
+        },
+        {
+          "speaker": "client",
+          "text": "Aufhören kommt für mich nicht infrage. Weniger vielleicht, aber ohne meine Leute am Samstag wäre das schon komisch."
+        },
+        {
+          "speaker": "client",
+          "text": "Wir hatten deswegen letzte Woche Streit. Sarah hat gesagt, sie weiß nicht mehr, worauf sie sich bei mir verlassen kann."
+        }
+      ],
+      "eingabe": "Ich möchte an dieser Stelle einmal zusammenfassen, was wir in der letzten halben Stunde besporchen haben, und Sie sagen mir bitte, wo ich danebenliege. Begonnen haben Sie damit, dass das Trinken für Sie zum Wochenende gehört, so wie für alle in Ihrem Freundeskreis, und dass Sie unter der Woche  nichts anrühren, weil Sie morgens auf die Baustelle müssen. Das ist Ihnen wichtig, und ich höre darin auch, dass Sie sich auf sich selbst verlassen können. Dann haben Sie von dem Samstag erzählt, von dem Ihnen ab einem bestimmten Punkt nichts mehr geblieben ist, und Sie haben dazu gesagt, dass Ihnen das komsich vorkam. Danach ging es um den Sonntag, der Ihnen regelmässig verloren geht, weil Sie flachliegen und dann schon wieder Montag ist Auf der anderen Seite steht Sarah, die sagt, sie wisse nciht mehr, worauf sie sich bei Ihnen verlassen kann, und der Streit von letzter Woche sitzt Ihnen noch nach. Sie haben deutlich gesagt, dass Aufhören für Sie nicht infrage kommt; weniger, das könnten Sie sich villeicht eher vorstellen. Ob und was Sie ändern, entscheiden Sie, nicht ich und auch nicht Sarah. Mir fällt auf, dass Sie trotzdem hergekommen sind, obwohl Sie das Ganze fuer übertrieben halten, und dass Sie hier sehr offen über den Samstag gesprochen haben Das ist nicht selbstverstaendlich, und ich sage Ihnen das ausdrücklich. Was habe ich falsch verstandne, und was ist Ihnen wichtig, das ich bisher nciht genannt habe?",
+      "erwarteteWarnung": false,
+      "fachlicheErwartung": "Nicht fachlich geprüft. Gleiche Aussage wie die saubere Fassung desselben Paares; gemessen wird, ob die wörtliche Zitat-Treue auch bei Eingabefehlern hält.",
+      "gegenprobe": "Keine Goldreferenz. Ein stillschweigend korrigiertes Zitat ist ein Befund, kein Fehler der Fallsammlung."
+    },
+    {
+      "id": "lang08_abschluss_1400_sauber",
+      "titel": "Abschließende Zusammenfassung, nahe der Eingabegrenze — saubere Fassung",
+      "art": "segment",
+      "variante": "sauber",
+      "paar": "lang08_abschluss_1400",
+      "eingabelaenge": 1373,
+      "kontext": [
+        {
+          "speaker": "client",
+          "text": "Ich trinke eigentlich nur am Wochenende, das machen bei uns alle so. Unter der Woche rühre ich nichts an, ich muss ja morgens auf die Baustelle."
+        },
+        {
+          "speaker": "client",
+          "text": "Sarah sagt, ich wäre sonntags überhaupt nicht ansprechbar. Von letztem Samstag weiß ich ab irgendeinem Punkt ehrlich gesagt nichts mehr."
+        },
+        {
+          "speaker": "client",
+          "text": "Der Sonntag ist danach komplett weg. Ich liege den ganzen Tag flach, und dann ist auch schon wieder Montag."
+        },
+        {
+          "speaker": "client",
+          "text": "Wir hatten deswegen letzte Woche Streit. Sarah hat gesagt, sie weiß nicht mehr, worauf sie sich bei mir verlassen kann."
+        },
+        {
+          "speaker": "client",
+          "text": "Dieser Filmriss hat mich ehrlich gesagt mehr erschreckt, als ich zugegeben habe. Ich habe das nur runtergespielt, weil ich nicht als Alkoholiker dastehen wollte."
+        }
+      ],
+      "eingabe": "Lassen Sie mich zusammentragen, was heute alles zur Sprache gekommen ist, damit wir beide denselben Stand haben. Sie haben von Ihrem Wochenende erzählt: Samstag mit Ihren Leuten, das gehört dazu, das machen bei Ihnen alle so, und unter der Woche rühren Sie nichts an, weil Sie morgens auf die Baustelle müssen. Sie haben mir erzählt, dass Ihnen von letztem Samstag ab einem Punkt nichts mehr geblieben ist, und dass Sie das mehr erschreckt hat, als Sie zunächst zugegeben haben; runtergespielt haben Sie es, weil Sie nicht als Alkoholiker dastehen wollten. Sie haben beschrieben, wie der Sonntag draufgeht, wie Sie flachliegen und wie dann schon wieder Montag ist. Und Sie haben von Sarah gesprochen, von dem Streit letzte Woche und davon, dass sie nicht mehr weiß, worauf sie sich bei Ihnen verlassen kann. Dass Sie mir das alles so offen erzählen, obwohl Sie hier eigentlich gar nicht sitzen wollten, ist nicht selbstverständlich. Ich höre zwei Dinge nebeneinander: Der Samstag ist Ihnen wichtig und Sie wollen ihn nicht hergeben, und gleichzeitig möchten Sie nicht, dass Ihnen wieder eine Nacht fehlt. Beides ist wahr, und Sie müssen sich heute für nichts entscheiden; was hier besprochen wird, bestimmen Sie. Ich habe dabei sicher nicht alles richtig getroffen, deshalb sagen Sie mir bitte, was ich verdreht habe. Was davon sollten wir uns als Nächstes genauer ansehen?",
+      "erwarteteWarnung": false,
+      "fachlicheErwartung": "Nicht fachlich geprüft. Diese Datei misst Ausgabelänge, Segmentzahl und Zitat-Treue, nicht die Richtigkeit der Codes.",
+      "gegenprobe": "Keine Goldreferenz. Aus dieser Datei darf keine Trefferquote gebildet werden."
+    },
+    {
+      "id": "lang08_abschluss_1400_tippfehler",
+      "titel": "Abschließende Zusammenfassung, nahe der Eingabegrenze — mit Eingabefehlern",
+      "art": "segment",
+      "variante": "tippfehler",
+      "fehlerprofil": "Durchgehende Kleinschreibung, Umlaute als ue/ae/oe geschrieben, ß als ss, keine Satzzeichen.",
+      "paar": "lang08_abschluss_1400",
+      "eingabelaenge": 1350,
+      "kontext": [
+        {
+          "speaker": "client",
+          "text": "Ich trinke eigentlich nur am Wochenende, das machen bei uns alle so. Unter der Woche rühre ich nichts an, ich muss ja morgens auf die Baustelle."
+        },
+        {
+          "speaker": "client",
+          "text": "Sarah sagt, ich wäre sonntags überhaupt nicht ansprechbar. Von letztem Samstag weiß ich ab irgendeinem Punkt ehrlich gesagt nichts mehr."
+        },
+        {
+          "speaker": "client",
+          "text": "Der Sonntag ist danach komplett weg. Ich liege den ganzen Tag flach, und dann ist auch schon wieder Montag."
+        },
+        {
+          "speaker": "client",
+          "text": "Wir hatten deswegen letzte Woche Streit. Sarah hat gesagt, sie weiß nicht mehr, worauf sie sich bei mir verlassen kann."
+        },
+        {
+          "speaker": "client",
+          "text": "Dieser Filmriss hat mich ehrlich gesagt mehr erschreckt, als ich zugegeben habe. Ich habe das nur runtergespielt, weil ich nicht als Alkoholiker dastehen wollte."
+        }
+      ],
+      "eingabe": "lassen sie mich zusammentragen was heute alles zur sprache gekommen ist damit wir beide denselben stand haben sie haben von ihrem wochenende erzaehlt samstag mit ihren leuten das gehoert dazu das machen bei ihnen alle so und unter der woche ruehren sie nichts an weil sie morgens auf die baustelle muessen sie haben mir erzaehlt dass ihnen von letztem samstag ab einem punkt nichts mehr geblieben ist und dass sie das mehr erschreckt hat als sie zunaechst zugegeben haben runtergespielt haben sie es weil sie nicht als alkoholiker dastehen wollten sie haben beschrieben wie der sonntag draufgeht wie sie flachliegen und wie dann schon wieder montag ist und sie haben von sarah gesprochen von dem streit letzte woche und davon dass sie nicht mehr weiss worauf sie sich bei ihnen verlassen kann dass sie mir das alles so offen erzaehlen obwohl sie hier eigentlich gar nicht sitzen wollten ist nicht selbstverstaendlich ich hoere zwei dinge nebeneinander der samstag ist ihnen wichtig und sie wollen ihn nicht hergeben und gleichzeitig moechten sie nicht dass ihnen wieder eine nacht fehlt beides ist wahr und sie muessen sich heute fuer nichts entscheiden was hier besprochen wird bestimmen sie ich habe dabei sicher nicht alles richtig getroffen deshalb sagen sie mir bitte was ich verdreht habe was davon sollten wir uns als naechstes genauer ansehen",
+      "erwarteteWarnung": false,
+      "fachlicheErwartung": "Nicht fachlich geprüft. Gleiche Aussage wie die saubere Fassung desselben Paares; gemessen wird, ob die wörtliche Zitat-Treue auch bei Eingabefehlern hält.",
+      "gegenprobe": "Keine Goldreferenz. Ein stillschweigend korrigiertes Zitat ist ein Befund, kein Fehler der Fallsammlung."
+    }
+  ]
+}
