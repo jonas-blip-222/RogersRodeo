@@ -3,6 +3,27 @@
 Neueste Prüfungen zuerst. Ältere Abschnitte bleiben als Verlauf erhalten und werden nicht
 rückwirkend umgeschrieben.
 
+## 29. September 2026 · Kurzprobe zur Anbieterbeschränkung nach E06
+
+Erste Benutzung der macOS-Prüf-App mit eingeschaltetem `provider.data_collection: "deny"`
+zusätzlich zu `require_parameters` und den drei ausgeschlossenen Anbietern. Das war die offene
+Frage aus E06: ob unter dreifacher Filterung überhaupt noch Routen übrig bleiben.
+
+**Geprüft:** Es kommen Antworten. Die Kombination schließt nicht alle Routen aus. Damit ist das
+Hauptrisiko von E06 ausgeräumt.
+
+**Nicht geprüft und ausdrücklich nicht behauptet:** Das war eine Handprobe über wenige Runden in
+der macOS-Prüf-App durch Jonas, kein Messlauf. Es liegen keine Zahlen zu Rundendauer,
+Wiederholungen, tatsächlich verwendeten Anbieterrouten, Tokenverbrauch oder Kosten vor. Ob die
+neue Frist von 120 Sekunden je Runde angemessen ist, hat diese Probe nicht berührt. Ob sich die
+Antwortqualität gegenüber dem ungefilterten Zustand verändert hat, ist nicht gemessen — dafür
+fehlt ein Vergleich unter gleichen Bedingungen. Ein vollständiger Durchlauf steht aus.
+
+**Qualitativer Eindruck, kein Befund:** Jonas beschreibt die Antworten der Figur als „ganz gut",
+changierend zwischen Zurückhaltung und Veränderungswunsch. Das entspricht dem erwünschten
+Nebeneinander von Beibehaltungs- und Veränderungsrede, ist aber ein Eindruck aus wenigen Runden
+und ersetzt keine fachliche Bewertung. Der fachlich geprüfte Referenzsatz fehlt weiterhin.
+
 ## 29. September 2026 · Live-Zielgedächtnis korrigiert und erneut abgenommen
 
 Die Fehler aus der ersten Live-Prüfung sind für die festgelegten Fälle behoben. Finale Läufe:
