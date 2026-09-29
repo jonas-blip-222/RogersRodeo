@@ -20,6 +20,120 @@ bleiben ausdrücklich als offene Detailentscheidungen markiert.
 Reine Dokumentationsänderung: keine neue App-Funktion, keine Code-/Gerätetests und kein
 kostenpflichtiger Modelllauf. Dokumentverweise und `git diff --check` geprüft.
 
+## 29. September 2026 · Inhaltsfreie Messspur für alle Modellaufrufe (offline geprüft)
+
+Eigener Branch `codex/messung-modellaufrufe`, Basis `d715b10` von
+`origin/claude/adapter-frist-und-anbieter`. Keine Änderungen an AppModel, Features oder
+ENTSCHEIDUNGEN; keine bezahlten Aufrufe, kein Push. TrainerCore importiert weiterhin nur
+Foundation und enthält keine Netzimplementierung.
+
+### Messvertrag
+
+`ModelCallMetrics` und das gespeicherte Snapshot-Schema bleiben unverändert. Sie enthalten
+weiterhin nur angenommene Ergebnisse. Eine separate optionale `ModelTraceSink` erhält pro
+Transportaufruf `callStarted` und `callFinished` mit derselben eindeutigen ID. Der Abschluss
+enthält auch den Startzeitpunkt; Start ohne Ende weist nach Prozessabbruch auf einen offenen
+Aufruf hin. Kein stilles Verwerfen bezahlter Erstversuche oder einer erfolgreichen Zielstufe
+bei späterem Analysefehler. `accepted` heißt vom Adapter validiert; eine spätere Ablehnung
+beim CharacterTracker erscheint als Coordinator-Wiederholung/Rundenfehler.
+
+Erfasst werden Stufe, Modell/Prompt-/Regelversion, Budget, Budgetversuch, Coordinator-Versuch
+(jeweils ab 1), Wiederholungsgrund, UTC-Unixzeit und monotone Dauern, HTTP-Status,
+`finish_reason`, Generierungs-ID, tatsächliche Route, Eingabe-/Ausgabetoken und gemeldete
+`usage.cost` in USD. Fehlendes bleibt unbekannt. Direkte Adapteraufrufe ohne Coordinator
+haben keine künstlich erfundene Coordinator-Versuchsnummer. Runden-ID und Versuche sind
+Task-lokal; gleichzeitige Runden vermischen sich nicht.
+
+Die zusätzliche Inhaltsauswertung speichert ausschließlich Zahlen: Unicode-Skalarzahl,
+Leerraumzahl, längste Folge und nachlaufender Leerraum. `suspectedWhitespaceLoop` bedeutet
+mindestens 128 aufeinanderfolgende Leerraumzeichen bei `length/error`; das ist eine
+Messheuristik, keine Inhaltsreparatur und kein Beweis einer Modellpathologie. Die früher
+verworfenen Gegenmaßnahmen bleiben verworfen; Budgets, Frist und Wiederholungsregeln sind
+unverändert. Keine Prompts, Antworten, Anfrageköpfe, Schlüssel oder Fehlermeldungstexte in
+JSONL. Vorhandene separate Live-Fixture-Berichte/Rohdiagnosen sind davon unabhängig.
+
+Die Dateisenke wird erst durch einen absoluten `RR_MODEL_TRACE_FILE`-Pfad aktiviert. Pro
+Prozess teilen Adapter denselben Schreiber. Datei muss neu sein, Ordner vorhanden; Rechte
+0600, synchrone Zeilen und Flush, kein Überschreiben alter Läufe. Schreibfehler vor dem
+Transport verhindern weitere unbeobachtete Aufrufe. Nach bereits erfolgtem Gesprächs-Commit
+wird ein fehlgeschlagener Rundenabschluss ausdrücklich gemeldet, aber der gespeicherte Turn
+nicht als fehlgeschlagen zurückgegeben. Die offene Spanne bleibt im Bericht sichtbar.
+
+### Auswertung und nächster bezahlter Lauf
+
+Der bestehende Starter wurde nur bearbeitet, **nicht ausgeführt**. Bei künftiger ausdrücklicher
+Freigabe aktiviert `python3 Tools/run_goal_memory_live.py long` beziehungsweise `probes`
+die Messung automatisch: `model-calls.jsonl` plus `model-calls.jsonl.run.json` im neuen,
+ignorierten Ergebnisordner. Der 15-Runden-Wrapper reicht die Senke an den Coordinator durch.
+Der Prozessrahmen umfasst auch Swift-Build, Teststart und Testende; das ist ausdrücklich
+keine reine Modelllatenz. Die vorhandenen fiktiven Inhaltsberichte bleiben separat.
+
+Offline danach:
+
+```sh
+python3 Tools/model_trace.py summarize Evaluation/results/<Lauf>/model-calls.jsonl
+python3 Tools/model_trace.py summarize Evaluation/results/<Lauf>/model-calls.jsonl --json
+```
+
+Für eine direkt gestartete Mac-Prüf-App (kein zusätzlicher Eingriff in AppModel nötig):
+
+```sh
+mkdir -p Evaluation/results/mein-messlauf
+python3 Tools/model_trace.py run --trace Evaluation/results/mein-messlauf/model-calls.jsonl -- /absoluter/Pfad/RogersRodeo
+```
+
+`run` führt das angegebene Programm tatsächlich aus; eine freigegebene App kann dabei
+Modellkosten verursachen. Hier wurde ausschließlich ein fest benannter Offline-Stubtest
+über diesen Wrapper ausgeführt. Authentifizierung bleibt auf dem vorhandenen Weg; niemals
+Schlüssel in Kommandoargumente, Berichte oder neue Dateien schreiben.
+
+Die Übersicht zählt alle abgeschlossenen Aufrufe, gruppiert nach Stufe, Ausgang und Anbieter,
+zeigt Wiederholungsgründe sowie Token-/Kostensummen mit Abdeckungszahlen. Dauervergleich:
+ganzer Prozess, Summe aller Transporte, Vereinigung der Aufrufspannen, übrige Rundenzeit
+und Rest außerhalb dieser Spannen. Überlappung wird nicht doppelt als Wandzeit gezählt.
+Der Rest ist gemessen, aber nicht ursächlich weiter aufgeschlüsselt (Build, Start, Pausen,
+Abschluss). Fehlender Prozessrahmen, offene Spannen und beschädigte letzte Zeilen werden
+explizit gemeldet. Eine lückenlose Abrechnung trotz Prozessabsturz/fehlender Providerdaten
+wird nicht behauptet. Keine Dateizeitstempel-Rekonstruktion nötig.
+
+### usage und Generierungs-Endpunkt
+
+Jede Chat-Anfrage enthält jetzt `"usage":{"include":true}` neben den unveränderten Filtern
+`require_parameters=true`, `data_collection=deny` und `ignore`. Offline nachgewiesen sind
+Serialisierung und Auswertung gestubbter Antworten. Die tatsächliche Routenverträglichkeit
+ist mangels erlaubter Live-Aufrufe **nicht geprüft**; der E06-Handtest weiter unten prüfte
+noch nicht diesen Zusatz. Keine automatische Wiederholung mit abgeschwächten Filtern.
+
+`/api/v1/generation?id=…` wurde weder aufgerufen noch automatisch angebunden. Laut Auftrag
+gebührenfrei, aber ein zusätzlicher Netzaufruf pro ID (bei noch nicht bereitstehenden Daten
+gegebenenfalls weitere). Später für Kostenabgleich/native Token sinnvoll, falls direkte
+Usage-Angaben fehlen. Er verlängert sonst die Messung unnötig und hilft ohne zurückerhaltene
+ID bei Transportabbruch nicht verlässlich. Die IDs stehen nun für diesen getrennten Abgleich
+zur Verfügung. Keine Kosten aus Listenpreisen schätzen und als Rechnung ausgeben.
+
+### Prüfung
+
+81 Core-Tests, 3 Storage-Tests und 64 reguläre App-Tests bestanden, darunter 14 neue
+Messspurtests. Zwei kostenpflichtige Live-Tests übersprungen (Runner meldet insgesamt 66);
+die fünf benannten Schlüsselbundtests gezielt ausgenommen. Acht neue Python-Tests bestanden.
+`swift build` für die gemeinsame macOS-App und `git diff --check` erfolgreich. Swift-Aufrufe
+mit ausgelagerten Caches/Buildpfaden unter `/private/tmp` und `--disable-sandbox` für die
+SwiftPM-Unterprozesse; die Agentensandbox blieb aktiv. Storage meldet weiterhin Fehler beim
+systemweiten Store-Änderungsdienst, die drei Dateiroundtrips bestanden trotzdem.
+
+Abgedeckt: Abschneidung mit Budgeteskalation, zweite Stufe scheitert nach bezahlter erster,
+HTTP-/Transport-/Schemafehler, Refusal, fehlende Nutzungsdaten, Cancellation auch nach
+Antwortempfang, Rundenfrist, beide Coordinator-Wiederholungen, parallele Runden, Dateischutz,
+Schreibfehler und keine doppelte Speicherung nach Diagnosefehler. Python prüft zusätzlich
+Zeitvereinigung, Dezimalkosten, unvollständige/duplizierte Datensätze und Prozessfehler.
+
+Ein vollständiger Offline-Stub-Beispiellauf durch Dateisenke, Prozessrahmen und Auswerter:
+vier Aufrufe, davon ein abgeschnittener Ziel-Erstversuch und drei angenommene Ausgaben.
+400/80 Token und 0,005 USD sind ausschließlich vorgegebene Fixturewerte, keine tatsächlichen
+Kosten oder Modellmessungen. Keine Simulator-/Geräte- oder freie Rollenprüfung.
+Beispieldaten und Testlogs bleiben außerhalb von Git unter
+`Evaluation/results/model-trace-offline-20260929/` beziehungsweise `/private/tmp/rr-measure-*`.
+
 ## 29. September 2026 · Kurzprobe zur Anbieterbeschränkung nach E06
 
 Erste Benutzung der macOS-Prüf-App mit eingeschaltetem `provider.data_collection: "deny"`
@@ -122,6 +236,22 @@ Texte mit `durationSeconds: 0`; das steht so in den Rohdaten.
 **Gegenprobe.** Der Vergleichslauf `goal-fix-long-01.json` zeigt **161,0 s** Gesamtdauer gegen
 **120,8 s** gemessen, Lücke **40,2 s**, dort ausschließlich durch abgeschnittene Erstversuche.
 Dasselbe Muster, kleinere Ausprägung.
+
+**Einschränkung, nachgetragen am 29.09.2026.** Die Überschrift dieses Nachtrags ist zu
+selbstbewusst, und die Aufteilung 177 zu 46 Sekunden ist **rekonstruiert, nicht gemessen**. Eine
+spätere Gegenprüfung am Code und an den Rohdaten hat drei Punkte relativiert:
+
+- Die „größte Einzellücke von rund 84 Sekunden" lässt sich nicht nachrechnen, weil je Runde
+  keine Zeitstempel vorliegen. Belegt ist nur die größte Lücke zwischen zwei Dateiänderungen.
+- Die **5,7 Sekunden** sind der Median **je Runde**, nicht je Analysestufe. Die Formulierung
+  weiter oben in diesem Abschnitt ist an dieser Stelle ungenau.
+- Der Vergleichslauf `goal-fix-long-01` zeigt ebenfalls rund **25 Prozent** unerfasste Zeit.
+  Die Lücke geht damit **nicht vollständig** auf Leerzeichenläufe zurück; es bleibt ein
+  ungeklärter Anteil.
+
+Die Aussage „es bleibt nichts Unerklärtes" gilt für die Summenrechnung, nicht für die
+Zuordnung der einzelnen Ursachen. Beides trennt erst die Messspur sauber, die seither gebaut
+wurde; sie ersetzt die Rekonstruktion aus Dateizeitstempeln.
 
 **Welche Daten dafür heute fehlen.** Die Rekonstruktion war nur über Dateizeitstempel möglich,
 weil der Adapter das Nötige nicht erfasst:

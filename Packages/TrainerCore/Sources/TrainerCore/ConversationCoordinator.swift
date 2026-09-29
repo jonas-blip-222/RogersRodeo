@@ -91,6 +91,39 @@ public actor ConversationCoordinator {
 
     public func send(sessionID: UUID, input: String, skipAnalysis: Bool = false,
                      onFeedback: FeedbackSink? = nil) async throws -> SessionSnapshot {
+        let sink = try await provider.modelTrace()
+        let roundID = UUID()
+        let context = ModelTraceContext(roundID: roundID)
+        return try await ModelTraceScope.$context.withValue(context) {
+            let start = ContinuousClock.now
+            var event = ModelTraceEvent(kind: .roundStarted, id: roundID)
+            try sink?.record(event)
+            do {
+                let saved = try await sendMeasured(sessionID: sessionID, input: input,
+                                                   skipAnalysis: skipAnalysis, onFeedback: onFeedback)
+                event.kind = .roundFinished; event.timestamp = Date().timeIntervalSince1970
+                event.durationSeconds = ModelTraceEvent.seconds(start.duration(to: .now))
+                event.result = "completed"
+                // Der Commit ist bereits erfolgt. Ein Diagnosefehler darf daraus keinen
+                // scheinbaren Speicherfehler machen und ein zweites Senden provozieren.
+                do { try sink?.record(event) }
+                catch { print("Messspur unvollständig: Rundenabschluss konnte nach erfolgreichem Speichern nicht geschrieben werden.") }
+                return saved
+            } catch {
+                // Ein gescheiterter Schreibversuch wird nicht als zweiter Abschluss gemeldet.
+                if event.kind != .roundFinished {
+                    event.kind = .roundFinished; event.timestamp = Date().timeIntervalSince1970
+                    event.durationSeconds = ModelTraceEvent.seconds(start.duration(to: .now))
+                    event.result = ModelTraceEvent.resultCode(error)
+                    try sink?.record(event)
+                }
+                throw error
+            }
+        }
+    }
+
+    private func sendMeasured(sessionID: UUID, input: String, skipAnalysis: Bool,
+                              onFeedback: FeedbackSink?) async throws -> SessionSnapshot {
         guard generation == nil else { throw TrainerFailure.operationInProgress }
         let token = UUID(); generation = token
         defer { if generation == token { generation = nil } }
@@ -144,8 +177,9 @@ public actor ConversationCoordinator {
         if !skipAnalysis {
             for attempt in 0...1 {
                 do {
-                    let result = try await RoundDeadline.run(until: deadline) {
-                        try await model.analyze(request)
+                    var context = ModelTraceScope.context; context.coordinatorAttempt = attempt + 1
+                    let result = try await ModelTraceScope.$context.withValue(context) {
+                        try await RoundDeadline.run(until: deadline) { try await model.analyze(request) }
                     }; try check(token)
                     try OutputValidator.validateAnalysis(result.value, input: text, context: result.contextMessagesUsed)
                     development = try CharacterTracker.advance(session.state.development, analysis: result.value,
@@ -153,7 +187,12 @@ public actor ConversationCoordinator {
                     try CharacterTracker.validate(development, session: session, currentTurnID: pending.id)
                     analysis = result.value; analysisContext = result.contextMessagesUsed; metrics.append(result.metrics)
                     break
-                } catch TrainerFailure.invalidAnalysis where attempt == 0 { try check(token) }
+                } catch TrainerFailure.invalidAnalysis where attempt == 0 {
+                    try check(token)
+                    var event = ModelTraceEvent(kind: .coordinatorRetry)
+                    event.coordinatorAttempt = 2; event.retryReason = "invalidAnalysis"
+                    try await provider.modelTrace()?.record(event)
+                }
             }
         }
         // Abschnitt 9.3: sobald die Analyse validiert ist, geht die Rückmeldung an die
@@ -178,12 +217,18 @@ public actor ConversationCoordinator {
         var replyResult: ModelResult<ClientReply>?
         for attempt in 0...1 {
             do {
-                let result = try await RoundDeadline.run(until: deadline) {
-                    try await model.reply(replyRequest)
+                var context = ModelTraceScope.context; context.coordinatorAttempt = attempt + 1
+                let result = try await ModelTraceScope.$context.withValue(context) {
+                    try await RoundDeadline.run(until: deadline) { try await model.reply(replyRequest) }
                 }; try check(token)
                 try OutputValidator.validateReply(result.value, visibleFacts: visible)
                 replyResult = result; break
-            } catch TrainerFailure.invalidReply where attempt == 0 { try check(token) }
+            } catch TrainerFailure.invalidReply where attempt == 0 {
+                try check(token)
+                var event = ModelTraceEvent(kind: .coordinatorRetry)
+                event.coordinatorAttempt = 2; event.stage = .roleReply; event.retryReason = "invalidReply"
+                try await provider.modelTrace()?.record(event)
+            }
         }
         guard let replyResult else { throw TrainerFailure.invalidReply }
         metrics.append(replyResult.metrics)

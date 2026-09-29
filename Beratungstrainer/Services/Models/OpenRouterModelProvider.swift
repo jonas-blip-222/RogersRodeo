@@ -667,7 +667,10 @@ enum OpenRouterSchema {
             ]),
             "response_format": responseFormat,
             "temperature": .double(temperature),
-            "max_tokens": .int(maxTokens)
+            "max_tokens": .int(maxTokens),
+            // Abrechnungsdaten mit der Antwort anfordern; keine zusätzlichen Modellaufrufe.
+            // Routenverträglichkeit zusammen mit require_parameters bleibt live zu prüfen.
+            "usage": .object(["include": .bool(true)])
         ]
         // Strukturierte Ausgabe muss von der gewählten Route unterstützt werden.
         // https://openrouter.ai/docs/guides/features/structured-outputs
@@ -801,12 +804,17 @@ actor OpenRouterModelProvider: TrainerModelProvider {
     private let session: URLSession?
     private let transport: OpenRouterTransport
     private var key: String?
+    private var traceSink: ModelTraceSink?
+    private var traceResolved = false
     /// Opt-in-Diagnose für Live-Evaluationen: ausschließlich Modellinhalt, keine Header/Schlüssel.
     private let analysisDiagnostics: (@Sendable (Data) async -> Void)?
 
     init(configuration: OpenRouterConfiguration = .init(),
          analysisDiagnostics: (@Sendable (Data) async -> Void)? = nil,
-         transport: OpenRouterTransport? = nil) {
+         transport: OpenRouterTransport? = nil,
+         traceSink: ModelTraceSink? = nil) {
+        self.traceSink = traceSink
+        self.traceResolved = traceSink != nil
         self.analysisDiagnostics = analysisDiagnostics
         self.configuration = configuration
         if let transport {
@@ -836,8 +844,22 @@ actor OpenRouterModelProvider: TrainerModelProvider {
                         effectiveContextLimit: 1_000_000)
     }
 
+    func modelTrace() async throws -> ModelTraceSink? { try resolveTrace() }
+
+    private func resolveTrace() throws -> ModelTraceSink? {
+        if !traceResolved {
+            // Kein AppModel-Eingriff erforderlich; auch direkte Adaptertests nutzen den Weg.
+            if let path = configuration.environment["RR_MODEL_TRACE_FILE"], !path.isEmpty {
+                traceSink = try OpenRouterTraceFiles.shared.sink(path: path)
+            }
+            traceResolved = true
+        }
+        return traceSink
+    }
+
     func prepare() throws {
         try Task.checkCancellation()
+        _ = try resolveTrace()
         if key != nil { return }
         guard let found = OpenRouterKey.lookup(service: configuration.keychainService,
                                                environment: configuration.environment) else {
@@ -851,27 +873,28 @@ actor OpenRouterModelProvider: TrainerModelProvider {
     func analyze(_ request: AnalysisRequest) async throws -> ModelResult<TurnAnalysis> {
         // Zielverlauf zuerst, ohne den noch unbeantworteten Beratungssatz als Ablenkung
         // oder vermeintlichen Beleg. Beide Stufen verwenden exakt dieselben Kontextindizes.
-        let (memoryData, memoryMetrics) = try await call(
+        let (memory, memoryMetrics) = try await call(stage: .goalMemory,
             system: OpenRouterSchema.memorySystemPrompt(), user: OpenRouterSchema.memoryPrompt(request),
             responseFormat: OpenRouterSchema.responseFormat(name: "GoalAndCharacterAnalysis", schema: OpenRouterSchema.memoryAnalysis),
             temperature: configuration.analysisTemperature, reasoning: configuration.analysisReasoning,
             budget: configuration.analysisTokens, retryBudget: configuration.analysisTokensRetry,
-            unusableFailure: .invalidAnalysis)
-        await analysisDiagnostics?(memoryData)
-        let memory = try OpenRouterResponse.decodeMemory(memoryData, context: request.recentMessages)
-        let (data, metrics) = try await call(
+            unusableFailure: .invalidAnalysis) { data in
+                try OpenRouterResponse.decodeMemory(data, context: request.recentMessages)
+            }
+        let (analysis, metrics) = try await call(stage: .counselorAnalysis,
             system: OpenRouterSchema.analysisSystemPrompt(request.codingGuide),
             user: OpenRouterSchema.analysisPrompt(request),
             responseFormat: OpenRouterSchema.responseFormat(name: "CounselorAnalysis", schema: OpenRouterSchema.counselorAnalysis),
             temperature: configuration.analysisTemperature, reasoning: configuration.analysisReasoning,
             budget: configuration.analysisTokens, retryBudget: configuration.analysisTokensRetry,
-            unusableFailure: .invalidAnalysis)
-        await analysisDiagnostics?(data)
-        var analysis = try OutputValidator.decodeAnalysis(OpenRouterResponse.analysisPayload(data), input: request.currentInput,
-                                                          context: request.recentMessages)
-        guard analysis.goalUpdates == nil, analysis.characterObservations == nil else { throw TrainerFailure.invalidAnalysis }
-        analysis.goalUpdates = memory.goalUpdates; analysis.characterObservations = memory.characterObservations
-        try OutputValidator.validateAnalysis(analysis, input: request.currentInput, context: request.recentMessages)
+            unusableFailure: .invalidAnalysis) { data in
+                var analysis = try OutputValidator.decodeAnalysis(OpenRouterResponse.analysisPayload(data), input: request.currentInput,
+                                                                  context: request.recentMessages)
+                guard analysis.goalUpdates == nil, analysis.characterObservations == nil else { throw TrainerFailure.invalidAnalysis }
+                analysis.goalUpdates = memory.goalUpdates; analysis.characterObservations = memory.characterObservations
+                try OutputValidator.validateAnalysis(analysis, input: request.currentInput, context: request.recentMessages)
+                return analysis
+            }
         func sum(_ a: Int?, _ b: Int?) -> Int? { guard let a, let b else { return nil }; return a + b }
         let combined = ModelCallMetrics(durationSeconds: memoryMetrics.durationSeconds + metrics.durationSeconds,
             inputTokens: sum(memoryMetrics.inputTokens, metrics.inputTokens), outputTokens: sum(memoryMetrics.outputTokens, metrics.outputTokens))
@@ -879,7 +902,7 @@ actor OpenRouterModelProvider: TrainerModelProvider {
     }
 
     func reply(_ request: ReplyRequest) async throws -> ModelResult<ClientReply> {
-        let (data, metrics) = try await call(
+        let (reply, metrics) = try await call(stage: .roleReply,
             system: OpenRouterSchema.rolePrompt(request),
             user: OpenRouterSchema.replyPrompt(request),
             responseFormat: OpenRouterSchema.responseFormat(name: "ClientReply",
@@ -887,11 +910,9 @@ actor OpenRouterModelProvider: TrainerModelProvider {
             temperature: configuration.replyTemperature,
             reasoning: configuration.replyReasoning,
             budget: configuration.replyTokens, retryBudget: configuration.replyTokensRetry,
-            unusableFailure: .invalidReply)
-        // Dieselbe Transporthülle wie bei der Einordnung entfernen; siehe
-        // `OpenRouterResponse.payload`. Vorher bekam `decodeReply` die Rohdaten.
-        let reply = try OutputValidator.decodeReply(OpenRouterResponse.replyPayload(data),
-                                                    visibleFacts: request.visibleFacts)
+            unusableFailure: .invalidReply) { data in
+                try OutputValidator.decodeReply(OpenRouterResponse.replyPayload(data), visibleFacts: request.visibleFacts)
+            }
         return .init(value: reply, metrics: metrics, contextMessagesUsed: request.recentMessages)
     }
 
@@ -908,24 +929,36 @@ actor OpenRouterModelProvider: TrainerModelProvider {
     /// nicht die Anzahl der Aufrufe, sondern die Gesamtzeit der Runde (120 Sekunden). Sie
     /// wirkt von außen über Cancellation: `send` bricht dann in `URLSession.data(for:)` ab
     /// und wirft `CancellationError`, weshalb hier nichts weiter zu tun ist.
-    private func call(system: String, user: String, responseFormat: JSONValue,
+    private func call<Value: Sendable>(stage: ModelTraceEvent.Stage,
+                      system: String, user: String, responseFormat: JSONValue,
                       temperature: Double, reasoning: Bool?, budget: Int, retryBudget: Int,
-                      unusableFailure: TrainerFailure) async throws -> (Data, ModelCallMetrics) {
-        var sawUnusable = false
-        for tokens in [budget, retryBudget] {
+                      unusableFailure: TrainerFailure,
+                      validate: (Data) throws -> Value) async throws -> (Value, ModelCallMetrics) {
+        var retryReason: String?
+        for (index, tokens) in [budget, retryBudget].enumerated() {
             try Task.checkCancellation()
-            switch try await send(system: system, user: user, responseFormat: responseFormat,
-                                  temperature: temperature, reasoning: reasoning, maxTokens: tokens) {
-            case let .content(data, metrics): return (data, metrics)
-            case .unusable: sawUnusable = true
+            let result = try await send(stage: stage, budgetAttempt: index + 1, retryReason: retryReason,
+                system: system, user: user, responseFormat: responseFormat,
+                temperature: temperature, reasoning: reasoning, maxTokens: tokens, validate: validate)
+            switch result {
+            case let .content(value, metrics): return (value, metrics)
+            case let .unusable(reason): retryReason = reason
             }
         }
-        throw sawUnusable ? unusableFailure : TrainerFailure.modelUnavailable
+        throw unusableFailure
     }
 
-    private func send(system: String, user: String, responseFormat: JSONValue,
-                      temperature: Double, reasoning: Bool?, maxTokens: Int) async throws -> OpenRouterOutcome {
+    private enum MeasuredResult<Value: Sendable> {
+        case content(Value, ModelCallMetrics)
+        case unusable(String)
+    }
+
+    private func send<Value: Sendable>(stage: ModelTraceEvent.Stage, budgetAttempt: Int, retryReason: String?,
+                      system: String, user: String, responseFormat: JSONValue,
+                      temperature: Double, reasoning: Bool?, maxTokens: Int,
+                      validate: (Data) throws -> Value) async throws -> MeasuredResult<Value> {
         guard let key else { throw TrainerFailure.modelUnavailable }
+        let sink = try resolveTrace()
         let body = OpenRouterSchema.body(configuration: configuration, system: system, user: user,
                                          responseFormat: responseFormat, temperature: temperature,
                                          maxTokens: maxTokens, reasoning: reasoning)
@@ -936,23 +969,168 @@ actor OpenRouterModelProvider: TrainerModelProvider {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("RogersRodeo", forHTTPHeaderField: "X-Title")
         do { request.httpBody = try body.serialized() } catch { throw TrainerFailure.artifactInvalid }
-
-        let start = ContinuousClock.now
-        let data: Data
-        let response: URLResponse
-        do {
-            (data, response) = try await transport(request)
-        } catch let error as URLError where error.code == .cancelled {
-            throw CancellationError()
-        } catch is CancellationError {
-            throw CancellationError()
-        } catch {
-            throw TrainerFailure.modelUnavailable
-        }
         try Task.checkCancellation()
-        guard let http = response as? HTTPURLResponse else { throw TrainerFailure.modelUnavailable }
-        let elapsed = start.duration(to: .now)
-        let seconds = Double(elapsed.components.seconds) + Double(elapsed.components.attoseconds) / 1e18
-        return try OpenRouterResponse.evaluate(status: http.statusCode, data: data, duration: seconds)
+
+        var event = ModelTraceEvent(kind: .callStarted)
+        event.startedAt = event.timestamp
+        event.stage = stage; event.model = configuration.model; event.budget = maxTokens
+        event.promptVersion = ConversationCoordinator.promptVersion; event.rulesVersion = ConversationCoordinator.rulesVersion
+        event.temperature = temperature; event.reasoningEnabled = reasoning
+        event.budgetAttempt = budgetAttempt; event.retryReason = retryReason
+        // Write-ahead: Absturz während des Netzes bleibt als offener Aufruf erkennbar.
+        try sink?.record(event)
+        let start = ContinuousClock.now
+        var finished = false
+        do {
+            let data: Data
+            let response: URLResponse
+            do {
+                (data, response) = try await transport(request)
+            } catch {
+                event.transportSeconds = ModelTraceEvent.seconds(start.duration(to: .now))
+                if error is CancellationError || (error as? URLError)?.code == .cancelled || Task.isCancelled {
+                    event.outcome = .cancelled
+                    throw CancellationError()
+                }
+                event.outcome = .transportError
+                throw TrainerFailure.modelUnavailable
+            }
+            event.transportSeconds = ModelTraceEvent.seconds(start.duration(to: .now))
+            // Metadaten vor Cancellation lesen: auch eine bereits bezahlte Antwort zählt.
+            if sink != nil { OpenRouterTraceMetadata.fill(&event, data: data) }
+            event.httpStatus = (response as? HTTPURLResponse)?.statusCode
+            try Task.checkCancellation()
+            guard let http = response as? HTTPURLResponse else {
+                event.outcome = .malformedResponse; throw TrainerFailure.modelUnavailable
+            }
+            let outcome: OpenRouterOutcome
+            do {
+                outcome = try OpenRouterResponse.evaluate(status: http.statusCode, data: data,
+                                                           duration: event.transportSeconds!)
+            } catch {
+                event.outcome = (error as? TrainerFailure) == .modelRefusal ? .refused
+                    : (http.statusCode == 200 ? .malformedResponse : .httpError)
+                throw error
+            }
+            let result: MeasuredResult<Value>
+            switch outcome {
+            case let .unusable(reason):
+                event.outcome = reason == "length" ? .truncated : (reason == "error" ? .generationError : .emptyContent)
+                result = .unusable(event.outcome!.rawValue)
+            case let .content(content, metrics):
+                if stage != .roleReply { await analysisDiagnostics?(content) }
+                do {
+                    result = .content(try validate(content), metrics)
+                    event.outcome = .accepted
+                } catch {
+                    event.outcome = .invalidOutput
+                    throw error
+                }
+            }
+            event.kind = .callFinished; event.timestamp = Date().timeIntervalSince1970
+            event.durationSeconds = ModelTraceEvent.seconds(start.duration(to: .now))
+            finished = true
+            try sink?.record(event)
+            return result
+        } catch {
+            if !finished {
+                if error is CancellationError { event.outcome = .cancelled }
+                event.kind = .callFinished; event.timestamp = Date().timeIntervalSince1970
+                event.durationSeconds = ModelTraceEvent.seconds(start.duration(to: .now))
+                event.result = ModelTraceEvent.resultCode(error)
+                try sink?.record(event)
+            }
+            throw error
+        }
+    }
+}
+
+// MARK: - Inhaltsfreie Messspur
+
+/// Nur ausdrücklich erlaubte Metadaten übernehmen. Niemals error.message, refusal,
+/// Header, Request, Antwortkörper oder Fehlermeldungsbeschreibungen serialisieren.
+enum OpenRouterTraceMetadata {
+    static func fill(_ event: inout ModelTraceEvent, data: Data) {
+        guard let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
+        func label(_ value: Any?, limit: Int = 128) -> String? {
+            guard let text = value as? String, !text.isEmpty, text.count <= limit,
+                  !text.unicodeScalars.contains(where: { CharacterSet.controlCharacters.contains($0) }) else { return nil }
+            return text
+        }
+        event.generationID = label(object["id"], limit: 256)
+        event.provider = label(object["provider"])
+        let usage = object["usage"] as? [String: Any]
+        func tokens(_ value: Any?) -> Int? {
+            guard let number = value as? NSNumber, CFGetTypeID(number) != CFBooleanGetTypeID(),
+                  number.doubleValue >= 0, number.doubleValue < Double(Int.max),
+                  number.doubleValue.rounded() == number.doubleValue else { return nil }
+            return number.intValue
+        }
+        event.inputTokens = tokens(usage?["prompt_tokens"])
+        event.outputTokens = tokens(usage?["completion_tokens"])
+        if let number = usage?["cost"] as? NSNumber, CFGetTypeID(number) != CFBooleanGetTypeID(),
+           number.doubleValue.isFinite, number.doubleValue >= 0 {
+            event.costUSD = Decimal(string: number.stringValue, locale: Locale(identifier: "en_US_POSIX"))
+        }
+        let choice = (object["choices"] as? [[String: Any]])?.first
+        if let reason = choice?["finish_reason"] as? String {
+            event.finishReason = ["stop", "length", "error", "content_filter", "tool_calls", "function_call"].contains(reason) ? reason : "other"
+        }
+        guard let message = choice?["message"] as? [String: Any], let text = message["content"] as? String else { return }
+        var count = 0, whitespace = 0, run = 0, longest = 0
+        for scalar in text.unicodeScalars {
+            count += 1
+            if CharacterSet.whitespacesAndNewlines.contains(scalar) {
+                whitespace += 1; run += 1; longest = max(longest, run)
+            } else { run = 0 }
+        }
+        event.contentScalarCount = count; event.whitespaceScalarCount = whitespace
+        event.longestWhitespaceRun = longest; event.trailingWhitespaceCount = run
+        // Messheuristik, keine Inhaltsreparatur und kein Beweis einer Modellpathologie.
+        event.suspectedWhitespaceLoop = longest >= 128 && ["length", "error"].contains(event.finishReason)
+    }
+}
+
+/// Eine Datei je Prozess/Lauf, auch wenn mehrere Adapter existieren. Bestehende Dateien
+/// werden nie überschrieben oder still an einen alten Lauf angehängt. Neue Pfade verwenden.
+private final class OpenRouterTraceFiles: @unchecked Sendable {
+    static let shared = OpenRouterTraceFiles()
+    private let lock = NSLock()
+    private var files: [String: OpenRouterTraceFile] = [:]
+    func sink(path: String) throws -> ModelTraceSink {
+        lock.lock(); defer { lock.unlock() }
+        guard path.hasPrefix("/") else { throw TrainerFailure.artifactInvalid }
+        if let file = files[path] { return ModelTraceSink { try file.record($0) } }
+        do {
+            let file = try OpenRouterTraceFile(path: path)
+            files[path] = file
+            return ModelTraceSink { try file.record($0) }
+        } catch { throw TrainerFailure.artifactInvalid }
+    }
+}
+
+private final class OpenRouterTraceFile: @unchecked Sendable {
+    private let lock = NSLock()
+    private let handle: FileHandle
+    private let encoder = JSONEncoder()
+    private let runID = UUID()
+    private let start = ContinuousClock.now
+    init(path: String) throws {
+        let url = URL(fileURLWithPath: path)
+        try Data().write(to: url, options: .withoutOverwriting)
+        try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: path)
+        handle = try FileHandle(forWritingTo: url)
+        encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
+        try record(ModelTraceEvent(kind: .runStarted))
+    }
+    func record(_ value: ModelTraceEvent) throws {
+        lock.lock(); defer { lock.unlock() }
+        var event = value
+        event.runID = runID; event.offsetSeconds = ModelTraceEvent.seconds(start.duration(to: .now))
+        do {
+            var data = try encoder.encode(event); data.append(0x0a)
+            try handle.write(contentsOf: data)
+            try handle.synchronize()
+        } catch { throw TrainerFailure.artifactInvalid }
     }
 }

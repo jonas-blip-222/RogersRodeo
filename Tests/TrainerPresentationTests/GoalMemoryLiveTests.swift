@@ -23,6 +23,7 @@ private actor GoalLiveProvider: TrainerModelProvider {
         catch { print("Live-Zieltest: Authentifizierung lokal nicht verfügbar (vor Netzaufruf)."); throw error }
     }
     func unload() async { await live.unload() }
+    func modelTrace() async throws -> ModelTraceSink? { try await live.modelTrace() }
     func analyze(_ request: AnalysisRequest) async throws -> ModelResult<TurnAnalysis> {
         requests.append(request)
         let result = try await live.analyze(request)
