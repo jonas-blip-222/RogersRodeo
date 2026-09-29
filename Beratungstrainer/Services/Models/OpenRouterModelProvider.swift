@@ -142,6 +142,20 @@ struct OpenRouterConfiguration: Sendable {
     /// Die Zuordnung Anzeigename → slug wurde am 29.09.2026 aus dieser Liste gelesen:
     /// „Mancer 2" heißt dort `mancer`.
     var ignoredProviders: [String] = ["wafer", "mancer", "parasail"]
+    /// E06: Anfragen gehen wieder mit `provider.data_collection: "deny"`; OpenRouter darf
+    /// damit nicht mehr an Anbieter routen, die Übermitteltes speichern oder für eigenes
+    /// Training verwenden dürfen. `nil` sendet das Feld nicht.
+    ///
+    /// **Nicht gemessen ist die Kombination.** E02 belegt, dass `deny` allein acht
+    /// verschiedene Anbieter bediente — das war jedoch das Python-Skript, das weder
+    /// `require_parameters` noch `ignore` setzte (`Tools/openrouter_eval.py`,
+    /// `anfrage_koerper`). Hier wirken drei Filter gleichzeitig: strukturierte Ausgabe
+    /// (`require_parameters`), die drei ausgeschlossenen Anbieter und jetzt `deny`. Ob
+    /// danach noch genügend Routen übrig bleiben, ist offen und zeigt sich erst im
+    /// bezahlten Lauf. Bleibt nichts übrig, antwortet OpenRouter mit einem Fehlerstatus,
+    /// der hier als `modelUnavailable` ankommt — nicht als stille Verschlechterung.
+    /// Rücknahme laut E06 nur mit Messbelegen, nicht auf Verdacht.
+    var dataCollection: String? = "deny"
     var keychainService = "rogersrodeo-openrouter"
 }
 
@@ -655,6 +669,9 @@ enum OpenRouterSchema {
         // https://openrouter.ai/docs/guides/features/structured-outputs
         var provider: [String: JSONValue] = ["require_parameters": .bool(true)]
         if !configuration.ignoredProviders.isEmpty { provider["ignore"] = .strings(configuration.ignoredProviders) }
+        // E06: keine Route an Anbieter, die Übermitteltes speichern oder für eigenes
+        // Training verwenden dürfen. Siehe `OpenRouterConfiguration.dataCollection`.
+        if let collection = configuration.dataCollection { provider["data_collection"] = .string(collection) }
         fields["provider"] = .object(provider)
         if let reasoning { fields["reasoning"] = .object(["enabled": .bool(reasoning)]) }
         return .object(fields)

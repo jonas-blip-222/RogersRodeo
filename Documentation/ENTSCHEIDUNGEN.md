@@ -196,7 +196,9 @@ Validität der automatischen Einordnung.
 ## E06 · Anbieterbeschränkung wieder einschalten
 
 **Datum:** 29.09.2026 · **Entschieden von:** im Auftrag von Jonas, der die Entscheidung
-ausdrücklich delegiert hat · **Status:** beschlossen, Umsetzung im Code offen
+ausdrücklich delegiert hat · **Status:** beschlossen und im Adapter umgesetzt
+(`OpenRouterConfiguration.dataCollection`, Vorgabe `"deny"`); ein bezahlter Lauf unter der
+Beschränkung steht aus
 
 Anfragen gehen künftig wieder mit `provider.data_collection: "deny"`. OpenRouter darf damit nicht
 mehr an Anbieter routen, die Übermitteltes speichern oder für eigenes Training verwenden dürfen.
@@ -229,9 +231,14 @@ Wirkung der Einstellung nur über die Zusage von OpenRouter; eine eigene Prüfun
 
 **Folgen.**
 
-- Die Umsetzung im Code steht noch aus. Nötig ist ein Flag im Anfragekörper des Adapters
-  (`OpenRouterSchema.body` setzt derzeit nur `provider.require_parameters` und `provider.ignore`).
-  Der Punkt ist in [TODO.md](TODO.md) geführt.
+- Umgesetzt: `OpenRouterSchema.body` setzt neben `provider.require_parameters` und
+  `provider.ignore` jetzt `provider.data_collection`, gesteuert über
+  `OpenRouterConfiguration.dataCollection` (Vorgabe `"deny"`, `nil` sendet das Feld nicht).
+- **Offen und ausdrücklich ungemessen: die Kombination.** Die acht Anbieter aus E02 wurden mit
+  `deny` *allein* gemessen, vom Python-Skript, das weder `require_parameters` noch `ignore`
+  setzt. Der Adapter filtert jetzt dreifach. Ob danach genug Routen bleiben, zeigt erst der
+  bezahlte Lauf. Fällt die Verfügbarkeit, ist zuerst `require_parameters` gegen `deny`
+  abzuwägen — mit Messbelegen, nicht auf Verdacht.
 - Sollte die Verfügbarkeit unter der Beschränkung leiden, ist die Entscheidung rücknehmbar —
   aber nur mit Messbelegen, nicht auf Verdacht. Die Messreihe zu E02 ist die Vorlage dafür.
 - Die zu E02 erhobenen Messwerte bleiben gültig; sie wurden teils mit, teils ohne Beschränkung

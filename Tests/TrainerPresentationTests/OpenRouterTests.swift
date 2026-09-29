@@ -72,6 +72,8 @@ private func object(_ data: Data) throws -> [String: Any] {
     let provider = try #require(body["provider"] as? [String: Any])
     #expect(provider["ignore"] as? [String] == ["wafer", "mancer", "parasail"])
     #expect(provider["require_parameters"] as? Bool == true)
+    // E06: Anbieter, die Übermitteltes speichern dürfen, sind ausgeschlossen.
+    #expect(provider["data_collection"] as? String == "deny")
     #expect((body["reasoning"] as? [String: Any])?["enabled"] as? Bool == false)
     let format = try #require(body["response_format"] as? [String: Any])
     #expect(format["type"] as? String == "json_schema")
@@ -85,6 +87,7 @@ private func object(_ data: Data) throws -> [String: Any] {
 @Test func anfragekoerperLaesstFelderWegWennNichtGesetzt() throws {
     var configuration = OpenRouterConfiguration()
     configuration.ignoredProviders = []
+    configuration.dataCollection = nil
     let body = try object(try OpenRouterSchema.body(
         configuration: configuration, system: "S", user: "U",
         responseFormat: OpenRouterSchema.responseFormat(name: "TurnAnalysis", schema: OpenRouterSchema.analysis),
@@ -92,7 +95,19 @@ private func object(_ data: Data) throws -> [String: Any] {
     let provider = try #require(body["provider"] as? [String: Any])
     #expect(provider["require_parameters"] as? Bool == true)
     #expect(provider["ignore"] == nil)
+    #expect(provider["data_collection"] == nil)
     #expect(body["reasoning"] == nil)
+}
+
+@Test func anbieterbeschraenkungIstStandardUndKeinZufallDerAufrufstelle() throws {
+    // E06 gilt für jeden Aufruf, nicht nur für den, den ein Test gerade baut: die
+    // Vorgabe steht in der Einstellung, nicht an einer einzelnen Aufrufstelle.
+    #expect(OpenRouterConfiguration().dataCollection == "deny")
+    let body = try object(try OpenRouterSchema.body(
+        configuration: .init(), system: "S", user: "U",
+        responseFormat: OpenRouterSchema.responseFormat(name: "CounselorAnalysis", schema: OpenRouterSchema.counselorAnalysis),
+        temperature: 0, maxTokens: 1500, reasoning: false).serialized())
+    #expect((body["provider"] as? [String: Any])?["data_collection"] as? String == "deny")
 }
 
 // MARK: - Prompts

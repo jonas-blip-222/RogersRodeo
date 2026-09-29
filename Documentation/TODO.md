@@ -143,8 +143,11 @@ stattdessen zu tun ist, steht in Abschnitt 5. Siehe `ENTSCHEIDUNGEN.md`, E01 bis
       vollständig: bis zu acht Aufrufe für die Analyse plus vier für die Rollenantwort. Der
       Adapter dokumentiert das im Kommentar zu `call` selbst. Ob diese Obergrenze sinnvoll ist,
       ist offen; sie bestimmt zugleich die Kosten und die Wartezeit im schlimmsten Fall.
-- [ ] **`provider.data_collection: "deny"` im Anfragekörper setzen (E06).** `OpenRouterSchema.body`
-      setzt derzeit nur `provider.require_parameters` und `provider.ignore`.
+- [x] **`provider.data_collection: "deny"` im Anfragekörper setzen (E06).** Umgesetzt über
+      `OpenRouterConfiguration.dataCollection`; `OpenRouterSchema.body` setzt das Feld neben
+      `require_parameters` und `ignore`. Offen bleibt die Messung: die acht Anbieter aus E02
+      wurden mit `deny` allein gemessen, nicht zusammen mit `require_parameters` und der
+      Ausschlussliste. Verfügbarkeit im nächsten bezahlten Lauf beobachten.
 - [ ] **Einmaligen Disclaimer bauen (E07).** Datenverarbeitung und die pädagogische
       Vereinfachung der Szenarien, zu bestätigen vor der ersten Benutzung. Text noch nicht
       geschrieben und nicht fachlich abgenommen.
