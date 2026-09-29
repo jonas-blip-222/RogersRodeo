@@ -26,9 +26,9 @@ benennen die abgelösten Annahmen und die nächsten Arbeitspakete.
 - Gesprächsdaten werden ausschließlich lokal per SwiftData gespeichert; kein Konto, keine
   CloudKit-Synchronisation. Das gilt weiterhin. Die **eingetippten Beiträge und der bisherige
   Gesprächsverlauf verlassen dagegen das Gerät**: sie gehen als Teil der Modellaufrufe an
-  OpenRouter und von dort an den jeweils gewählten Anbieter. Nichts, was hier eingegeben wird,
-  bleibt auf dem iPhone. Echtes Fall-, Klienten- oder Mandatsmaterial gehört deshalb nicht in
-  die App.
+  OpenRouter und von dort an den jeweils gewählten Anbieter. Die lokale Speicherung ist also
+  kein Schutz davor, dass der Text das Gerät verlässt — beides geschieht. Echtes Fall-,
+  Klienten- oder Mandatsmaterial gehört deshalb nicht in die App.
 - Markdown-Protokoll speichern oder ausdrücklich teilen.
 - Schwarz-weiße Startseite mit vier wechselnden Cartoon-Motiven; Porträts bleiben aus dem Gespräch ausgeblendet.
 - Getesteter Regelkern: verborgene Offenheit, segmentbezogene Regeln, Faktenfreigabe,
