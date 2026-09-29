@@ -233,11 +233,16 @@ public struct ModelResult<Value: Sendable>: Sendable {
 }
 
 public protocol TrainerModelProvider: Sendable {
+    func modelTrace() async throws -> ModelTraceSink?
     func descriptor() async -> ModelDescriptor
     func prepare() async throws
     func analyze(_ request: AnalysisRequest) async throws -> ModelResult<TurnAnalysis>
     func reply(_ request: ReplyRequest) async throws -> ModelResult<ClientReply>
     func unload() async
+}
+
+public extension TrainerModelProvider {
+    func modelTrace() async throws -> ModelTraceSink? { nil }
 }
 
 public struct BuildIdentity: Codable, Sendable, Equatable {
