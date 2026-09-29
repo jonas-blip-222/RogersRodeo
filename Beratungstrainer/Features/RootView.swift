@@ -79,6 +79,9 @@ struct RootView: View {
             Text(title).font(.subheadline.weight(.medium)).frame(maxWidth: .infinity).padding(.vertical, 11)
                 .foregroundStyle(selected ? .white : Palette.ink)
                 .background(selected ? Palette.ink : .clear, in: Capsule())
+                // Ohne diese Form ist nur der gezeichnete Text antippbar; die nicht ausgewählte
+                // Schaltfläche hat keinen Hintergrund und reagiert daneben sonst nicht.
+                .contentShape(Capsule())
         }.buttonStyle(.plain).accessibilityAddTraits(selected ? .isSelected : [])
     }
 
