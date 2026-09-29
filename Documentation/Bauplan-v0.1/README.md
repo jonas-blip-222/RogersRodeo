@@ -2,6 +2,22 @@
 
 Stand: 18.09.2026. Planungsstand nach Sichtung der vier unterschiedlichen Projektunterlagen und dem Gespräch mit Jonas. Dieses Paket enthält Spezifikationen, Schnittstellen und Beispiele. Es enthält noch keine fertige iPhone-App und keine gemessenen Ergebnisse eines lokalen Sprachmodells.
 
+> **Überholt in einem zentralen Punkt, Stand 29.09.2026.**
+> Dieses Dokument bleibt als historischer Planungsstand unverändert erhalten und wird nicht
+> rückwirkend umgeschrieben. Es beschreibt durchgehend ein **lokal auf dem Gerät ausgeführtes
+> Modell** über MLX oder die FoundationModels-Brücke. Dieser Weg wird nicht mehr verfolgt: die
+> Modellaufrufe laufen über die OpenRouter-API. Damit sind insbesondere überholt — die
+> Offline-Zusage, die gebündelten Modellgewichte samt `Models.lock.json`, das daraus abgeleitete
+> Deployment-Target iOS 27, die reservierten Ausgabebudgets von 768 und 384 Token, und die
+> Arbeitspakete T00 und T07 in [04-Umsetzungsplan.md](04-Umsetzungsplan.md).
+>
+> Weiterhin gültig ist alles, was nicht an der Modellherkunft hängt: die Trennung von Kern und
+> Adaptern, die atomare Turn-Transaktion, die verborgene Offenheit, die Faktenfreigabe, die
+> Validierung von Zitaten und Fakten-IDs, und der Verzicht auf eine automatische Kompetenznote.
+>
+> Maßgeblich sind [../ENTSCHEIDUNGEN.md](../ENTSCHEIDUNGEN.md) (E01 bis E03) und
+> [../MI-UEBERGABE.md](../MI-UEBERGABE.md).
+
 ## Die geplante App
 
 Jonas übt ein Gespräch mit einer fiktiven Person aus der Drogenberatung. Die erste Figur ist Lukas, der erste Beratungsansatz Motivational Interviewing (MI). Das Gespräch läuft vollständig lokal auf dem iPhone. Freiwillig eingeblendete Hinweise unterstützen die nächste Gesprächsreaktion. Anschließend gibt es eine Auswertung mit konkreten Gesprächsstellen.

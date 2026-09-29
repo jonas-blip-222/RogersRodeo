@@ -8,17 +8,32 @@ Fachliche und architektonische Grundlage: [Bauplan v0.1](Documentation/Bauplan-v
 [MI-Nachtrag vom 29.09.2026](Documentation/MI-UEBERGABE.md). Bei Widerspruch gilt der MI-Nachtrag;
 seine Abschnitte 3 und 12 benennen die abgelösten Annahmen und die nächsten Arbeitspakete.
 
+> **Wichtige Änderung am 29.09.2026: keine lokale Modellausführung mehr.**
+> Die Modellaufrufe laufen über die OpenRouter-API statt über ein Modell auf dem Gerät. Damit
+> verlassen die eingegebenen Beratungsäußerungen das Gerät, und ein Offline-Betrieb ist nicht mehr
+> vorgesehen. Bauplan v0.1 beschreibt an vielen Stellen noch den lokalen Weg über MLX; diese
+> Abschnitte sind überholt. Begründung, Grenzen und die gemessenen Folgen stehen in
+> [ENTSCHEIDUNGEN.md](Documentation/ENTSCHEIDUNGEN.md), E01 bis E03.
+
 ## Vorhanden
 
 - SwiftUI: Figur auswählen, Gespräch führen, Entwürfe sichern, Sitzungen fortsetzen und abschließen, Verlauf und Rückblick.
-- Ausschließlich lokale SwiftData-Speicherung; kein Konto, Server oder CloudKit.
+- Gesprächsdaten werden ausschließlich lokal per SwiftData gespeichert; kein Konto, keine
+  CloudKit-Synchronisation. Das gilt weiterhin. Die **Modellaufrufe** gehen dagegen an einen
+  externen Dienst, siehe Hinweis oben.
 - Markdown-Protokoll speichern oder ausdrücklich teilen.
 - Schwarz-weiße Startseite mit vier wechselnden Cartoon-Motiven; Porträts bleiben aus dem Gespräch ausgeblendet.
 - Getesteter Regelkern: verborgene Offenheit, segmentbezogene Regeln, Faktenfreigabe, Wiederholungsschutz und Ausgabevalidierung.
 - Abbruch, verspätete Modellantworten, Speicherfehler und idempotente Übernahme vollständiger Runden.
 - Ein gemeinsamer, deterministisch erzeugter Inhaltskatalog mit SHA-256-Prüfung.
 
-**Noch nicht vorhanden:** echte lokale Modellinferenz, Spracheingabe/-ausgabe, PDF-Export, fachlich geprüfte Tipps und Gerätefreigabe. Die Demo liefert keine fachliche Einordnung und bewertet keine Beratungskompetenz.
+**Noch nicht vorhanden:** angebundene Modellinferenz in der App — der Adapter auf die API entsteht
+gerade, die App verwendet bis dahin weiter feste Demo-Antworten. Ebenfalls offen: Spracheingabe und
+-ausgabe, PDF-Export, fachlich geprüfte Tipps und Gerätefreigabe. Die Demo liefert keine fachliche
+Einordnung und bewertet keine Beratungskompetenz.
+
+Was am Modell bereits gemessen ist und was ausdrücklich nicht, steht in
+[STATUS.md](Documentation/STATUS.md) unter dem 29. September 2026.
 
 ## Start am Mac
 
@@ -41,7 +56,12 @@ Das Verpackungsskript überschreibt keine bestehende Ausgabe. Der Build ist loka
 
 `Beratungstrainer.xcodeproj` öffnen, Scheme **Beratungstrainer**, Konfiguration **Debug**, eigenes Signing-Team und Gerät auswählen. Das geplante Deployment-Target bleibt **iOS 27**. Die unabhängigen Pakete benötigen iOS 17; daraus folgt keine Freigabe der vollständigen App für iOS 17.
 
-Die geplante FoundationModels/MLX-Brücke erfordert einen noch ausstehenden Integrationsversuch mit dem passenden 27er-SDK. Eine vorhandene Version Xcode 26.6 ersetzt diesen Nachweis nicht. Zuerst auf iPhone 17 prüfen; iPhone 14/15 bleiben angestrebte, nicht zugesicherte Zielgeräte. Aktueller Prüfstand: [Documentation/STATUS.md](Documentation/STATUS.md).
+Der Build gegen den iPhone-17-Simulator mit iOS 27.0 ist am 29.09.2026 erstmals erfolgreich
+gelaufen und wurde im Simulator bedient. Ein Lauf auf einem echten Gerät steht weiterhin aus.
+
+Die früher geplante FoundationModels/MLX-Brücke entfällt ersatzlos (siehe Hinweis oben und E01).
+Damit gibt es auch keinen technischen Grund mehr für iOS 27 als Deployment-Target; es steht noch
+auf 27 und ist neu zu bestimmen. Aktueller Prüfstand: [Documentation/STATUS.md](Documentation/STATUS.md).
 
 ## Prüfungen
 
