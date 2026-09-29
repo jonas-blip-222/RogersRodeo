@@ -2,6 +2,26 @@
 
 Die folgenden Punkte sind eine Diskussionsgrundlage, keine bereits fachlich freigegebene Spezifikation.
 
+## Aktueller Teilschritt · 29.09.2026
+
+- [x] MI-03: doppelseitige Reflexion mit belegten Sustain-/Change-Seiten und ausdrücklichem
+      Lob für Sustain zuerst, Change danach. Produktentscheidung E04; Prompt und Bausteine 0.2.
+- [ ] Neues Analyseschema mit echtem Modell und aktuelle Feedbackanzeige im Simulator prüfen.
+- [ ] Drei getrennte Zustände für die Figurenentwicklung konkretisieren: Veränderungsbereitschaft
+      mit Zielbezug, Zuversicht/Selbstwirksamkeit mit Zielbezug und Rapport/Arbeitsbeziehung.
+      Fachlich bereits in MI-Übergabe 5.1–5.3 vorgesehen, noch nicht als Parameter implementiert.
+      Explizite Skalenantworten als Selbstbericht samt Beleg speichern; keine Umrechnung aus
+      Offenheit, keine automatischen SOC-Schwellen. Jonas hat die drei Bereiche am 29.09.
+      erneut ausdrücklich benannt. Zunächst belegte Beobachtungen (MI-03), danach Einfluss auf
+      Rollenverhalten und Verlauf über Termine (MI-04) ausarbeiten.
+- [ ] Skalierungsfragen und das begründete Erfragen eigener Lösungsideen erkennen.
+- [ ] Wiederholungen in Lukas' Antworten untersuchen und vorhandene Beibehaltungsmotive
+      situationsbezogen nutzen. Grundlage: Jonas' erster Testlauf und seine Anmerkungen.
+
+Die folgenden älteren Checkboxen sind historisch teilweise überholt; tatsächlichen Code und
+neueste STATUS-Einträge berücksichtigen. MI-01 nicht erneut aufbauen; MI-02 gilt mit Cloud
+statt lokaler Inferenz gemäß E01–E03. MI-03 und MI-04 bleiben insgesamt offen.
+
 ## 1. MI-Inhalte und Feedback entscheiden
 
 - [ ] Kompakten, versionierten MI-Inhaltsbestand festlegen: Prinzip, Erklärung, Beispiele/Gegenbeispiele, Quellenverweis und fachlicher Freigabestatus.

@@ -103,7 +103,7 @@ extension TrainerFailure: LocalizedError {
         case .sessionNotFound: "Diese Sitzung ist nicht mehr vorhanden."
         case .sessionCompleted: "Diese Sitzung ist abgeschlossen oder hat die maximale Länge erreicht."
         case .storageUnavailable: "Die Sitzung konnte nicht gespeichert werden. Deine Eingabe bleibt erhalten."
-        case .unsupportedVersion: "Diese Sitzung kann mit der aktuellen Modellversion gelesen, aber nicht fortgesetzt werden."
+        case .unsupportedVersion: "Diese Sitzung stammt aus einem anderen App- oder Modellstand. Du kannst sie nachlesen und exportieren. Bitte starte ein neues Gespräch."
         }
     }
 }

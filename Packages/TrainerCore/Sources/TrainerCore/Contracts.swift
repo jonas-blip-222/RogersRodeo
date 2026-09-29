@@ -41,9 +41,32 @@ public struct AnalysisSegment: Codable, Sendable, Equatable {
     }
 }
 
+/// Semantische Beobachtung, getrennt von Codes und interner Offenheit.
+public struct ReflectionSide: Codable, Sendable, Equatable {
+    public var input: EvidenceReference
+    public var client: EvidenceReference
+    public init(input: EvidenceReference, client: EvidenceReference) {
+        self.input = input; self.client = client
+    }
+}
+
+public struct DoubleSidedReflection: Codable, Sendable, Equatable {
+    public var sustain: ReflectionSide
+    public var change: ReflectionSide
+    public var isUncertain: Bool
+    public init(sustain: ReflectionSide, change: ReflectionSide, isUncertain: Bool) {
+        self.sustain = sustain; self.change = change; self.isUncertain = isUncertain
+    }
+}
+
 public struct TurnAnalysis: Codable, Sendable, Equatable {
     public var segments: [AnalysisSegment]
-    public init(segments: [AnalysisSegment]) { self.segments = segments }
+    /// nil heißt nicht erhoben/erkannt, niemals eine negative Bewertung.
+    /// Optionals bleiben beim Lesen alter gespeicherter Analysen kompatibel.
+    public var doubleSidedReflection: DoubleSidedReflection?
+    public init(segments: [AnalysisSegment], doubleSidedReflection: DoubleSidedReflection? = nil) {
+        self.segments = segments; self.doubleSidedReflection = doubleSidedReflection
+    }
 }
 
 public struct ClientReply: Codable, Sendable, Equatable {

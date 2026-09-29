@@ -207,7 +207,17 @@ private func schnappschuss(identity: ModelDescriptor, status: SessionStatus) -> 
                                       facts: [])
     return SessionSnapshot(schemaVersion: 1, id: UUID(), revision: 0, approachID: "mi",
                            identity: .init(contentHash: "h", rulesVersion: "0.1",
-                                           promptVersion: "0.1", model: identity),
+                                           promptVersion: ConversationCoordinator.promptVersion, model: identity),
                            content: .init(scenario: scenario, codingGuide: "G", tips: []),
                            state: .init(openness: 2), turns: [], status: status, startedAt: Date())
+}
+
+@Test func alterPromptstandWirdSchonBeimOeffnenErkannt() {
+    let identity = OpenRouterModelProvider().descriptor()
+    var session = schnappschuss(identity: identity, status: .active)
+    #expect(ProviderChange.mayContinue(session, with: identity))
+    session.identity.promptVersion = "0.1"
+    #expect(!ProviderChange.mayContinue(session, with: identity))
+    session.status = .completed
+    #expect(ProviderChange.mayContinue(session, with: identity))
 }

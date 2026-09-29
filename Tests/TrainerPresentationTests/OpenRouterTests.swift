@@ -24,10 +24,10 @@ private func object(_ data: Data) throws -> [String: Any] {
 
 // MARK: - Schema
 
-@Test func einordnungsschemaEntsprichtDerGemessenenFassung() throws {
+@Test func einordnungsschemaEnthaeltBelegteDoppelseitigeReflexion() throws {
     let schema = try object(try OpenRouterSchema.analysis.serialized())
     #expect(schema["additionalProperties"] as? Bool == false)
-    #expect(schema["required"] as? [String] == ["segments"])
+    #expect(schema["required"] as? [String] == ["segments", "doubleSidedReflection"])
     let properties = try #require(schema["properties"] as? [String: Any])
     let segments = try #require(properties["segments"] as? [String: Any])
     #expect(segments["type"] as? String == "array")
@@ -259,4 +259,37 @@ private func envelope(content: String?, finish: String?, refusal: String? = nil,
     let provider = OpenRouterModelProvider(configuration: configuration)
     guard ProcessInfo.processInfo.environment["OPENROUTER_API_KEY"] == nil else { return }
     await #expect(throws: TrainerFailure.modelUnavailable) { try await provider.prepare() }
+}
+
+@Test func erweitertesSchemaIstStriktUndReferenzenSindVollstaendig() throws {
+    func check(_ schema: [String: Any]) throws {
+        if let fields = schema["properties"] as? [String: Any] {
+            #expect(schema["additionalProperties"] as? Bool == false)
+            #expect(Set(try #require(schema["required"] as? [String])) == Set(fields.keys))
+            for value in fields.values { try check(try #require(value as? [String: Any])) }
+        }
+        if let items = schema["items"] as? [String: Any] { try check(items) }
+    }
+    let schema = try object(OpenRouterSchema.analysis.serialized())
+    try check(schema)
+    let fields = try #require(schema["properties"] as? [String: Any])
+    let pair = try #require(fields["doubleSidedReflection"] as? [String: Any])
+    #expect(pair["type"] as? [String] == ["object", "null"])
+    let reference = try object(OpenRouterSchema.evidence.serialized())
+    #expect(Set(try #require(reference["required"] as? [String])) == ["source", "speaker", "messageIndex", "quote", "occurrence"])
+}
+
+@Test func analyseErhaeltNummerierteBelegeUndEigenenSystemnachtrag() {
+    let request = AnalysisRequest(codingGuide: "LEITFADEN", recentMessages: [
+        .init(speaker: .client, text: "Abschalten ist mir wichtig."),
+        .init(speaker: .counselor, text: "Und noch?"),
+        .init(speaker: .client, text: "Sonntags fitter sein.")], currentInput: "REFLEXION")
+    let system = OpenRouterSchema.analysisSystemPrompt(request.codingGuide)
+    let user = OpenRouterSchema.analysisPrompt(request)
+    #expect(system.contains("LEITFADEN"))
+    #expect(system.contains("doubleSidedReflection=null"))
+    #expect(system.contains("isUncertain=true"))
+    #expect(!system.contains("REFLEXION"))
+    #expect(user.contains("[2] Klient: Sonntags fitter sein."))
+    #expect(user.contains("[1] Beratung: Und noch?"))
 }

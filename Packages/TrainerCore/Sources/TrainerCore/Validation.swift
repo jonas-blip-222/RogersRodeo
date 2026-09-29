@@ -9,10 +9,20 @@ public enum OutputValidator {
 
     public static func decodeAnalysis(_ data: Data, input: String, context: [DialogueMessage]) throws -> TurnAnalysis {
         do {
-            let object = try exactKeys(JSONSerialization.jsonObject(with: data), required: ["segments"])
+            let object = try exactKeys(JSONSerialization.jsonObject(with: data), required: ["segments"], optional: ["doubleSidedReflection"])
             guard let segments = object["segments"] as? [Any] else { throw TrainerFailure.invalidAnalysis }
             for value in segments {
                 _ = try exactKeys(value, required: ["quote", "code", "isUncertain"], optional: ["supportingClientQuote"])
+            }
+            if let reflection = object["doubleSidedReflection"], !(reflection is NSNull) {
+                let pair = try exactKeys(reflection, required: ["sustain", "change", "isUncertain"])
+                for name in ["sustain", "change"] {
+                    let side = try exactKeys(pair[name] as Any, required: ["input", "client"])
+                    for field in ["input", "client"] {
+                        _ = try exactKeys(side[field] as Any,
+                            required: ["source", "speaker", "quote", "occurrence"], optional: ["messageIndex"])
+                    }
+                }
             }
             let analysis = try JSONDecoder().decode(TurnAnalysis.self, from: data)
             try validateAnalysis(analysis, input: input, context: context)
@@ -43,7 +53,7 @@ public enum OutputValidator {
     }
 
     public static func validateAnalysis(_ analysis: TurnAnalysis, input: String, context: [DialogueMessage]) throws {
-        _ = try locations(analysis, input: input)
+        let ranges = try locations(analysis, input: input)
         for segment in analysis.segments {
             if let quote = segment.supportingClientQuote {
                 guard !quote.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
@@ -51,6 +61,21 @@ public enum OutputValidator {
                     throw TrainerFailure.invalidAnalysis
                 }
             }
+        }
+        if let pair = analysis.doubleSidedReflection {
+            for side in [pair.sustain, pair.change] {
+                guard side.input.source == .currentInput, side.client.source == .contextMessage,
+                      side.client.speaker == .client else { throw TrainerFailure.invalidAnalysis }
+                try validateEvidence(side.client, input: input, context: context)
+                let range = try evidenceRange(side.input, input: input, context: context)
+                guard zip(analysis.segments, ranges).contains(where: { segment, segmentRange in
+                    [.simpleReflection, .complexReflection].contains(segment.code)
+                        && segmentRange.lowerBound <= range.lowerBound && range.upperBound <= segmentRange.upperBound
+                }) else { throw TrainerFailure.invalidAnalysis }
+            }
+            let sustain = try evidenceRange(pair.sustain.input, input: input, context: context)
+            let change = try evidenceRange(pair.change.input, input: input, context: context)
+            guard !sustain.overlaps(change) else { throw TrainerFailure.invalidAnalysis }
         }
     }
 
@@ -60,6 +85,11 @@ public enum OutputValidator {
     /// dürfen nie in eine Rückmeldung geraten (MI-Nachtrag, Abschnitt 7.3).
     public static func validateEvidence(_ reference: EvidenceReference, input: String,
                                         context: [DialogueMessage]) throws {
+        _ = try evidenceRange(reference, input: input, context: context)
+    }
+
+    static func evidenceRange(_ reference: EvidenceReference, input: String,
+                              context: [DialogueMessage]) throws -> Range<String.Index> {
         let text: String
         switch reference.source {
         case .currentInput:
@@ -77,12 +107,16 @@ public enum OutputValidator {
             throw TrainerFailure.invalidAnalysis
         }
         var cursor = text.startIndex
+        var result: Range<String.Index>?
         for _ in 0..<reference.occurrence {
             guard let found = text.range(of: reference.quote, options: .literal, range: cursor..<text.endIndex) else {
                 throw TrainerFailure.invalidAnalysis
             }
             cursor = found.upperBound
+            result = found
         }
+        guard let result else { throw TrainerFailure.invalidAnalysis }
+        return result
     }
 
     public static func validateReply(_ reply: ClientReply, visibleFacts: [VisibleFact]) throws {

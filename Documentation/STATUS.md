@@ -3,6 +3,75 @@
 Neueste Prüfungen zuerst. Ältere Abschnitte bleiben als Verlauf erhalten und werden nicht
 rückwirkend umgeschrieben.
 
+## 29. September 2026 · MI-03-Teilschritt: doppelseitige Reflexion
+
+### Verhalten und Verträge
+
+Gemäß Jonas' Präzisierung E04 erhält die Reihenfolge **Sustain Talk zuerst, Change Talk danach**
+ausdrücklich Lob. Das Modell ordnet die beiden Seiten semantisch ein; beide benötigen je ein
+wörtliches Zitat im eigenen Beitrag und einen überprüften Klientenbeleg. Die FeedbackEngine
+prüft die tatsächlichen Textpositionen einschließlich des jeweiligen Vorkommens.
+
+- Neues optionales `TurnAnalysis.doubleSidedReflection`, mit `ReflectionSide` und vorhandenen
+  `EvidenceReference`-Werten. Kein zusätzlicher Modellaufruf, keine Stichworterkennung.
+- OpenRouter-Schema und Systemnachtrag erweitert; Verlauf für genaue Referenzen nummeriert.
+  Das ältere, lokal geänderte Python-Evaluationsskript wurde nicht angefasst und prüft dieses
+  neue Schema noch nicht.
+- Richtige Reihenfolge: eigener Textbaustein mit vier Belegen; erhält Platz unter den höchstens
+  zwei positiven Rückmeldungen und ersetzt das allgemeine Reflexionslob dieser Runde.
+  Warnungen bleiben zuerst. Umgekehrte Reihenfolge ist nicht automatisch ein Fehler.
+- Unsichere Beobachtung oder unsicheres zugehöriges Segment: kein sicheres Reihenfolgelob.
+  Ungültige/erfundene/überlappende Belege werden abgewiesen. Fragen/Ratschläge können nicht als
+  Reflexionssegmente für die neue Beobachtung dienen.
+- Frühmeldung, gespeicherter Turn und Rückblick verwenden die bestehende Feedbackstrecke.
+  Offenheitsregeln unverändert; keine zusätzlichen Punkte oder sichtbaren Skalen.
+- Promptstand **0.2**, Feedbackbausteine **0.2**, Regeln **0.1**, Snapshots weiterhin **1**.
+  Alte Analysen ohne das Feld bleiben lesbar/exportierbar, neue Beobachtungen werden nicht
+  nachträglich erfunden. Aktive Sitzungen mit Promptstand 0.1 werden nicht still unter neuen
+  Regeln fortgesetzt; Hinweis schon beim Öffnen, neues Gespräch erforderlich.
+- E04 bezeichnet Jonas' Produktentscheidung, keine wissenschaftliche Quelle. Der Baustein
+  bleibt `.draft`; exakte Zitate belegen noch keine korrekte semantische Zuordnung.
+
+### Tatsächlich geprüft
+
+- TrainerCore: **49 Tests bestanden**, darunter neun neue Tests für Reihenfolge/Gegenrichtung,
+  Unsicherheit, falsche Belege, wiederholte Zitate, Schema-/Altformat, Anzeigelimit,
+  Frühmeldung vor angehaltener Antwort, Snapshot-Roundtrip und alte Promptstände.
+- TrainerStorage: **2 Tests bestanden**, einschließlich Dateispeicher-/Feedback-Roundtrip.
+  Die Umgebung meldete weiterhin Warnungen des Store-Änderungsdienstes.
+- Root-Paket: im vollständigen Lauf **35 von 40 Tests bestanden**. Fünf bestehende
+  Schlüsselbundtests scheiterten beim Speichern/Lesen/Löschen ihrer künstlichen Testeinträge.
+  Kein echter Schlüssel wurde benötigt. Wiederholung mit genau diesen fünf Tests ausgenommen:
+  **35 Tests bestanden**. App und Testmodule wurden dabei als Mac-Prüf-App kompiliert.
+- `git diff --check`: bestanden.
+- Buildausgaben und Swift-/Clang-Caches liegen unter `/private/tmp/rr-double-*`; SwiftPM mit
+  `--disable-sandbox` innerhalb der unveränderten Agenten-Ausführungsbeschränkungen ausgeführt.
+  Erster Core-Build scheiterte am Standard-Cachepfad; temporärer Cache behob das. Ein
+  Swift-Exklusivitätsfehler in einem neuen Test wurde vor dem erfolgreichen Lauf korrigiert.
+
+### Fehlende Nachweise
+
+Der versuchte iOS-Simulator-Build scheiterte vor dem App-Build an Paketauflösung/gesperrten
+Cachepfaden; CoreSimulator meldete zusätzlich eine ungültige Dienstverbindung. Kein erfolgreicher
+iOS-Build, visueller Lauf, VoiceOver-/Gerätenachweis oder echter Modelllauf für diese Erweiterung.
+Die Güte der semantischen Erkennung, Anbieterakzeptanz des neuen Schemas und zusätzliche
+Ausgabelänge/Latenz/Kosten sind noch zu messen. Technische Fixtures sind keine Goldreferenzen.
+
+### Einordnung in MI-01 bis MI-04 und Jonas' Nachfrage
+
+MI-01 bleibt implementiert. MI-02 ist durch E01–E03 auf Cloud-Inferenz umgestellt, nicht durch
+lokale Modellpläne neu zu beginnen; der vorhandene Nutzertest zeigt bereits Modellantworten,
+ersetzt aber keine systematische Qualitätsprüfung. Dieser Ausbau ist ein Teil von MI-03.
+
+Veränderungsbereitschaft, Zuversicht/Selbstwirksamkeit und Beziehung/Rapport sind in
+`MI-UEBERGABE.md` Abschnitt 5.1–5.3 inhaltlich getrennt vorgesehen; Zuversichtsskalen außerdem
+in Abschnitt 4.4 und Fall 13. Im tatsächlichen `SimulationState` existieren bisher nur Offenheit,
+Fragenfolge, offengelegte Fakten und Wiederholungsschutz. Es gibt keine drei eigenständigen
+Zustandsparameter, keine belegte Fortschreibung und keinen getrennten Einfluss auf die Rolle.
+Nächster Schritt: zielbezogene Bereitschaft und Zuversicht sowie Beziehungsbeobachtungen
+belegt speichern (MI-03), danach in Charakter-/Terminverlauf einbinden (MI-04). Keine Ableitung
+aus Offenheit, kein automatischer Fortschritt über Punkteschwellen.
+
 ## 29. September 2026 · MI-01: Rückmeldung an die übende Person
 
 ### Was jetzt tatsächlich passiert

@@ -142,3 +142,22 @@ bis 3742 Token gehen dafür weg, bevor das JSON beginnt. Bei zu kleinem Budget e
 Wiederholungslogik aufgebaut werden.
 
 **Tatsächliche Kosten der Messung:** 0,25 USD für 56 Aufrufe.
+
+## E04 · Reihenfolge einer doppelseitigen Reflexion ausdrücklich loben
+
+**Datum:** 29.09.2026 · **Entschieden von:** Jonas · **Status:** beschlossen
+
+Eine belegte doppelseitige Reflexion erhält ausdrücklich positives Feedback für die Reihenfolge:
+**zuerst Sustain Talk (Gründe für Beibehaltung), danach Change Talk (Gründe für Veränderung)**.
+Die Reihenfolge selbst ist der Anlass für dieses Lob. Sie darf nicht lediglich als Stilmerkmal
+ohne Rückmeldung behandelt werden. Beide Seiten müssen zu tatsächlichen Aussagen von Lukas
+über dieselbe Veränderung passen; eine erfundene Veränderungsbereitschaft genügt nicht.
+
+Die umgekehrte Reihenfolge bekommt dieses spezielle Lob nicht, wird aber nicht automatisch als
+Fehler bezeichnet. Unsichere Deutung erzeugt kein sicheres Reihenfolgelob. Die Aussage über die
+Reihenfolge kommt aus geprüften Textpositionen, die semantische Zuordnung aus dem Modell.
+
+Umgesetzt als MI-03-Teilschritt: optionales `doubleSidedReflection` mit vier Belegreferenzen,
+Promptstand 0.2, Feedbackbausteine 0.2. Kein neuer Offenheitsbonus und keine sichtbare Punktzahl.
+E04 ist eine Produktentscheidung und keine Literaturquelle oder wissenschaftliche Validierung;
+der Textbaustein bleibt fachlicher Entwurf.

@@ -29,7 +29,9 @@ struct ProviderChange: Equatable {
     /// Die Speicherlogik bleibt unberührt: eine Sitzung mit fremder Modellkennung ist und
     /// bleibt nicht fortsetzbar.
     static func mayContinue(_ session: SessionSnapshot, with current: ModelDescriptor) -> Bool {
-        session.status != .active || session.identity.model == current
+        session.status != .active || (session.identity.model == current
+            && session.identity.promptVersion == ConversationCoordinator.promptVersion
+            && session.identity.rulesVersion == "0.1")
     }
 }
 

@@ -1,6 +1,7 @@
 import Foundation
 
 public actor ConversationCoordinator {
+    public static let promptVersion = "0.2"
     private let repository: any SessionRepository
     private let provider: any TrainerModelProvider
     private var generation: UUID?
@@ -22,7 +23,7 @@ public actor ConversationCoordinator {
         try await provider.prepare(); try check(token)
         let descriptor = await provider.descriptor(); try check(token)
         let snapshot = SessionSnapshot(schemaVersion: 1, id: UUID(), revision: 0, approachID: "mi",
-            identity: .init(contentHash: contentHash, rulesVersion: "0.1", promptVersion: "0.1", model: descriptor),
+            identity: .init(contentHash: contentHash, rulesVersion: "0.1", promptVersion: Self.promptVersion, model: descriptor),
             content: content, state: .init(openness: content.scenario.opennessStart), turns: [], status: .active, startedAt: Date())
         try await repository.create(snapshot)
         return snapshot
@@ -54,7 +55,7 @@ public actor ConversationCoordinator {
         }
         guard session.status == .active, session.turns.count < 20 else { throw TrainerFailure.sessionCompleted }
         let descriptor = await provider.descriptor(); try check(token)
-        guard session.identity.rulesVersion == "0.1", session.identity.promptVersion == "0.1",
+        guard session.identity.rulesVersion == "0.1", session.identity.promptVersion == Self.promptVersion,
               session.identity.model == descriptor else { throw TrainerFailure.unsupportedVersion }
         prepared = nil
         let oldPending = try await repository.loadPending(sessionID: sessionID); try check(token)

@@ -91,7 +91,7 @@ enum TestData {
     static let model = ModelDescriptor(id: "test", artifactRevision: "1", runtimeRevision: "1", effectiveContextLimit: 4096)
     static func session() -> SessionSnapshot {
         .init(schemaVersion: 1, id: UUID(), revision: 0, approachID: "mi",
-              identity: .init(contentHash: "test", rulesVersion: "0.1", promptVersion: "0.1", model: model),
+              identity: .init(contentHash: "test", rulesVersion: "0.1", promptVersion: ConversationCoordinator.promptVersion, model: model),
               content: content, state: .init(openness: 3), turns: [], status: .active, startedAt: Date())
     }
 }

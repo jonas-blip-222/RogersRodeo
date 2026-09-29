@@ -126,11 +126,15 @@ public struct FeedbackTemplate: Sendable, Equatable {
 /// Der Bestand der Textbausteine. Eigene Version, damit eine Formulierungsänderung nicht die
 /// `rulesVersion` der Sitzung anfassen muss — die entscheidet über die Fortsetzbarkeit.
 public enum FeedbackTemplates {
-    public static let version = "0.1"
+    public static let version = "0.2"
 
     /// Fachlicher Entwurf. Formulierungen sind an Abschnitt 7.1 angelehnt und noch nicht
-    /// fachlich geprüft; Quellenkennungen verweisen auf Abschnitt 14 des MI-Nachtrags.
+    /// fachlich geprüft; Quellenkennungen verweisen auf Abschnitt 14 des MI-Nachtrags; E04 auf die Produktentscheidung.
     public static let all: [FeedbackTemplate] = [
+        .init(ruleID: "rueckmeldung.doppelseitige_reflexion", kind: .observation, certainty: .confirmed,
+              title: "Doppelseitige Reflexion",
+              format: "Gut angeordnet: Du greifst zuerst auf, was für das Beibehalten spricht, und danach die Gründe für Veränderung. So steht der Change Talk am Ende deiner Reflexion: „{zitat}“.",
+              sourceID: "E04"),
         .init(ruleID: "warnung.konfrontation", kind: .warning, certainty: .confirmed,
               title: "Konfrontation",
               format: "„{zitat}“ setzt {figur} unter Druck, statt an das Gesagte anzuknüpfen.",
@@ -196,6 +200,8 @@ public enum FeedbackEngine {
         guard let analysis, !analysis.segments.isEmpty,
               let ranges = try? OutputValidator.locations(analysis, input: input) else { return [] }
         let placed = Array(zip(analysis.segments, ranges))
+        let doubleSided = doubleSidedFinding(analysis, input: input, context: context,
+                                           characterName: characterName, rulesVersion: rulesVersion)
 
         var results: [(position: String.Index, finding: FeedbackFinding)] = []
 
@@ -215,6 +221,8 @@ public enum FeedbackEngine {
 
         var observations: [(position: String.Index, finding: FeedbackFinding)] = []
         for (code, ruleID) in observationRules {
+            // Das spezifische Lob ersetzt das allgemeine Reflexionslob dieser Runde.
+            if doubleSided != nil && code == .complexReflection { continue }
             // Nur belegte, sichere Segmente. Eine elegante Satzform allein beweist weder
             // Empathie noch eine zutreffende komplexe Reflexion (Abschnitt 4.3).
             guard let candidate = placed.first(where: { $0.0.code == code && !$0.0.isUncertain }) else { continue }
@@ -226,7 +234,11 @@ public enum FeedbackEngine {
             observations.append((candidate.1.lowerBound, finding))
         }
         observations.sort { $0.position < $1.position }
-        results += observations.prefix(observationLimit)
+        if let doubleSided {
+            // Die ausdrücklich gewünschte Reihenfolge darf nicht durch das Anzeigelimit verschwinden.
+            results.append(doubleSided)
+        }
+        results += observations.prefix(observationLimit - (doubleSided == nil ? 0 : 1))
 
         // Warnungen zuerst, innerhalb einer Art in der Reihenfolge des eigenen Beitrags.
         return results.sorted { left, right in
@@ -234,6 +246,28 @@ public enum FeedbackEngine {
             if leftWarning != rightWarning { return leftWarning }
             return left.position < right.position
         }.map(\.finding)
+    }
+
+    private static func doubleSidedFinding(_ analysis: TurnAnalysis, input: String,
+                                            context: [DialogueMessage], characterName: String,
+                                            rulesVersion: String) -> (position: String.Index, finding: FeedbackFinding)? {
+        guard let pair = analysis.doubleSidedReflection, !pair.isUncertain,
+              (try? OutputValidator.validateAnalysis(analysis, input: input, context: context)) != nil,
+              let sustain = try? OutputValidator.evidenceRange(pair.sustain.input, input: input, context: context),
+              let change = try? OutputValidator.evidenceRange(pair.change.input, input: input, context: context),
+              sustain.upperBound <= change.lowerBound,
+              let ranges = try? OutputValidator.locations(analysis, input: input),
+              !zip(analysis.segments, ranges).contains(where: { segment, range in
+                  (range.overlaps(sustain) || range.overlaps(change)) && segment.isUncertain
+              }),
+              let template = FeedbackTemplates.template("rueckmeldung.doppelseitige_reflexion", .confirmed)
+        else { return nil }
+        let quote = String(input[sustain.lowerBound..<change.upperBound])
+        return (sustain.lowerBound, .init(ruleID: template.ruleID, kind: .observation, certainty: .confirmed,
+            title: template.title, message: template.render(character: characterName, quote: quote, support: nil),
+            evidence: [pair.sustain.input, pair.sustain.client, pair.change.input, pair.change.client],
+            templateVersion: FeedbackTemplates.version, rulesVersion: rulesVersion,
+            sourceID: template.sourceID, reviewStatus: .draft))
     }
 
     private static func build(segment: AnalysisSegment, range: Range<String.Index>, ruleID: String,
