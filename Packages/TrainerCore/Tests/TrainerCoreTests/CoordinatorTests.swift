@@ -356,3 +356,84 @@ private let druckAnalyse = TurnAnalysis(segments: [
     let done = try await repo.finish(sessionID: session.id, expectedRevision: 0, endedAt: date)
     #expect(try await repo.finish(sessionID: session.id, expectedRevision: 0, endedAt: date) == done)
 }
+
+// MARK: - Gesamtfrist je Gesprächsrunde
+
+/// Anbieter, der langsam, aber abbrechbar ist. Die Frist setzt voraus, dass der Anbieter
+/// Cancellation beachtet; der echte Adapter tut das über `URLSession`. Ein Anbieter, der
+/// sie ignoriert (`ControlledProvider(.heldReply)`), taugt für diese Prüfung nicht.
+actor SlowProvider: TrainerModelProvider {
+    let delay: Duration
+    var analyses = 0
+    var replies = 0
+    init(delay: Duration) { self.delay = delay }
+    func descriptor() -> ModelDescriptor { TestData.model }
+    func prepare() {}
+    func unload() {}
+    func analyze(_ request: AnalysisRequest) async throws -> ModelResult<TurnAnalysis> {
+        analyses += 1
+        try await Task.sleep(for: delay)
+        return .init(value: .init(segments: [.init(quote: request.currentInput, code: .autonomy, isUncertain: false)]),
+                     metrics: .init(durationSeconds: 0.1), contextMessagesUsed: request.recentMessages)
+    }
+    func reply(_ request: ReplyRequest) async throws -> ModelResult<ClientReply> {
+        replies += 1
+        try await Task.sleep(for: delay)
+        return .init(value: .init(text: "Das entscheide ich selbst.", primaryTag: nil, disclosedFactIDs: []),
+                     metrics: .init(durationSeconds: 0.1), contextMessagesUsed: request.recentMessages)
+    }
+}
+
+@Test func rundenfristBrichtEineHaengendeRundeAbUndSpeichertNichtsHalbes() async throws {
+    // Ohne Frist liefe diese Runde zehn Sekunden weiter; im Betrieb sind es bis zu zwölf
+    // HTTP-Aufrufe mit je 150 Sekunden Aufruffrist.
+    let repo = MemorySessionRepository(), provider = SlowProvider(delay: .seconds(10))
+    let coordinator = ConversationCoordinator(repository: repo, provider: provider,
+                                              roundDeadline: .milliseconds(100))
+    let original = try await coordinator.create(content: TestData.content, contentHash: "test")
+    let start = ContinuousClock.now
+    await #expect(throws: TrainerFailure.roundDeadlineExceeded) {
+        try await coordinator.send(sessionID: original.id, input: "Sie entscheiden.")
+    }
+    #expect(start.duration(to: .now) < .seconds(5))
+    // Kein halber Zustand: die Sitzung ist unverändert, der Beitrag bleibt als Entwurf.
+    #expect(try await repo.load(id: original.id) == original)
+    #expect(try await repo.loadPending(sessionID: original.id)?.input == "Sie entscheiden.")
+    // Die Frist hat den laufenden Aufruf abgebrochen, nicht bloß den nächsten verhindert.
+    #expect(await provider.analyses == 1)
+    #expect(await provider.replies == 0)
+}
+
+@Test func rundenfristGiltUeberAlleStufenHinwegUndNichtJeAufruf() async throws {
+    // Jede Stufe für sich bleibt unter der Frist; zusammen überschreiten sie sie. Genau das
+    // ist der Unterschied zur vorhandenen Frist je HTTP-Aufruf.
+    let repo = MemorySessionRepository(), provider = SlowProvider(delay: .milliseconds(300))
+    let coordinator = ConversationCoordinator(repository: repo, provider: provider,
+                                              roundDeadline: .milliseconds(500))
+    let original = try await coordinator.create(content: TestData.content, contentHash: "test")
+    await #expect(throws: TrainerFailure.roundDeadlineExceeded) {
+        try await coordinator.send(sessionID: original.id, input: "Sie entscheiden.")
+    }
+    #expect(await provider.analyses == 1)
+    #expect(await provider.replies == 1)
+    #expect(try await repo.load(id: original.id) == original)
+}
+
+@Test func rundeInnerhalbDerFristWirdGanzNormalGespeichert() async throws {
+    // Gegenprobe: die Frist darf den gesunden Fall nicht kappen.
+    let repo = MemorySessionRepository(), provider = SlowProvider(delay: .milliseconds(10))
+    let coordinator = ConversationCoordinator(repository: repo, provider: provider,
+                                              roundDeadline: .seconds(30))
+    let original = try await coordinator.create(content: TestData.content, contentHash: "test")
+    let saved = try await coordinator.send(sessionID: original.id, input: "Sie entscheiden selbst.")
+    #expect(saved.revision == 1 && saved.turns.count == 1)
+    #expect(try await repo.loadPending(sessionID: original.id) == nil)
+}
+
+@Test func fristablaufIstEinEigenerFallUndKeinModellausfall() {
+    // Die Gegenseite war erreichbar; sie hat nur zu lange gebraucht. Die Meldung muss das
+    // sagen und darf nicht zur Netzprüfung auffordern.
+    let text = try! #require(TrainerFailure.roundDeadlineExceeded.errorDescription)
+    #expect(text.contains("zu lange"))
+    #expect(text != TrainerFailure.modelUnavailable.errorDescription)
+}

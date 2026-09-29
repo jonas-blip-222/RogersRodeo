@@ -871,6 +871,11 @@ actor OpenRouterModelProvider: TrainerModelProvider {
     /// bei der Einordnung zusätzlich: ohne Einordnung fortsetzen). Der Coordinator wiederholt
     /// darüber hinaus ein zweites Mal: bis zu vier Aufrufe je Teilanalyse, acht für beide
     /// Analysestufen zusammen. Hinzu kommen die getrennten Versuche für die Rollenantwort.
+    ///
+    /// Diese Obergrenze bleibt unverändert; begrenzt wird seit `TrainerCore.RoundDeadline`
+    /// nicht die Anzahl der Aufrufe, sondern die Gesamtzeit der Runde (120 Sekunden). Sie
+    /// wirkt von außen über Cancellation: `send` bricht dann in `URLSession.data(for:)` ab
+    /// und wirft `CancellationError`, weshalb hier nichts weiter zu tun ist.
     private func call(system: String, user: String, responseFormat: JSONValue,
                       temperature: Double, reasoning: Bool?, budget: Int, retryBudget: Int,
                       unusableFailure: TrainerFailure) async throws -> (Data, ModelCallMetrics) {

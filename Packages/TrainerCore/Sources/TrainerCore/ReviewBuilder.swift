@@ -104,6 +104,7 @@ extension TrainerFailure: LocalizedError {
         case .sessionCompleted: "Diese Sitzung ist abgeschlossen oder hat die maximale Länge erreicht."
         case .storageUnavailable: "Die Sitzung konnte nicht gespeichert werden. Deine Eingabe bleibt erhalten."
         case .unsupportedVersion: "Diese Sitzung stammt aus einem anderen App- oder Modellstand. Du kannst sie nachlesen und exportieren. Bitte starte ein neues Gespräch."
+        case .roundDeadlineExceeded: "Die Antwort hat zu lange gedauert und wurde abgebrochen. Dein Beitrag ist erhalten geblieben; bitte versuche es erneut."
         }
     }
 }

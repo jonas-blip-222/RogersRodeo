@@ -378,4 +378,8 @@ public enum TrainerFailure: Error, Sendable, Equatable {
     case sessionCompleted
     case storageUnavailable
     case unsupportedVersion
+    /// Die Gesamtfrist einer Gesprächsrunde ist abgelaufen. Eigener Fall und ausdrücklich
+    /// kein `modelUnavailable`: Die Gegenseite war erreichbar, sie hat nur zu lange
+    /// gebraucht — meist über mehrere Wiederholungen hinweg. Siehe `RoundDeadline`.
+    case roundDeadlineExceeded
 }

@@ -1,5 +1,60 @@
 import Foundation
 
+/// Gesamtfrist für eine Gesprächsrunde, über alle Stufen und Wiederholungen hinweg.
+///
+/// **Warum hier und nicht im Adapter.** Die Runde wird im `ConversationCoordinator`
+/// koordiniert; der Adapter sieht nur einzelne Aufrufe. `analyze` und `reply` sind
+/// getrennte Aufrufe, und die vollständige Wiederholung von `analyze` steht ebenfalls hier.
+/// Eine Frist im Adapter bräuchte rundenbezogenen Zustand in einem geteilten Actor und
+/// wüsste weiterhin nichts von der Wiederholung des Coordinators. Ein Wecker ist reine
+/// Nebenläufigkeit — `TrainerCore` bekommt dadurch keinen Netzcode und gilt für jeden
+/// Anbieter, auch für den Demo-Anbieter und spätere Adapter.
+///
+/// **Warum nur um die Modellaufrufe.** Die Frist umschließt ausdrücklich nicht
+/// `repository.commit`. Ein Fristablauf kann deshalb nur vor dem Übergabepunkt eintreten:
+/// Der Turn ist danach entweder vollständig gespeichert oder gar nicht. Die atomare
+/// Turn-Transaktion und die Wiederaufnahme über `prepared` bleiben unberührt.
+public enum RoundDeadline {
+    /// 120 Sekunden ab Beginn der Runde.
+    ///
+    /// Begründung, keine eigene Messung: Der Median einer erfolgreichen Analysestufe lag in
+    /// der Messreihe vom 29.09.2026 bei 5,7 Sekunden; eine gesunde Runde aus zwei
+    /// Analysestufen und einer Rollenantwort bleibt weit darunter. Die größte dort
+    /// beobachtete Einzellücke durch einen abgeschnittenen Erstversuch betrug 84,6 Sekunden
+    /// und passt damit noch hinein — die Frist kappt also nicht den bekannten Normalfall
+    /// mit Wiederholung, sondern das Weiterlaufen darüber hinaus. Ohne sie erlaubt die
+    /// Aufrufkette zwölf HTTP-Aufrufe mit je 150 Sekunden Aufruffrist, also rund 30 Minuten
+    /// mit der Anzeige „Antwort wird vorbereitet …".
+    public static let standard = Duration.seconds(120)
+
+    /// Führt `work` gegen die Frist aus. Läuft sie ab, wird `work` abgebrochen und
+    /// `TrainerFailure.roundDeadlineExceeded` geworfen. Ein Abbruch von außen bleibt ein
+    /// `CancellationError` und wird nicht in einen Fristablauf umgedeutet.
+    ///
+    /// **Voraussetzung:** `work` muss Cancellation beachten. Der OpenRouter-Adapter tut das
+    /// (`URLSession.data(for:)` bricht ab und wird zu `CancellationError`); ein Anbieter,
+    /// der sie ignoriert, verzögert die Rückkehr bis zu seinem eigenen Ende. Dieselbe
+    /// Annahme trifft der Coordinator schon für die vorhandene Abbruchmöglichkeit.
+    static func run<T: Sendable>(until instant: ContinuousClock.Instant,
+                                 _ work: @escaping @Sendable () async throws -> T) async throws -> T {
+        try Task.checkCancellation()
+        guard ContinuousClock.now < instant else { throw TrainerFailure.roundDeadlineExceeded }
+        return try await withThrowingTaskGroup(of: T?.self) { group in
+            group.addTask { try await work() }
+            group.addTask {
+                try await Task.sleep(until: instant, clock: ContinuousClock())
+                return nil
+            }
+            defer { group.cancelAll() }
+            // Das erste fertige Kind entscheidet: ein Wert ist das Ergebnis, `nil` ist der
+            // Wecker. Der jeweils andere Zweig wird beim Verlassen der Gruppe abgebrochen.
+            guard let first = try await group.next() else { throw TrainerFailure.roundDeadlineExceeded }
+            guard let value = first else { throw TrainerFailure.roundDeadlineExceeded }
+            return value
+        }
+    }
+}
+
 public actor ConversationCoordinator {
     public static let promptVersion = "0.5"
     public static let rulesVersion = "0.4"
@@ -7,8 +62,12 @@ public actor ConversationCoordinator {
     private let provider: any TrainerModelProvider
     private var generation: UUID?
     private var prepared: (sessionID: UUID, revision: Int, turn: CompletedTurn)?
-    public init(repository: any SessionRepository, provider: any TrainerModelProvider) {
-        self.repository = repository; self.provider = provider
+    /// Gesamtfrist je Runde; siehe `RoundDeadline`. Als Parameter, damit Tests sie
+    /// verkürzen können, ohne auf echte Wartezeiten angewiesen zu sein.
+    private let roundDeadline: Duration
+    public init(repository: any SessionRepository, provider: any TrainerModelProvider,
+                roundDeadline: Duration = RoundDeadline.standard) {
+        self.repository = repository; self.provider = provider; self.roundDeadline = roundDeadline
     }
     private func check(_ token: UUID) throws {
         try Task.checkCancellation()
@@ -35,6 +94,10 @@ public actor ConversationCoordinator {
         guard generation == nil else { throw TrainerFailure.operationInProgress }
         let token = UUID(); generation = token
         defer { if generation == token { generation = nil } }
+        // Beginn der Runde. Ab hier gilt eine Gesamtfrist über alle Stufen und
+        // Wiederholungen hinweg; siehe `RoundDeadline`.
+        let deadline = ContinuousClock.now.advanced(by: roundDeadline)
+        let model = provider
         let session = try await repository.load(id: sessionID); try check(token)
         let text = input.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty, text.count <= 1500 else { throw TrainerFailure.invalidInput }
@@ -81,7 +144,9 @@ public actor ConversationCoordinator {
         if !skipAnalysis {
             for attempt in 0...1 {
                 do {
-                    let result = try await provider.analyze(request); try check(token)
+                    let result = try await RoundDeadline.run(until: deadline) {
+                        try await model.analyze(request)
+                    }; try check(token)
                     try OutputValidator.validateAnalysis(result.value, input: text, context: result.contextMessagesUsed)
                     development = try CharacterTracker.advance(session.state.development, analysis: result.value,
                         input: text, context: result.contextMessagesUsed, session: session, turnID: pending.id)
@@ -113,7 +178,9 @@ public actor ConversationCoordinator {
         var replyResult: ModelResult<ClientReply>?
         for attempt in 0...1 {
             do {
-                let result = try await provider.reply(replyRequest); try check(token)
+                let result = try await RoundDeadline.run(until: deadline) {
+                    try await model.reply(replyRequest)
+                }; try check(token)
                 try OutputValidator.validateReply(result.value, visibleFacts: visible)
                 replyResult = result; break
             } catch TrainerFailure.invalidReply where attempt == 0 { try check(token) }

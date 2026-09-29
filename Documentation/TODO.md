@@ -118,10 +118,15 @@ stattdessen zu tun ist, steht in Abschnitt 5. Siehe `ENTSCHEIDUNGEN.md`, E01 bis
       selbe Ergebnis.
 - [x] Echte Gesamtfrist **je HTTP-Aufruf**: `timeoutIntervalForResource = 150` Sekunden im
       Adapter. Wiederholungen sind begrenzt, die Fehlermeldung ist verständlich.
-- [ ] **Frist je Gesprächsrunde.** Die vorhandene Frist wirkt nur je Aufruf. Bei bis zu zwölf
-      Aufrufen sind theoretisch rund 30 Minuten möglich, in denen die Oberfläche nur
-      „Antwort wird vorbereitet …" zeigt. Nötig ist eine Obergrenze für die ganze Runde mit
-      einem sauberen Abbruch. Anbieter ohne verwertbare Antworten weiter ausschließen.
+- [x] **Frist je Gesprächsrunde.** Umgesetzt als `RoundDeadline` im `ConversationCoordinator`:
+      120 Sekunden ab Beginn der Runde, über beide Analysestufen, die Rollenantwort und alle
+      Wiederholungen hinweg. Danach `TrainerFailure.roundDeadlineExceeded` mit eigener
+      Meldung. Die Frist umschließt nur die Modellaufrufe, nicht `repository.commit` — ein
+      Fristablauf kann also nur vor dem Übergabepunkt eintreten, die atomare
+      Turn-Transaktion bleibt unberührt. Der Wert ist begründet gewählt, nicht gemessen:
+      Median einer erfolgreichen Analysestufe 5,7 s, größte beobachtete Einzellücke 84,6 s.
+      Ob 120 s im echten Betrieb zu knapp oder zu großzügig sind, zeigt der bezahlte Lauf.
+      Anbieter ohne verwertbare Antworten bleiben weiter ausgeschlossen.
 - [x] **Schlüsseleingabe auf dem iPhone.** `Beratungstrainer/Features/SettingsView.swift` gibt es;
       der Adapter legt den Schlüssel unter `rogersrodeo-openrouter` mit
       `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly` ab, bewusst erst per `SecItemUpdate` und
