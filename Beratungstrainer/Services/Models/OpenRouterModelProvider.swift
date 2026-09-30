@@ -85,10 +85,10 @@ struct OpenRouterConfiguration: Sendable {
     /// Budget vollständig: mit 4000 dauerte das am 29.09.2026 bis zu 148 Sekunden, mit
     /// 768 noch 18. Ein kleineres Budget kostet also nicht nur weniger, es begrenzt auch
     /// die Wartezeit im Fehlerfall.
+    var analysisTokens = 1500
     /// Ergänzende Zielanalyse darf die gültige Beratungseinordnung höchstens 12 s begleiten.
     /// Produktgrenze, keine behauptete gemessene Erfolgsquote. Cancellation erreicht URLSession.
     var memoryTimeout: Duration = .seconds(12)
-    var analysisTokens = 1500
     var analysisTokensRetry = 4000
     var replyTokens = 2000
     var replyTokensRetry = 4000
@@ -478,11 +478,11 @@ enum OpenRouterSchema {
             .joined(separator: "\n")
     }
 
-    /// Ergänzt den eingefrorenen Leitfaden um den expliziten Analysevertrag 0.5.
+    /// Ergänzt den eingefrorenen Leitfaden um den expliziten Analysevertrag 0.7.
     static func analysisSystemPrompt(_ guide: String) -> String {
         guide + """
 
-        Ergänzung zum Ausgabevertrag, Promptstand 0.6: Die ältere Anweisung „nur segments“
+        Ergänzung zum Ausgabevertrag, Promptstand 0.7: Die ältere Anweisung „nur segments“
         wird ersetzt durch segments, doubleSidedReflection (Objekt oder null) und permissions.
         Erkenne eine doppelseitige Reflexion nur, wenn die Beratung zwei Seiten derselben
         Veränderung aus tatsächlichen Klientenaussagen aufgreift: sustain (Gründe fürs
@@ -513,6 +513,10 @@ enum OpenRouterSchema {
         braucht eine neue Frage und eine neue Zustimmung — auch beim selben Thema, auch in
         derselben Situation, auch innerhalb desselben Beitrags. Es gibt keine pauschale und
         keine dauerhafte Erlaubnis. Zähle keine Turns; beurteile die Gesprächssituation.
+        Bewerte die Erlaubnis unmittelbar VOR dem jeweiligen Rat. Der erste Rat nach einem
+        passenden Ja hat noch Erlaubnis; erst DANACH ist sie verbraucht. Der gerade bewertete
+        Rat selbst ist niemals sein eigener consumedBy-Beleg. Ein schroffer Ton kann zusätzlich
+        konfrontation sein, macht eine belegte Erlaubnis aber nicht rückwirkend ungeschehen.
         standing:
         erteilt: frühere Erlaubnisfrage der Beratung in request, darauf FOLGENDE ausdrückliche
         Zustimmung der Figur in response, Zustimmung gehört zu dieser Situation und ist noch
@@ -544,6 +548,15 @@ enum OpenRouterSchema {
         Sichere Einträge müssen zum Segmentcode passen: erteilt nur zu ratschlag_mit_erlaubnis,
         bereits_verbraucht/fruehere_situation/abgelehnt/widerrufen/im_selben_beitrag_gefragt/
         nicht_eingeholt nur zu ratschlag_ohne_erlaubnis.
+        Prüfe vor der Ausgabe die Belege des gewählten standing:
+        - erteilt: request UND response sind ausgefüllte, wörtlich auffindbare Referenzen;
+          consumedBy=null. Frage < Zustimmung < aktueller Rat.
+        - bereits_verbraucht: request UND response UND consumedBy sind ausgefüllte Referenzen.
+          Frage < Zustimmung < früherer Rat < aktueller Rat. Fehlt eines davon, ist dieser
+          Status nicht belegt; niemals bereits_verbraucht mit null-Referenzen ausgeben.
+        - Bei fehlender Beleggrundlage unklar mit isUncertain=true; nicht aus dem Ton raten.
+        Kopiere messageIndex und Sprecher aus dem nummerierten Verlauf; die Erlaubnisfrage
+        ist eine Beratungsnachricht, das Ja eine Klientennachricht, der frühere Rat Beratung.
         Diese Stufe liefert ausschließlich segments, doubleSidedReflection und permissions.
         Zielgedächtnis und Charakterbeobachtungen werden separat erhoben und gehören nicht
         in diese Ausgabe.

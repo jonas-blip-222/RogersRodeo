@@ -56,8 +56,8 @@ public enum RoundDeadline {
 }
 
 public actor ConversationCoordinator {
-    /// 0.6: Erlaubnislage je Ratschlag als eigener Belegvertrag in der Beraterstufe.
-    public static let promptVersion = "0.6"
+    /// 0.7: Kontextbezogene Beratungseinordnung, unabhängig von optionalen Zielbelegen.
+    public static let promptVersion = "0.7"
     /// 0.5: Erlaubnisbefunde und die Abstufung bei unvollständigem Kontext.
     public static let rulesVersion = "0.5"
     private let repository: any SessionRepository

@@ -469,3 +469,27 @@ actor SlowProvider: TrainerModelProvider {
     #expect(restored == saved)
     #expect(ReviewBuilder.markdown(restored).contains("Ziel- und Beziehungseinschätzung war nicht verfügbar"))
 }
+
+@Test func nichtVerfuegbareZielanalyseBewahrtVorhandenenZustandBeimCommit() async throws {
+    let repository = MemorySessionRepository()
+    var session = TestData.session()
+    let rapport = CharacterObservation(dimension: .rapport, assessment: .unclear, goal: nil,
+        evidence: .init(source: .contextMessage, speaker: .client, messageIndex: 0,
+            quote: session.content.scenario.openingLine, occurrence: 1), isUncertain: true)
+    // Ein bereits vorhandener Beziehungsstand, nicht nur der triviale nil-Fall.
+    let firstInput = "Was beschäftigt Sie?"
+    var missing = druckAnalyse; missing.discardMemory()
+    let provider = ScriptedProvider(script: [
+        firstInput: .init(segments: [.init(quote: firstInput, code: .openQuestion, isUncertain: false)],
+            characterObservations: [rapport], goalUpdates: [], memoryStatus: .complete),
+        druckEingabe: missing])
+    let coordinator = ConversationCoordinator(repository: repository, provider: provider)
+    session = try await coordinator.create(content: session.content, contentHash: "test")
+    session = try await coordinator.send(sessionID: session.id, input: firstInput)
+    #expect(session.state.development?.rapport != nil)
+    let saved = try await coordinator.send(sessionID: session.id, input: druckEingabe)
+    #expect(saved.state.development == session.state.development)
+    #expect(saved.turns.last?.analysis?.memoryStatus == .unavailable)
+    #expect(saved.turns.last?.feedback.contains { $0.ruleID == "warnung.konfrontation" } == true)
+    #expect(await provider.analyses == 2)
+}

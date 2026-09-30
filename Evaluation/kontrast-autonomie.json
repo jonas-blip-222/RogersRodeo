@@ -10,13 +10,34 @@
       "titel": "Aufforderung zur Entscheidung am Ende einer Kette ungefragter Ratschlaege",
       "art": "segment",
       "kontext": [
-        { "speaker": "client", "text": "Sarah übertreibt total. Ich hab das doch im Griff." },
-        { "speaker": "counselor", "text": "Darf ich Ihnen dazu etwas sagen?" },
-        { "speaker": "client", "text": "Na sicher, gerne." },
-        { "speaker": "counselor", "text": "Hör auf zu saufen. Alle außer dir haben schon mitbekommen, dass es zu viel ist." },
-        { "speaker": "client", "text": "Ist ja gut. Kann sein." },
-        { "speaker": "counselor", "text": "Halt dich eher fern von den Jungs, die sind kein guter Einfluss." },
-        { "speaker": "client", "text": "Hm. Die Jungs kenn ich seit der Schule." }
+        {
+          "speaker": "client",
+          "text": "Sarah übertreibt total. Ich hab das doch im Griff."
+        },
+        {
+          "speaker": "counselor",
+          "text": "Darf ich Ihnen dazu etwas sagen?"
+        },
+        {
+          "speaker": "client",
+          "text": "Na sicher, gerne."
+        },
+        {
+          "speaker": "counselor",
+          "text": "Hör auf zu saufen. Alle außer dir haben schon mitbekommen, dass es zu viel ist."
+        },
+        {
+          "speaker": "client",
+          "text": "Ist ja gut. Kann sein."
+        },
+        {
+          "speaker": "counselor",
+          "text": "Halt dich eher fern von den Jungs, die sind kein guter Einfluss."
+        },
+        {
+          "speaker": "client",
+          "text": "Hm. Die Jungs kenn ich seit der Schule."
+        }
       ],
       "eingabe": "Sie sollten sich dann von Sarah trennen, entscheiden Sie sich.",
       "erwarteteWarnung": true,
@@ -28,7 +49,10 @@
       "titel": "Dieselbe Aufforderung ohne draengende Vorgeschichte",
       "art": "segment",
       "kontext": [
-        { "speaker": "client", "text": "Sarah sagt, entweder das Trinken oder sie. Ich weiß echt nicht weiter." }
+        {
+          "speaker": "client",
+          "text": "Sarah sagt, entweder das Trinken oder sie. Ich weiß echt nicht weiter."
+        }
       ],
       "eingabe": "Sie sollten sich dann von Sarah trennen, entscheiden Sie sich.",
       "erwarteteWarnung": true,
@@ -40,7 +64,10 @@
       "titel": "Freiheitsformel, die im selben Zug das richtige Ergebnis benennt",
       "art": "segment",
       "kontext": [
-        { "speaker": "client", "text": "Am Freitag bin ich immer mit den Jungs unterwegs, das ist einfach so." }
+        {
+          "speaker": "client",
+          "text": "Am Freitag bin ich immer mit den Jungs unterwegs, das ist einfach so."
+        }
       ],
       "eingabe": "Sie können das natürlich halten, wie Sie wollen. Vernünftig ist aber nur der eine Weg, und den kennen Sie.",
       "erwarteteWarnung": true,
@@ -52,7 +79,10 @@
       "titel": "Anerkennung als Vorspann einer Forderung",
       "art": "segment",
       "kontext": [
-        { "speaker": "client", "text": "Ich bin heute hergekommen, obwohl ich es für Quatsch halte." }
+        {
+          "speaker": "client",
+          "text": "Ich bin heute hergekommen, obwohl ich es für Quatsch halte."
+        }
       ],
       "eingabe": "Dass Sie überhaupt hier sitzen, rechne ich Ihnen an. Dann hören Sie jetzt auch endlich mit dem Trinken auf.",
       "erwarteteWarnung": true,
@@ -64,9 +94,18 @@
       "titel": "Abwertung und Rat im selben Beitrag",
       "art": "segment",
       "kontext": [
-        { "speaker": "client", "text": "Sarah übertreibt total. Ich hab das doch im Griff." },
-        { "speaker": "counselor", "text": "Darf ich Ihnen dazu etwas sagen?" },
-        { "speaker": "client", "text": "Na sicher, gerne." }
+        {
+          "speaker": "client",
+          "text": "Sarah übertreibt total. Ich hab das doch im Griff."
+        },
+        {
+          "speaker": "counselor",
+          "text": "Darf ich Ihnen dazu etwas sagen?"
+        },
+        {
+          "speaker": "client",
+          "text": "Na sicher, gerne."
+        }
       ],
       "eingabe": "Hör auf zu saufen. Alle außer dir haben schon mitbekommen, dass es zu viel ist.",
       "erwarteteWarnung": true,
@@ -78,13 +117,34 @@
       "titel": "Echte Autonomiebetonung nach einer draengenden Passage",
       "art": "segment",
       "kontext": [
-        { "speaker": "client", "text": "Sarah übertreibt total. Ich hab das doch im Griff." },
-        { "speaker": "counselor", "text": "Darf ich Ihnen dazu etwas sagen?" },
-        { "speaker": "client", "text": "Na sicher, gerne." },
-        { "speaker": "counselor", "text": "Hör auf zu saufen. Alle außer dir haben schon mitbekommen, dass es zu viel ist." },
-        { "speaker": "client", "text": "Ist ja gut. Kann sein." },
-        { "speaker": "counselor", "text": "Halt dich eher fern von den Jungs, die sind kein guter Einfluss." },
-        { "speaker": "client", "text": "Hm. Die Jungs kenn ich seit der Schule." }
+        {
+          "speaker": "client",
+          "text": "Sarah übertreibt total. Ich hab das doch im Griff."
+        },
+        {
+          "speaker": "counselor",
+          "text": "Darf ich Ihnen dazu etwas sagen?"
+        },
+        {
+          "speaker": "client",
+          "text": "Na sicher, gerne."
+        },
+        {
+          "speaker": "counselor",
+          "text": "Hör auf zu saufen. Alle außer dir haben schon mitbekommen, dass es zu viel ist."
+        },
+        {
+          "speaker": "client",
+          "text": "Ist ja gut. Kann sein."
+        },
+        {
+          "speaker": "counselor",
+          "text": "Halt dich eher fern von den Jungs, die sind kein guter Einfluss."
+        },
+        {
+          "speaker": "client",
+          "text": "Hm. Die Jungs kenn ich seit der Schule."
+        }
       ],
       "eingabe": "Ich habe Ihnen gerade zwei Ratschläge hingelegt, ohne Sie zu fragen. Ob Sie davon irgendetwas aufgreifen oder nichts davon, entscheiden Sie; ich nehme Ihnen das nicht ab.",
       "erwarteteWarnung": false,
@@ -96,9 +156,18 @@
       "titel": "Autonomiebetonung neben einem Rat mit Erlaubnis",
       "art": "segment",
       "kontext": [
-        { "speaker": "client", "text": "Der Freitag läuft jedes Mal gleich ab, und danach ärgere ich mich." },
-        { "speaker": "counselor", "text": "Möchten Sie eine Idee dazu hören?" },
-        { "speaker": "client", "text": "Ja, gerne." }
+        {
+          "speaker": "client",
+          "text": "Der Freitag läuft jedes Mal gleich ab, und danach ärgere ich mich."
+        },
+        {
+          "speaker": "counselor",
+          "text": "Möchten Sie eine Idee dazu hören?"
+        },
+        {
+          "speaker": "client",
+          "text": "Ja, gerne."
+        }
       ],
       "eingabe": "Sie könnten den Freitag einmal anders anfangen lassen, etwa mit einem festen Termin am Samstagmorgen. Wenn das für Sie nicht passt, lassen Sie es einfach; das ist Ihre Entscheidung.",
       "erwarteteWarnung": false,
@@ -110,7 +179,10 @@
       "titel": "Autonomiebetonung am Einstieg, ohne Richtungsangabe",
       "art": "segment",
       "kontext": [
-        { "speaker": "client", "text": "Ich bin nur hier, weil Sarah mich geschickt hat. Ich finde das völlig übertrieben." }
+        {
+          "speaker": "client",
+          "text": "Ich bin nur hier, weil Sarah mich geschickt hat. Ich finde das völlig übertrieben."
+        }
       ],
       "eingabe": "Ob Sie hier überhaupt etwas verändern wollen, entscheiden Sie. Ich habe keine Vorgabe, wie Ihr Freitag aussehen soll.",
       "erwarteteWarnung": false,
@@ -122,7 +194,10 @@
       "titel": "Belegte Anerkennung ohne angehaengte Forderung",
       "art": "segment",
       "kontext": [
-        { "speaker": "client", "text": "Letzte Woche bin ich am Freitag einfach nach Hause gefahren. Das war ungewohnt." }
+        {
+          "speaker": "client",
+          "text": "Letzte Woche bin ich am Freitag einfach nach Hause gefahren. Das war ungewohnt."
+        }
       ],
       "eingabe": "Sie sind letzte Woche nach Hause gefahren, obwohl das für Sie ungewohnt war. Wie haben Sie das hinbekommen?",
       "erwarteteWarnung": false,
@@ -134,12 +209,30 @@
       "titel": "Frage nach dem Vorgehen mit vorweggenommener Antwort",
       "art": "segment",
       "kontext": [
-        { "speaker": "client", "text": "Keine Ahnung, worüber wir hier reden sollen." }
+        {
+          "speaker": "client",
+          "text": "Keine Ahnung, worüber wir hier reden sollen."
+        }
       ],
       "eingabe": "Womit möchten Sie heute anfangen? Am besten mit dem Alkohol, alles andere bringt ja nichts.",
       "erwarteteWarnung": true,
       "fachlicheErwartung": "Die Frage sucht keine Zusammenarbeit, weil ihre Antwort im selben Beitrag vorweggenommen und bewertet wird. Erwartet wird fuer den zweiten Satz ein Ratschlags- oder Konfrontationssegment; der erste Satz ist hoechstens als unsichere offene_frage einzuordnen, nicht als gesichertes zusammenarbeit_suchen.",
       "gegenprobe": "Ohne den zweiten Satz ist 'Womit möchten Sie heute anfangen?' ein klares zusammenarbeit_suchen. Der Befund haengt am Zusammenspiel der beiden Saetze, nicht an der Frageform."
+    },
+    {
+      "id": "kontrast11_festlegungsdruck_ohne_richtung",
+      "titel": "Sofortige Festlegung ohne vorgegebenes Ergebnis",
+      "art": "segment",
+      "kontext": [
+        {
+          "speaker": "client",
+          "text": "Ich weiß noch nicht, was ich machen möchte."
+        }
+      ],
+      "eingabe": "Sie müssen sich jetzt entscheiden.",
+      "erwarteteWarnung": true,
+      "fachlicheErwartung": "Kein autonomie_betonen: Obwohl kein Ergebnis vorgegeben wird, erzwingt die Beratung eine sofortige Festlegung. Erwartet wird konfrontation oder ein Ratschlag mit passender Erlaubnisprüfung; zumindest keine sichere positive Autonomieeinordnung.",
+      "gegenprobe": "Eine ausdrückliche Freigabe, sich Zeit zu nehmen, kann echte Autonomiebetonung sein. Entscheidend ist der Festlegungsdruck, nicht das Wort entscheiden."
     }
   ]
 }
