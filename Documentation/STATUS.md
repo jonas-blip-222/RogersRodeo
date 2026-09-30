@@ -3,6 +3,65 @@
 Neueste Prüfungen zuerst. Ältere Abschnitte bleiben als Verlauf erhalten und werden nicht
 rückwirkend umgeschrieben.
 
+## 30. September 2026 · Entkopplung der Analysen und Kontextregeln
+
+Arbeitsbranch `codex/analyse-ausfaelle`, Grundlage `12776cb`. Der vorangegangene Live-Replay
+mit fünf freigegebenen fiktiven Beiträgen ergab zwei angenommene Einordnungen und drei
+Abbrüche schon in der Ziel-/Charakteranalyse. Ursachen waren fehlende Zielbelege, falsche
+Belegquelle und ein Beratersatz als vermeintliche Klientenaussage. Die eigentliche
+Beratungseinordnung wurde in diesen drei Runden nicht aufgerufen. Sieben HTTP-Aufrufe,
+gemeldete Kosten 0,0048271238 USD. Kein Beweis, dass alle ursprünglichen Simulatorausfälle
+dieselbe Ursache hatten; deren rohe Fehlerantworten fehlen.
+
+Die Analysen laufen jetzt parallel. Zielmodellfehler, Verweigerung oder Transportausfall
+verwerfen nur die neue Zielbeobachtung. Eine eigene Zwölf-Sekunden-Frist begrenzt diese
+optionale Aufgabe; globale Cancellation und lokale Integritätsfehler bleiben Fehler.
+Die Beratung bleibt strikt belegvalidiert. Der Coordinator trennt auch erst am Zielzustand
+auffallende Fehler ab, ohne eine gültige Beratungseinordnung erneut anzufordern oder den
+bisherigen Zielzustand zu ändern. `memoryStatus=unavailable` wird gespeichert und im
+Markdown-Export kenntlich gemacht. Kein automatisches „Ohne Einordnung“ für eine defekte
+Beratungseinordnung. Rollenprompt, Modell, Providerregeln und atomarer Turn-Commit bleiben.
+
+Claude lieferte `007d9ac`, übernommen als `8efa7f3`: Leitfaden 0.2 mit Kontextprüfung für
+Autonomie und Gesprächshandlungen, zehn fiktive Kontrastfälle (lokal um eine Druck-Gegenprobe auf elf ergänzt), elf zusätzliche lokale
+Pythonprüfungen. Codex präzisierte zwei pauschale Formulierungen, sodass eine eigenständige
+Würdigung neben einem Rat möglich bleibt. Promptversion 0.7; Regeln 0.5 unverändert.
+Kontrastfälle bleiben fachlicher Arbeitsentwurf, keine Goldreferenz. Keine Stichwortheuristik.
+
+Prüfungen am integrierten Stand: TrainerCore 103, TrainerStorage 5, App-Testlauf 78 Tests;
+vier Opt-in-Livetests deaktiviert und sechs Schlüsselbundtests ausdrücklich ausgeschlossen.
+Python: 22 Tests. `swift build`, `git diff --check` und iOS-Simulator-Build ohne Codesignierung
+erfolgreich. Abschlusslogs: `/private/tmp/rr-codex-permission-y9wa7t08/*-closure.log`;
+iOS-Build ebenfalls darin. Python wurde nach fehlendem PyYAML mit den gepinnten
+Projektabhängigkeiten in einer lokalen Test-venv erfolgreich wiederholt. Die Speichertests prüfen auch den neuen Ausfallstatus
+nach tatsächlichem Schließen/Wiederöffnen der SwiftData-Datei. Kein UI-/iPhone-Gerätetest.
+
+Live-Nachprüfung am 30.09.: nach Entkopplung 3/5 Originalbeiträge angenommen; nach
+Leitfaden- und Erlaubnispräzisierung erneut 3/5. Zwei Einordnungen scheitern weiterhin an
+strikten Beraterbelegen. Der letzte Original-Replay dauerte je Runde 3,07–13,63 s; er prüft
+nur Analysen, keine vollständigen Rollenrunden und belegt deshalb keine Ende-zu-Ende-Latenz.
+In Runde fünf bleibt das falsche Autonomie-Lob für „entscheiden Sie sich“ bestehen. Elf
+Kontrastfälle lieferten formal angenommene Antworten, zeigen aber fachliche Schwächen,
+insbesondere bei Druck als Autonomie und scheinbarer Zusammenarbeit. Keine fachliche
+Trefferquote: der Kontrastsatz ist kein geprüfter Goldstandard.
+
+Eine isolierte Analysemodellprobe mit `anthropic/claude-haiku-4.5` scheiterte zunächst in
+allen fünf Originalrunden mit HTTP 400; ein anschließender begrenzter Ein-Runden-Replay
+am 30.09. bestätigte HTTP 400 in 2,35 s (ein Transportaufruf). OpenRouter meldet nur
+„Provider returned error“; die genaue Parameter-/Schemaursache ist nicht nachgewiesen.
+Der Diagnoseadapter kann künftig zusätzlich eine begrenzte, schlüsselredigierte
+Anbietermeldung speichern. Kein Produktionsmodellwechsel und kein Geschwindigkeits- oder
+Qualitätsversprechen. Figurenmodell Qwen und Rollenprompt bleiben unverändert.
+
+Die unabhängig aktivierbaren Replays in `AnalysisReplayLiveTests.swift` prüfen Original-
+beiträge und Kontrastfälle über den Produktionsadapter; Erwartungen werden nicht an das
+Modell gesendet. Maximal 16 bzw. 32 Transportaufrufe pro Lauf, zusätzlich Stopp vor einem
+weiteren Aufruf ab bereits gemeldeten Kosten von 0,10 USD (keine harte Rechnungsobergrenze).
+`RR_REPLAY_MAX_ROUNDS=1` begrenzt den Original-Replay für gezielte Diagnose.
+Live-Rohdaten liegen außerhalb von Git unter
+`/Users/jonasortmanns/Developer/Agents/codex/2026-09-30_analyse-ausfaelle/`.
+Kein Push oder Merge dieser Änderungen nach main.
+
 ## 30. September 2026 · Erlaubnisablauf mit Speicherneustart geprüft
 
 Auf Basis `2e71356` wurde die bislang fehlende Verknüpfung von Erlaubnisanalyse,

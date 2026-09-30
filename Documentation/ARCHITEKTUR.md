@@ -15,27 +15,37 @@ Der Coordinator verwendet deterministische Validatoren, StateReducer, ContextBui
 
 Die normale Oberfläche bekommt nur das gespeicherte Ergebnis. Ein Turn besteht aus Eingabe, Einordnung, geprüfter Antwort, Zuständen davor/danach, ausgewähltem Tipp und tatsächlichen Messwerten. Offenheit und verborgene Fakten werden nicht als Bewertungsdaten angezeigt oder exportiert.
 
-## Analyseadapter ab Prompt 0.5
+## Analyseadapter ab Prompt 0.7
 
-Der OpenRouter-Adapter teilt die logische Einordnung in zwei getrennte Modellaufrufe:
-Ziel-/Charakterbeobachtungen aus dem bisherigen Verlauf, danach Bewertung des aktuellen
-Beratungssatzes. Die erste Stufe erhält die aktuelle Eingabe nicht. Beide nutzen dieselben
-nummerierten Originalnachrichten; erst ihre geprüfte Zusammenführung wird als `TurnAnalysis`
-an den Coordinator geliefert. Ohne Wiederholung sind es damit zwei Analyseaufrufe plus eine
-Rollenantwort je Runde. Der höhere Aufwand ist eine bewusste Folge der Live-Befunde; Zeiten
-und Prüfgrenzen stehen im neuesten [STATUS.md](STATUS.md).
+Der OpenRouter-Adapter führt Beratungseinordnung und Ziel-/Charakterbeobachtungen parallel aus.
+Beide sehen dieselben nummerierten Originalnachrichten; die Zielanalyse erhält die aktuelle
+Beratereingabe nicht. Ihre Belege werden unabhängig geprüft. Fehlerhafte Modellantworten,
+Transportausfälle oder Verweigerungen dieser ergänzenden Stufe verwerfen nur deren Ergebnis.
+Nach zwölf Sekunden wird eine noch laufende Zielanalyse abgebrochen. Diese Zeitgrenze ist eine
+Produktentscheidung, keine gemessene fachliche Erfolgsquote. Ein globaler Abbruch wird weiterhin
+propagiert, niemals als Teilerfolg gespeichert.
 
-Eine vollständig umschlossene einzelne JSON-Codehülle kann am Adapterrand entfernt werden.
-Es werden keine Inhalte, Zitate oder Referenzen repariert; der vollständige Inhalt durchläuft
-weiter die strikten Validatoren. Gedächtnis- und Beratungsschema bleiben getrennt. Neue
-Charakterbeobachtungen dürfen unter dem Zielvertrag keinen neuen Zielverlauf ohne Zielereignis
-anlegen. Alte optionale Daten bleiben lesbar; Fortsetzung nur mit passender Prompt-/Regelversion.
+Die Beratungseinordnung bleibt strikt validiert: Fehlende Erlaubnisbelege, ungültige Zitate oder
+fehlerhafte Segmente führen weiterhin zu Fehler und ggf. Coordinator-Wiederholung. Eine defekte
+Zielanalyse allein wiederholt keine gültige Beratungseinordnung. Auch erst am vorhandenen
+Zielzustand erkennbare Referenzfehler werden im Coordinator auf den Zielteil begrenzt. Der bisherige
+Ziel-/Beziehungszustand bleibt dann unverändert; `memoryStatus=unavailable` und leere Ziel-/
+Beobachtungslisten dokumentieren den Ausfall dauerhaft. Der Markdown-Export benennt ihn.
+Alte Analysen ohne dieses optionale Metadatum bleiben lesbar. Das Modell darf den Laufzeitstatus
+nicht selbst liefern. Es werden keine Zitate oder Referenzen repariert.
 
 Die atomare Turn-Transaktion bleibt unverändert. Die frühe Rückmeldung erscheint nach der
-geprüften logischen Einordnung und vor der Rollenantwort. Der Rollenprompt erhält weiterhin
-nur sein normales Kontextfenster und keine Zielhypothesen. Die gespeicherten Analysemetriken
-summieren die beiden erfolgreichen Teilaufrufe; fehlgeschlagene Versuche sind darin nicht
-vollständig enthalten und dürfen nicht als vollständige Kosten- oder Wartezeitmessung gelten.
+geprüften Einordnung und vor der Rollenantwort. Der Rollenprompt erhält weiterhin sein normales
+Kontextfenster und keine Zielhypothesen. Die Analysemetrik enthält die tatsächlich verstrichene
+Zeit beider parallelen Aufgaben. Tokenzahlen werden nur addiert, wenn beide erfolgreichen
+Teilaufrufe sie melden; bei fehlender Zielanalyse bleiben sie unbekannt. Die gesonderte Messspur
+enthält auch Fehlversuche und abgebrochene Aufrufe. Keine dieser Tokenangaben ersetzt eine
+vollständige Abrechnung des Anbieters, insbesondere nach Abbruch.
+
+Prompt 0.7 und Inhaltsleitfaden 0.2 unterscheiden den neuen Stand von bisherigen Sitzungen.
+Regeln 0.5 und Rückmeldungsbausteine 0.3 bleiben unverändert. Offene alte Sitzungen können wegen
+der Versionsbindung weiterhin gelesen/exportiert, aber nicht unter geändertem Prompt fortgesetzt
+werden. Keine Modell-, Provider- oder Rollenpromptänderung.
 
 ## Ausführung und Persistenz
 
