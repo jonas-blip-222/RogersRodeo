@@ -47,6 +47,12 @@ Regeln 0.5 und Rückmeldungsbausteine 0.3 bleiben unverändert. Offene alte Sitz
 der Versionsbindung weiterhin gelesen/exportiert, aber nicht unter geändertem Prompt fortgesetzt
 werden. Keine Modell-, Provider- oder Rollenpromptänderung.
 
+Bei ausdrücklich konfigurierten Anthropic-Modellen verwendet der Adapter für die beiden
+Analyseschemata gemeinsame Belegdefinitionen (`$defs`/`$ref`). Die wiederholten nullable
+Objekte überschritten sonst die Grammatikgrenze des Anbieters. Das ausgegebene JSON und die
+lokale Validierung bleiben gleich; Qwen- und Rollenschemata behalten ihre bisherige Form.
+Das ist eine Schnittstellenkorrektur, keine automatische Modellumschaltung.
+
 ## Ausführung und Persistenz
 
 1. Eingabe als PendingTurn mit UUID und erwarteter Revision sichern.

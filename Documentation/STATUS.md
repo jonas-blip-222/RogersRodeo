@@ -3,6 +3,46 @@
 Neueste Prüfungen zuerst. Ältere Abschnitte bleiben als Verlauf erhalten und werden nicht
 rückwirkend umgeschrieben.
 
+## 30. September 2026 · Claude-Schemafehler eingegrenzt und behoben
+
+Jonas' Präzisierung: bei Claude-Aufträgen zum Coden mindestens Sonnet verwenden; Lukas'
+Rollenmodell bleibt erhalten. Die Haiku-Probe betraf die Einordnung, keinen Coding-Agenten.
+Kein neuer Coding-Agent wurde in dieser Fortsetzung beauftragt.
+
+Ein begrenzter Sonnet-4.6-Aufruf lieferte die konkrete Anbietermeldung: „The compiled grammar
+is too large“. Enum-Werte nur in Beschreibungen zu verschieben beseitigte den Fehler nicht;
+diese Variante wurde verworfen. Wiederholte Belegobjekte als gemeinsame `$defs` mit `$ref`
+zu senden behob ihn. NullableEvidence bleibt die Vereinigung aus dem ursprünglichen
+Evidence-Objekt und null; erforderliche Felder, Aufzählungen und strikte lokale Belegprüfung
+bleiben unverändert. Nur Anthropic-Analyseschemata verwenden diese kompakte Darstellung;
+Qwen-Anfragen und der Rollenvertrag bleiben gleich. Keine automatische Ausweichroute.
+
+Live über den Produktionsadapter mit `anthropic/claude-sonnet-4.6`:
+
+- Original-Replay: **5/5** Beratungseinordnungen angenommen, 2,22–5,19 s je Runde.
+  Runde zwei verwirft nur den Zielteil (`memoryStatus=unavailable`).
+  Runde fünf enthält kein falsches Autonomie-Lob mehr. Runde drei fasst jedoch Rat und
+  Abwertung vollständig als Konfrontation zusammen; die Ratserlaubnis wird dadurch nicht
+  eigenständig erfasst. Keine vollständigen Rollenrunden, kein Ende-zu-Ende-Zeitnachweis.
+- Kontraste: **10/11** formal angenommen. Die Freiheitsformel vor der vorgegebenen
+  „richtigen“ Antwort erhält weiterhin Autonomie; Rat und Abwertung werden in Kontrast05
+  nicht getrennt; Kontrast10 wird lokal als invalidAnalysis abgewiesen. Weitere Codes
+  bleiben fachlich fragwürdig. Keine Goldreferenz und keine fachliche Trefferquote.
+- Zehn bzw. 22 Transportaufrufe; gemeldete Kosten **0,159822 + 0,330024 USD**.
+  Opt-in-Diagnoseläufe können bis 0,50 USD gemeldeten Kosten stoppen; Standard bleibt
+  0,10 USD. Der Stopp gilt vor weiteren Aufrufen und ist keine harte Rechnungsobergrenze.
+
+Der Schemafehler ist beseitigt, ein Produktionsmodellwechsel bleibt unentschieden. Modell-
+und Sitzungsidentität werden nicht verändert; die Messspur der Probe nennt Sonnet korrekt.
+Neue Liveberichte: `live-final-replay-20260930T194741Z-a3c3e3` und
+`live-final-contrast-20260930T194742Z-7bb840` im bisherigen externen Diagnoseordner.
+
+Abschluss: Core 103, Storage 5, App **79** Tests sowie Swift- und iOS-Simulator-Build
+bestanden. Python 22 Tests aus dem vorangegangenen Abschluss; keine Python-/Inhaltsänderung
+im Repository seither. Neue Logs: `/private/tmp/rr-codex-permission-y9wa7t08/*-refs-final.log`.
+Der neue Test prüft gemeinsame Belegdefinitionen, erhaltene Nullvariante und Aufzählungen,
+strikten Modus sowie unveränderte Qwen- und Rollenformate. Kein Push, kein Merge nach main.
+
 ## 30. September 2026 · Entkopplung der Analysen und Kontextregeln
 
 Arbeitsbranch `codex/analyse-ausfaelle`, Grundlage `12776cb`. Der vorangegangene Live-Replay
