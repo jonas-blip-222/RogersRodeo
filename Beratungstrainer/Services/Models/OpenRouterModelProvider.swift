@@ -58,12 +58,45 @@ enum JSONValue: Encodable, Sendable, Equatable {
         encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
         return try encoder.encode(self)
     }
+
+    /// Structured-output providers follow schema property order. Produce the segments
+    /// before their permission evidence, and each quote before its classification.
+    /// All leaves still use JSONEncoder escaping; ordinary serialization stays canonical.
+    func serializedForRequest() throws -> Data {
+        func render(_ value: JSONValue) throws -> String {
+            switch value {
+            case let .object(fields):
+                let preferred: [String]
+                if Set(fields.keys) == ["segments", "permissions", "doubleSidedReflection"] {
+                    preferred = ["segments", "permissions", "doubleSidedReflection"]
+                } else if Set(fields.keys) == ["quote", "code", "isUncertain", "supportingClientQuote"] {
+                    preferred = ["quote", "code", "isUncertain", "supportingClientQuote"]
+                } else { preferred = fields.keys.sorted() }
+                let entries = try preferred.map { key in
+                    let escaped = String(decoding: try JSONValue.string(key).serialized(), as: UTF8.self)
+                    return escaped + ":" + (try render(fields[key]!))
+                }
+                return "{" + entries.joined(separator: ",") + "}"
+            case let .array(values):
+                return "[" + (try values.map(render)).joined(separator: ",") + "]"
+            default: return String(decoding: try value.serialized(), as: UTF8.self)
+            }
+        }
+        return Data(try render(self).utf8)
+    }
 }
 
 // MARK: - Einstellungen
 
 struct OpenRouterConfiguration: Sendable {
+    /// The figure keeps the established Qwen model.
     var model = "qwen/qwen3.8-27b"
+    /// Live comparison 30.09.2026: separate model for both analysis stages. nil selects `model`
+    /// with the historical analysis settings for explicit diagnostic comparisons.
+    var analysisModel: String? = "anthropic/claude-sonnet-5.5"
+    var analysisModelReasoning: Bool? = nil // This endpoint requires reasoning; use its default.
+    var analysisModelTokens = 4000
+    var analysisModelTokensRetry = 8000
     var endpoint = URL(string: "https://openrouter.ai/api/v1/chat/completions")!
     /// Historische Messung des kleineren Analysevertrags vor dem Zielgedächtnis:
     /// E03: Mit eingeschaltetem Überlegen reichten 768 Token nicht; deshalb standen hier
@@ -433,7 +466,7 @@ enum OpenRouterSchema {
     ])
 
     static let memoryAnalysis = analysisSubset(["goalUpdates", "characterObservations"])
-    static let counselorAnalysis = analysisSubset(["segments", "doubleSidedReflection", "permissions"])
+    static let counselorAnalysis = analysisSubset(["segments", "permissions", "doubleSidedReflection"])
     private static func analysisSubset(_ fields: [String]) -> JSONValue {
         guard case let .object(root) = analysis, case let .object(properties)? = root["properties"] else {
             preconditionFailure("Statisches Analyseschema muss ein Objekt sein")
@@ -509,11 +542,11 @@ enum OpenRouterSchema {
             .joined(separator: "\n")
     }
 
-    /// Ergänzt den eingefrorenen Leitfaden um den expliziten Analysevertrag 0.7.
+    /// Ergänzt den eingefrorenen Leitfaden um den expliziten Analysevertrag 0.8.
     static func analysisSystemPrompt(_ guide: String) -> String {
         guide + """
 
-        Ergänzung zum Ausgabevertrag, Promptstand 0.7: Die ältere Anweisung „nur segments“
+        Ergänzung zum Ausgabevertrag, Promptstand 0.8: Die ältere Anweisung „nur segments“
         wird ersetzt durch segments, doubleSidedReflection (Objekt oder null) und permissions.
         Erkenne eine doppelseitige Reflexion nur, wenn die Beratung zwei Seiten derselben
         Veränderung aus tatsächlichen Klientenaussagen aufgreift: sustain (Gründe fürs
@@ -531,6 +564,12 @@ enum OpenRouterSchema {
         Die input-Ausschnitte dürfen sich nicht überlappen. Fehlende oder gekürzte Belege:
         doubleSidedReflection=null. Bei vorhandenen Belegen, aber unsicherer Deutung:
         isUncertain=true. Bei Widerruf, Zielwechsel oder Widerspruch keine sichere Beobachtung.
+
+        Bestimme zunächst sämtliche Gesprächshandlungen nach dem Leitfaden. Die zusätzliche
+        Erlaubnisprüfung darf keinen Rat verschwinden lassen oder in Konfrontation umbenennen.
+        Vor Ausgabe müssen Segmentcode und Erlaubnislage zusammenpassen: Ton und Erlaubnis
+        sind getrennte Fragen. Bei belegtem Ja ist auch ein schroffer erster Rat mit Erlaubnis;
+        eine eigenständige Abwertung daneben wird separat als konfrontation erfasst.
 
         permissions: Erlaubnislage für JEDEN Ratschlag der aktuellen Eingabe, also für jedes
         Segment mit ratschlag_mit_erlaubnis oder ratschlag_ohne_erlaubnis. Kein Ratschlag: [].
@@ -588,6 +627,10 @@ enum OpenRouterSchema {
         - Bei fehlender Beleggrundlage unklar mit isUncertain=true; nicht aus dem Ton raten.
         Kopiere messageIndex und Sprecher aus dem nummerierten Verlauf; die Erlaubnisfrage
         ist eine Beratungsnachricht, das Ja eine Klientennachricht, der frühere Rat Beratung.
+        Abschließende Konsistenzprüfung: Jedes Ratschlagssegment hat genau einen permissions-
+        Eintrag, und jeder Eintrag gehört zu einem Ratschlagssegment. erteilt verlangt
+        ratschlag_mit_erlaubnis; sichere fehlende/verbrauchte Erlaubnis verlangt
+        ratschlag_ohne_erlaubnis. Gib niemals einen Rat mit permissions=[] aus.
         Diese Stufe liefert ausschließlich segments, doubleSidedReflection und permissions.
         Zielgedächtnis und Charakterbeobachtungen werden separat erhoben und gehören nicht
         in diese Ausgabe.
@@ -943,8 +986,11 @@ actor OpenRouterModelProvider: TrainerModelProvider {
     /// Der Coordinator vergleicht diesen Wert mit der gespeicherten Sitzungsidentität und
     /// verweigert das Fortsetzen bei Abweichung. Deshalb stabil halten.
     nonisolated func descriptor() -> ModelDescriptor {
-        ModelDescriptor(id: "openrouter/\(configuration.model)",
-                        artifactRevision: configuration.model,
+        let identity = configuration.analysisModel.map {
+            "role=\(configuration.model);analysis=\($0)"
+        } ?? configuration.model
+        return ModelDescriptor(id: "openrouter/\(identity)",
+                        artifactRevision: identity,
                         runtimeRevision: "openrouter-chat-completions-v1",
                         // Aus der öffentlichen Modellliste laut E01, nicht selbst gemessen.
                         effectiveContextLimit: 1_000_000)
@@ -985,8 +1031,10 @@ actor OpenRouterModelProvider: TrainerModelProvider {
             system: OpenRouterSchema.analysisSystemPrompt(request.codingGuide),
             user: OpenRouterSchema.analysisPrompt(request),
             responseFormat: OpenRouterSchema.responseFormat(name: "CounselorAnalysis", schema: OpenRouterSchema.counselorAnalysis),
-            temperature: configuration.analysisTemperature, reasoning: configuration.analysisReasoning,
-            budget: configuration.analysisTokens, retryBudget: configuration.analysisTokensRetry,
+            temperature: configuration.analysisTemperature,
+            reasoning: configuration.analysisModel == nil ? configuration.analysisReasoning : configuration.analysisModelReasoning,
+            budget: configuration.analysisModel == nil ? configuration.analysisTokens : configuration.analysisModelTokens,
+            retryBudget: configuration.analysisModel == nil ? configuration.analysisTokensRetry : configuration.analysisModelTokensRetry,
             unusableFailure: .invalidAnalysis) { data in
                 let analysis = try OutputValidator.decodeAnalysis(OpenRouterResponse.analysisPayload(data), input: request.currentInput,
                                                                   context: request.recentMessages)
@@ -1036,8 +1084,10 @@ actor OpenRouterModelProvider: TrainerModelProvider {
         try await call(stage: .goalMemory,
             system: OpenRouterSchema.memorySystemPrompt(), user: OpenRouterSchema.memoryPrompt(request),
             responseFormat: OpenRouterSchema.responseFormat(name: "GoalAndCharacterAnalysis", schema: OpenRouterSchema.memoryAnalysis),
-            temperature: configuration.analysisTemperature, reasoning: configuration.analysisReasoning,
-            budget: configuration.analysisTokens, retryBudget: configuration.analysisTokensRetry,
+            temperature: configuration.analysisTemperature,
+            reasoning: configuration.analysisModel == nil ? configuration.analysisReasoning : configuration.analysisModelReasoning,
+            budget: configuration.analysisModel == nil ? configuration.analysisTokens : configuration.analysisModelTokens,
+            retryBudget: configuration.analysisModel == nil ? configuration.analysisTokensRetry : configuration.analysisModelTokensRetry,
             unusableFailure: .invalidAnalysis) { data in
                 try OpenRouterResponse.decodeMemory(data, context: request.recentMessages)
             }
@@ -1101,7 +1151,11 @@ actor OpenRouterModelProvider: TrainerModelProvider {
                       validate: (Data) throws -> Value) async throws -> MeasuredResult<Value> {
         guard let key else { throw TrainerFailure.modelUnavailable }
         let sink = try resolveTrace()
-        let body = OpenRouterSchema.body(configuration: configuration, system: system, user: user,
+        var stageConfiguration = configuration
+        if stage != .roleReply, let model = configuration.analysisModel {
+            stageConfiguration.model = model
+        }
+        let body = OpenRouterSchema.body(configuration: stageConfiguration, system: system, user: user,
                                          responseFormat: responseFormat, temperature: temperature,
                                          maxTokens: maxTokens, reasoning: reasoning)
         var request = URLRequest(url: configuration.endpoint)
@@ -1110,12 +1164,12 @@ actor OpenRouterModelProvider: TrainerModelProvider {
         request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("RogersRodeo", forHTTPHeaderField: "X-Title")
-        do { request.httpBody = try body.serialized() } catch { throw TrainerFailure.artifactInvalid }
+        do { request.httpBody = try body.serializedForRequest() } catch { throw TrainerFailure.artifactInvalid }
         try Task.checkCancellation()
 
         var event = ModelTraceEvent(kind: .callStarted)
         event.startedAt = event.timestamp
-        event.stage = stage; event.model = configuration.model; event.budget = maxTokens
+        event.stage = stage; event.model = stageConfiguration.model; event.budget = maxTokens
         event.promptVersion = ConversationCoordinator.promptVersion; event.rulesVersion = ConversationCoordinator.rulesVersion
         event.temperature = temperature; event.reasoningEnabled = reasoning
         event.budgetAttempt = budgetAttempt; event.retryReason = retryReason

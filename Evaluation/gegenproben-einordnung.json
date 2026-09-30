@@ -1,0 +1,135 @@
+{
+  "schemaVersion": 1,
+  "quelle": "Unabhängige Gegenfälle aus Claude-Sonnet-5-Review, von Codex präzisiert; nicht im Prompt enthalten.",
+  "status": "draft",
+  "istGoldreferenz": false,
+  "hinweis": "Ausschließlich fiktive Übungsfälle. Fachliche Arbeitsentwürfe, keine Goldreferenz. Erwartungen gelangen nicht an das Modell. Keine fachliche Trefferquote.",
+  "faelle": [
+    {
+      "id": "gegen01_freigabe_neben_vorschlag",
+      "titel": "Freigabe neben einem erlaubten Vorschlag",
+      "art": "segment",
+      "kontext": [
+        {
+          "speaker": "client",
+          "text": "Die Einladungen am Freitag stressen mich."
+        },
+        {
+          "speaker": "counselor",
+          "text": "Möchten Sie eine Idee hören, wie Sie damit umgehen könnten?"
+        },
+        {
+          "speaker": "client",
+          "text": "Ja, gerne."
+        }
+      ],
+      "eingabe": "Sie könnten die nächste Einladung erst einmal offenlassen. Wenn Sie lieber direkt zusagen möchten, ist das genauso Ihre Entscheidung.",
+      "fachlicheErwartung": "Ein Rat mit standing=erteilt und eine echte Autonomiebetonung. Die Alternative wird nicht abgewertet.",
+      "erwarteteWarnung": false,
+      "gegenprobe": "Ein Vorschlag allein darf die folgende echte Freigabe nicht entwerten."
+    },
+    {
+      "id": "gegen02_sachliche_direktheit",
+      "titel": "Sachliches Spiegeln trotz direktem Ton",
+      "art": "segment",
+      "kontext": [
+        {
+          "speaker": "client",
+          "text": "In den letzten vier Wochen habe ich mich jeden Freitag mit den Jungs getroffen."
+        }
+      ],
+      "eingabe": "Sie waren also an allen vier Freitagen mit den Jungs unterwegs. Das halten wir erst einmal fest.",
+      "fachlicheErwartung": "Sachliche Information oder einfache Reflexion, keine Konfrontation und kein Ratschlag. Der Bericht wird nicht moralisch bewertet.",
+      "erwarteteWarnung": false,
+      "gegenprobe": "Direkter Ton allein ist kein Druck."
+    },
+    {
+      "id": "gegen03_abwertung_ohne_rat",
+      "titel": "Abwertung ohne Handlungsempfehlung",
+      "art": "segment",
+      "kontext": [
+        {
+          "speaker": "client",
+          "text": "Ich habe es diese Woche nicht geschafft, Sarah anzurufen."
+        }
+      ],
+      "eingabe": "Das ist wieder diese billige Ausrede. Auf Sie kann man sich wirklich nicht verlassen.",
+      "fachlicheErwartung": "Konfrontation ohne erfundenen Rat; permissions bleibt leer.",
+      "erwarteteWarnung": true,
+      "gegenprobe": "Die neue Trennregel darf ohne Empfehlung keinen Ratschlag erzeugen."
+    },
+    {
+      "id": "gegen04_zwei_raete_ein_ja",
+      "titel": "Ein Ja vor zwei eigenständigen Ratschlägen",
+      "art": "segment",
+      "kontext": [
+        {
+          "speaker": "client",
+          "text": "Meine Woche ist immer so voll, und dann verpasse ich auch noch die Anmeldung zum Kurs."
+        },
+        {
+          "speaker": "counselor",
+          "text": "Darf ich Ihnen einen Vorschlag für diese Woche machen?"
+        },
+        {
+          "speaker": "client",
+          "text": "Ja, gerne."
+        }
+      ],
+      "eingabe": "Tragen Sie einen freien Abend in Ihren Kalender ein. Rufen Sie außerdem morgen beim Kursbüro an.",
+      "fachlicheErwartung": "Zwei Ratschläge: erster mit erteilt, zweiter ohne Erlaubnis mit bereits_verbraucht. consumedBy des zweiten verweist auf den ersten Rat in der aktuellen Eingabe.",
+      "erwarteteWarnung": true,
+      "gegenprobe": "Ein Ja wird nicht zweimal verwendet, auch im selben Beitrag nicht."
+    },
+    {
+      "id": "gegen05_ausdrueckliche_ablehnung",
+      "titel": "Rat nach ausdrücklicher Ablehnung",
+      "art": "segment",
+      "kontext": [
+        {
+          "speaker": "client",
+          "text": "Ich komme beim Planen meiner Woche gerade nicht weiter."
+        },
+        {
+          "speaker": "counselor",
+          "text": "Darf ich Ihnen dazu einen Rat geben?"
+        },
+        {
+          "speaker": "client",
+          "text": "Nein, ich möchte erst selbst überlegen."
+        }
+      ],
+      "eingabe": "Tragen Sie Ihre Termine sofort in einen Kalender ein.",
+      "fachlicheErwartung": "Rat ohne Erlaubnis mit standing=abgelehnt und der tatsächlichen Ablehnung als Beleg. Keine Würdigung und keine Autonomiebetonung.",
+      "erwarteteWarnung": true,
+      "gegenprobe": "Ratlosigkeit oder frühere Zustimmung ersetzen diese konkrete Ablehnung nicht."
+    },
+    {
+      "id": "gegen06_andere_situation",
+      "titel": "Erlaubnis gehört zu einer früheren anderen Sache",
+      "art": "segment",
+      "kontext": [
+        {
+          "speaker": "client",
+          "text": "Ich verliere manchmal den Überblick über meine Arbeitszeiten."
+        },
+        {
+          "speaker": "counselor",
+          "text": "Darf ich Ihnen einen Tipp nur zur Terminplanung geben?"
+        },
+        {
+          "speaker": "client",
+          "text": "Ja, dazu gerne."
+        },
+        {
+          "speaker": "client",
+          "text": "Die Termine sind inzwischen geklärt. Jetzt möchte ich darüber reden, wie ich Sarah von meinem neuen Job erzähle."
+        }
+      ],
+      "eingabe": "Schreiben Sie Sarah heute noch einen Brief.",
+      "fachlicheErwartung": "Rat ohne Erlaubnis; die frühere Zustimmung zur Terminplanung erlaubt keinen Rat zur Kommunikation mit Sarah. nicht_eingeholt oder fruehere_situation ist vertretbar; nicht erteilt und mangels früheren Rats nicht bereits_verbraucht.",
+      "erwarteteWarnung": true,
+      "gegenprobe": "Gleicher Gesprächspartner bedeutet keine dauerhafte Erlaubnis."
+    }
+  ]
+}

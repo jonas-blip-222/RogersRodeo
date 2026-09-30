@@ -244,7 +244,7 @@ private func traceSession(_ coordinator: ConversationCoordinator) async throws -
         _ = try await coordinator.send(sessionID: session.id, input: "Hallo")
     }
     let counselor = collector.calls.filter { $0.stage == .counselorAnalysis }
-    #expect(counselor.map(\.budget) == [1500, 4000, 1500, 4000])
+    #expect(counselor.map(\.budget) == [4000, 8000, 4000, 8000])
     #expect(counselor.map(\.coordinatorAttempt) == [1, 1, 2, 2])
     #expect(counselor.map(\.outcome) == Array(repeating: .generationError, count: 4))
     #expect(collector.events.last?.result == "invalidAnalysis")
@@ -317,4 +317,37 @@ private func traceSession(_ coordinator: ConversationCoordinator) async throws -
     OpenRouterTraceMetadata.fill(&event, data: traceEnvelope(String(repeating: "x \n", count: 100), finish: "length"))
     #expect(event.suspectedWhitespaceLoop == false) // Viele Leerzeichen, aber kein langer Lauf.
     #expect(event.longestWhitespaceRun == 2)
+}
+
+
+@Test func stufenmodelleBleibenInAnfrageMessspurUndSitzungsidentitaetKonsistent() async throws {
+    let stub = TraceTransport([.response(traceEnvelope(traceAnalysis), 200), .response(traceEnvelope(traceReply), 200)],
+                              memory: [.response(traceEnvelope(traceMemory), 200)])
+    let collector = TraceCollector()
+    let provider = traceProvider(stub, collector: collector)
+    try await provider.prepare()
+    _ = try await provider.analyze(.init(codingGuide: "G", recentMessages: [], currentInput: "Hallo"))
+    _ = try await provider.reply(traceRequest)
+    let expected = ["CounselorAnalysis": "anthropic/claude-sonnet-5.5", "GoalAndCharacterAnalysis": "anthropic/claude-sonnet-5.5", "ClientReply": "qwen/qwen3.8-27b"]
+    for request in await stub.requests {
+        let body = try #require(JSONSerialization.jsonObject(with: request.httpBody!) as? [String: Any])
+        let format = try #require(body["response_format"] as? [String: Any])
+        let wrapper = try #require(format["json_schema"] as? [String: Any])
+        let name = try #require(wrapper["name"] as? String)
+        #expect(body["model"] as? String == expected[name])
+        if name != "ClientReply" {
+            #expect(body["reasoning"] == nil)
+            #expect(body["max_tokens"] as? Int == 4000)
+        } else {
+            #expect((body["reasoning"] as? [String: Bool])?["enabled"] == false)
+        }
+    }
+    #expect(collector.calls.count == 3)
+    #expect(collector.calls.first { $0.stage == .counselorAnalysis }?.model == expected["CounselorAnalysis"])
+    #expect(collector.calls.first { $0.stage == .goalMemory }?.model == expected["GoalAndCharacterAnalysis"])
+    #expect(collector.calls.first { $0.stage == .roleReply }?.model == expected["ClientReply"])
+    var allQwen = OpenRouterConfiguration(); allQwen.analysisModel = nil
+    var otherCounselor = OpenRouterConfiguration(); otherCounselor.analysisModel = "anthropic/other"
+    #expect(provider.descriptor() != OpenRouterModelProvider(configuration: allQwen).descriptor())
+    #expect(provider.descriptor() != OpenRouterModelProvider(configuration: otherCounselor).descriptor())
 }

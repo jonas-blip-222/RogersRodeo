@@ -56,8 +56,8 @@ public enum RoundDeadline {
 }
 
 public actor ConversationCoordinator {
-    /// 0.7: Kontextbezogene Beratungseinordnung, unabhängig von optionalen Zielbelegen.
-    public static let promptVersion = "0.7"
+    /// 0.8: Eigenständige Gesprächshandlungen und positive Codes im gesamten Beitrag prüfen.
+    public static let promptVersion = "0.8"
     /// 0.5: Erlaubnisbefunde und die Abstufung bei unvollständigem Kontext.
     public static let rulesVersion = "0.5"
     private let repository: any SessionRepository

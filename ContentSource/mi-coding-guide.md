@@ -1,4 +1,4 @@
-# Lernschema MI · Entwurf 0.2
+# Lernschema MI · Entwurf 0.3
 
 Dieses angepasste Lernschema ist fachlich noch nicht geprüft. Es ist keine standardisierte MITI-Bewertung.
 
@@ -16,22 +16,22 @@ Ordne die aktuelle Berateräußerung anhand des übergebenen Gesprächs ein. Zit
 | information | Sachliche Information ohne Handlungsaufforderung. |
 | ratschlag_ohne_erlaubnis | Empfehlung ohne im verfügbaren Kontext erkennbare Erlaubnis. |
 | ratschlag_mit_erlaubnis | Empfehlung mit erkennbarer, weiterhin passender Erlaubnis im Kontext. |
-| konfrontation | Direktes Abwerten, Moralisieren oder argumentatives Überstimmen. |
-| sonstiges | Organisatorische oder andere eindeutig erkannte Sprache ohne passendere Kategorie. |
+| konfrontation | Direktes Abwerten, Moralisieren, argumentatives Überstimmen oder Erzwingen einer sofortigen Festlegung gegen geäußerte Unentschiedenheit. Sachliche Direktheit allein genügt nicht. |
+| sonstiges | Organisatorische oder andere eindeutig erkannte Sprache ohne passendere Kategorie. Kein Ausweg, um eine erkennbare Empfehlung oder Druck unbenannt zu lassen. |
 
 ## Funktion im Kontext
 
 Maßgeblich ist, was eine Äußerung im gezeigten Gespräch tut, nicht, wie sie formuliert ist. Dieselbe Wortfolge kann an einer anderen Stelle eine andere Funktion haben. Entscheide nie anhand einzelner Wörter, Höflichkeitsformeln oder Satzmuster, sondern anhand der Handlung, die der Beitrag an dieser Stelle vollzieht.
 
-1. **Segmentiere nach Handlungen, nicht nach Satzzeichen.** Ein Teilsatz erhält nur dann ein eigenes Segment, wenn er für sich genommen eine eigene Gesprächshandlung ist. Unterstreicht er lediglich die unmittelbar davor stehende Handlung, begründet er sie oder fordert er zu ihrer Umsetzung auf, gehört er in deren Segment und trägt deren Code.
-2. **Positive Einordnungen brauchen einen Beleg im Beitrag selbst.** Für wuerdigung, komplexe_reflexion, autonomie_betonen und zusammenarbeit_suchen muss die Funktion an der Stelle erkennbar sein, nicht nur die dazu passende Wortwahl. Eine nur vorgeschobene Anerkennung, mit der eine Forderung durchgesetzt wird, ist Teil dieser Forderung. Eine eigenständige, konkret belegte Anerkennung kann dagegen neben einem Ratschlag stehen. Eine Frage nach dem Vorgehen, deren Antwort im selben Beitrag schon vorweggenommen wird, sucht keine Zusammenarbeit.
-3. **Der gezeigte Verlauf gehört zur Bedeutung.** Hat die Beratung in den vorangegangenen Zügen die Richtung vorgegeben, gedrängt oder abgewertet, wird eine freilassende Formulierung dadurch nicht automatisch falsch — die Belegpflicht aus Schritt 2 wiegt dann aber schwerer, weil die Formulierung ebenso gut den Druck fortsetzen kann. Das Gesprächsklima allein begründet weder eine positive noch eine negative Einordnung.
-4. **Abwertung und Rat schließen sich nicht aus.** Enthält ein Beitrag beides, segmentiere beides: konfrontation für den abwertenden oder überstimmenden Teil, ratschlag_mit_erlaubnis oder ratschlag_ohne_erlaubnis für die Empfehlung. Lass nicht eine der beiden Handlungen entfallen, weil die andere schon codiert ist.
-5. **Unsicherheit ist die richtige Antwort bei dünnem Beleg.** Trägt der Kontext die positive Funktion nicht, ohne dass eine andere Einordnung klar belegt wäre, setze isUncertain=true. Eine unsichere positive Einordnung ist besser als eine sichere ohne Beleg.
+1. **Lies zuerst den ganzen Beitrag.** Prüfe seine Handlungen im Gesprächskontext, erst danach ihre Textgrenzen. Eine spätere Einschränkung im selben Beitrag gehört zur Bedeutung einer früheren Freiheits- oder Zusammenarbeitsformel.
+2. **Erhalte jede eigenständige Empfehlung und jede eigenständige Abwertung.** Eine konkrete Handlung empfehlen ist ein Ratschlag, auch im Imperativ und in schroffem Ton. Folgt eine Abwertung der Person oder ihrer Sicht, bekommt sie ein eigenes konfrontation-Segment; sie darf den Rat nicht verschlucken. Eine bloße sachliche Begründung oder Bekräftigung desselben Rats bleibt dagegen in dessen Segment. Beurteile Handlungen, nicht Satzzeichen. Die Erlaubnis wird für jeden erkannten Rat anschließend geprüft.
+3. **Positive Codes brauchen eine wirksame Funktion im ganzen Beitrag.** Wird eine Wahl im selben Beitrag ausdrücklich abgewertet oder nur eine Antwort als akzeptabel hingestellt, ist die scheinbare Freigabe kein autonomie_betonen. Wird eine Frage nach dem Vorgehen sofort verbindlich selbst beantwortet, ist sie kein zusammenarbeit_suchen. Fasse die Formel mit der steuernden Handlung zusammen oder erfasse die belegte steuernde Handlung; vergib kein positives Segment für eine zurückgenommene Freigabe.
+4. **Eigenständige Anerkennung und echte Freigabe bleiben möglich.** Ein Rat im selben Beitrag entwertet sie nicht automatisch. Eine konkret belegte Stärke kann gewürdigt werden; die ausdrückliche, nicht wieder zurückgenommene Möglichkeit, einen Vorschlag abzulehnen, kann autonomie_betonen sein. Auch nach früherem Drängen kann die Beratung jetzt Druck zurücknehmen. Das Gesprächsklima allein entscheidet keinen Code.
+5. **Unterscheide fehlenden Beleg von Gegenbeleg.** Bei mehrdeutiger Funktion setze isUncertain=true. Wenn der ganze Beitrag die positive Funktion klar aufhebt, wähle die belegte andere Handlung statt eines unsicheren positiven Codes. Bloßes Wiedergeben einer Klientenaussage kann einfache_reflexion sein; freundlicher Ton allein belegt keine Würdigung.
 
 ## Prüfschritte für autonomie_betonen
 
-Dass von Entscheiden, Wählen oder Selbstbestimmung die Rede ist, genügt nicht. Beide Schritte müssen zutreffen; sonst ist das Segment kein autonomie_betonen, sondern gehört zu der Handlung, in die es eingebettet ist.
+Dass von Entscheiden, Wählen oder Selbstbestimmung die Rede ist, genügt nicht. Beide Schritte müssen im gesamten aktuellen Beitrag zutreffen, einschließlich aller späteren Sätze; sonst ist die Formulierung kein autonomie_betonen, sondern gehört zur belegten steuernden Handlung.
 
 1. **Offenheit:** Bleibt nach diesem Beitrag mehr als ein Ergebnis in Ordnung, ohne dass die Person der Beratung widersprechen müsste? Benennt die Beratung im selben Zug ein Ergebnis als das richtige oder erwartete, lautet die Antwort nein.
 2. **Richtung des Drucks:** Nimmt die Formulierung Druck von der Person — sie darf ablehnen, es lassen, später entscheiden — oder gibt sie den Druck an sie zurück, indem sie eine Festlegung verlangt? Verlangt sie eine sofortige Festlegung, ist sie keine Freigabe der Entscheidung — auch dann nicht, wenn mehrere Ergebnisse offenbleiben. Das gilt ebenso für Nachdruck auf eine zuvor vorgegebene Richtung.
@@ -40,4 +40,4 @@ Neben einem Ratschlag bleibt echte Autonomiebetonung möglich und ist dann als e
 
 Bei mehreren Funktionen segmentieren. Wenn die Bedeutung oder Erlaubnis im verfügbaren Kontext unklar ist, isUncertain=true setzen; sonstiges ist kein Ersatz für Unsicherheit. Komplexe Reflexion und Würdigung benötigen für einen Zustandsbonus einen exakten supportingClientQuote aus einer tatsächlich übergebenen Klientennachricht. Fehlender Beleg bewirkt keinen Bonus. Eine doppelseitige Satzform allein belegt keine komplexe Reflexion.
 
-Ausgabe ausschließlich als JSON mit segments. Jedes Segment enthält quote, code, isUncertain und optional supportingClientQuote. Keine weiteren Felder, keine Markdown-Zäune.
+Ausgabe ausschließlich als JSON mit segments und den ergänzenden Belegfeldern des übergebenen Ausgabevertrags. Jedes Segment enthält quote, code, isUncertain und optional supportingClientQuote. Ergänzende Belegfelder liefert der Ausgabevertrag. Keine Markdown-Zäune.

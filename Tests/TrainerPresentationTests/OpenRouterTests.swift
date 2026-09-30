@@ -265,7 +265,7 @@ private func envelope(content: String?, finish: String?, refusal: String? = nil,
 @Test func modellkennungUnterscheidetSichVonDerDemo() async {
     let provider = OpenRouterModelProvider()
     let descriptor = provider.descriptor()
-    #expect(descriptor.id == "openrouter/qwen/qwen3.8-27b")
+    #expect(descriptor.id == "openrouter/role=qwen/qwen3.8-27b;analysis=anthropic/claude-sonnet-5.5")
     // Der Coordinator vergleicht die Kennung mit der gespeicherten Sitzung. Eine Demo-Sitzung
     // lässt sich deshalb lesen, aber nicht mit echtem Modell fortsetzen — das ist gewollt.
     #expect(descriptor != DemoModelProvider.identity)
@@ -522,7 +522,7 @@ private let pruefAnfrage = ReplyRequest(publicProfile: "P", behaviorInstruction:
     #expect(result.value.goalUpdates == [] && result.value.characterObservations == [])
     #expect(result.metrics.inputTokens == nil)
     #expect(await stub.callCount == 3)
-    #expect(try await stub.sentBudgets().sorted() == [1500, 1500, 4000])
+    #expect(try await stub.sentBudgets().sorted() == [4000, 4000, 8000])
 }
 
 // MARK: - Erlaubnisvertrag der Beraterstufe
@@ -801,4 +801,21 @@ private actor SlowMemoryTransport {
     #expect(standing["enum"] as? [String] == PermissionStanding.allCases.map(\.rawValue))
     #expect(OpenRouterSchema.compactGrammar(OpenRouterSchema.responseFormat(name: "ClientReply", schema: OpenRouterSchema.reply))
         == OpenRouterSchema.responseFormat(name: "ClientReply", schema: OpenRouterSchema.reply))
+}
+
+
+@Test func anfrageschemaOrdnetSegmenteVorAbhaengigenErlaubnisbelegen() throws {
+    let body = OpenRouterSchema.body(configuration: .init(), system: "Zitat \" und \\ und\nZeile 😀",
+        user: "U", responseFormat: OpenRouterSchema.responseFormat(name: "CounselorAnalysis", schema: OpenRouterSchema.counselorAnalysis),
+        temperature: 0, maxTokens: 1500, reasoning: false)
+    let ordered = try body.serializedForRequest()
+    #expect(NSDictionary(dictionary: try object(ordered)) == NSDictionary(dictionary: try object(try body.serialized())))
+    let text = String(decoding: ordered, as: UTF8.self)
+    let segments = try #require(text.range(of: "\"segments\":{"))
+    let permissions = try #require(text.range(of: "\"permissions\":{"))
+    let reflection = try #require(text.range(of: "\"doubleSidedReflection\":{"))
+    #expect(segments.lowerBound < permissions.lowerBound && permissions.lowerBound < reflection.lowerBound)
+    let quote = try #require(text.range(of: "\"quote\":{"))
+    let code = try #require(text.range(of: "\"code\":{"))
+    #expect(quote.lowerBound < code.lowerBound)
 }

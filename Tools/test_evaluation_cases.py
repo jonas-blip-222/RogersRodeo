@@ -27,6 +27,7 @@ FALLDATEIEN = [
     ROOT / "Evaluation/mi-faelle.json",
     ROOT / "Evaluation/lange-faelle.json",
     ROOT / "Evaluation/kontrast-autonomie.json",
+    ROOT / "Evaluation/gegenproben-einordnung.json",
 ]
 KONTRASTE = ROOT / "Evaluation/kontrast-autonomie.json"
 LEITFADEN = ROOT / "ContentSource/mi-coding-guide.md"

@@ -57,6 +57,26 @@ private actor ReplayTransport {
     }
 }
 
+private func replayConfiguration(_ env: [String: String]) throws -> OpenRouterConfiguration {
+    var config = OpenRouterConfiguration()
+    if let model = env["RR_ANALYSIS_REPLAY_MODEL"] {
+        config.model = model; config.analysisModel = nil
+    }
+    if let reasoning = env["RR_ANALYSIS_REPLAY_REASONING"] {
+        switch reasoning {
+        case "auto": config.analysisReasoning = nil
+        case "true": config.analysisReasoning = true
+        case "false": config.analysisReasoning = false
+        default: throw TrainerFailure.invalidInput
+        }
+    }
+    if let raw = env["RR_ANALYSIS_REPLAY_TOKENS"] {
+        guard let tokens = Int(raw), (1500...8000).contains(tokens) else { throw TrainerFailure.invalidInput }
+        config.analysisTokens = tokens; config.analysisTokensRetry = max(tokens, config.analysisTokensRetry)
+    }
+    return config
+}
+
 private struct ReplayStep: Codable {
     var round: Int
     var elapsedSeconds: Double
@@ -76,8 +96,7 @@ func freigegebenesFiktivesGespraechLiveNachpruefen() async throws {
     let maxRounds = Int(env["RR_REPLAY_MAX_ROUNDS"] ?? "5") ?? 5
     guard (1...5).contains(maxRounds) else { throw TrainerFailure.invalidInput }
     let guide = try env["RR_ANALYSIS_REPLAY_GUIDE"].map { try String(contentsOfFile: $0, encoding: .utf8) }
-    var config = OpenRouterConfiguration()
-    if let model = env["RR_ANALYSIS_REPLAY_MODEL"] { config.model = model }
+    let config = try replayConfiguration(env)
     let transport = ReplayTransport(directory: directory, configuration: config)
     let provider = OpenRouterModelProvider(configuration: config, transport: { request in
         try await transport.send(request)
@@ -116,6 +135,7 @@ func freigegebenesFiktivesGespraechLiveNachpruefen() async throws {
         results.append(row)
         try encoder.encode(results).write(to: directory.appendingPathComponent("report.json"), options: .atomic)
         print("Analyse-Replay Runde \(index + 1): \(row.error ?? "angenommen"), \(row.elapsedSeconds) Sekunden")
+        if row.error == "modelUnavailable" { break }
     }
     await provider.unload()
 }
@@ -146,8 +166,7 @@ func autonomieKontrasteLiveNachpruefen() async throws {
     let cases = try JSONDecoder().decode(ContrastCollection.self, from: Data(contentsOf: URL(fileURLWithPath: input))).faelle
     guard cases.count <= 11 else { throw TrainerFailure.invalidInput }
     let guide = try String(contentsOfFile: guidePath, encoding: .utf8)
-    var config = OpenRouterConfiguration()
-    if let model = env["RR_ANALYSIS_REPLAY_MODEL"] { config.model = model }
+    let config = try replayConfiguration(env)
     let transport = ReplayTransport(directory: directory, configuration: config, maxCalls: 32)
     let provider = OpenRouterModelProvider(configuration: config, transport: { try await transport.send($0) })
     try await provider.prepare()
@@ -168,6 +187,7 @@ func autonomieKontrasteLiveNachpruefen() async throws {
         results.append(row)
         try encoder.encode(results).write(to: directory.appendingPathComponent("report.json"), options: .atomic)
         print("Kontrast \(item.id): \(row.error ?? "angenommen"), \(row.elapsedSeconds) Sekunden")
+        if row.error == "modelUnavailable" { break }
     }
     await provider.unload()
 }
