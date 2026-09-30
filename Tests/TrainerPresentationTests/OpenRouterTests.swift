@@ -761,3 +761,44 @@ private actor SlowMemoryTransport {
     let result = try await provider.analyze(.init(codingGuide: "G", recentMessages: [], currentInput: "Hallo"))
     #expect(result.value.memoryStatus == .unavailable)
 }
+
+
+@Test func claudeSchemaVerwendetGemeinsameBelegeOhneDenVertragZuAendern() throws {
+    let format = OpenRouterSchema.responseFormat(name: "CounselorAnalysis", schema: OpenRouterSchema.counselorAnalysis)
+    var claude = OpenRouterConfiguration(); claude.model = "anthropic/claude-sonnet-4.6"
+    let claudeBody = try object(try OpenRouterSchema.body(configuration: claude, system: "S", user: "U",
+        responseFormat: format, temperature: 0, maxTokens: 1500, reasoning: false).serialized())
+    let qwenBody = try object(try OpenRouterSchema.body(configuration: .init(), system: "S", user: "U",
+        responseFormat: format, temperature: 0, maxTokens: 1500, reasoning: false).serialized())
+    #expect(NSDictionary(dictionary: try #require(qwenBody["response_format"] as? [String: Any]))
+        == NSDictionary(dictionary: try object(try format.serialized())))
+    let compact = try object(try OpenRouterSchema.compactGrammar(format).serialized())
+    #expect(NSDictionary(dictionary: try #require(claudeBody["response_format"] as? [String: Any]))
+        == NSDictionary(dictionary: compact))
+    let wrapper = try #require(compact["json_schema"] as? [String: Any])
+    #expect(wrapper["strict"] as? Bool == true)
+    let schema = try #require(wrapper["schema"] as? [String: Any])
+    let definitions = try #require(schema["$defs"] as? [String: Any])
+    let evidence = try #require(definitions["Evidence"] as? [String: Any])
+    #expect(NSDictionary(dictionary: evidence) == NSDictionary(dictionary: try object(try OpenRouterSchema.evidence.serialized())))
+    let original = try object(try OpenRouterSchema.counselorAnalysis.serialized())
+    #expect(schema["required"] as? [String] == original["required"] as? [String])
+    #expect(schema["additionalProperties"] as? Bool == false)
+    let fields = try #require(schema["properties"] as? [String: Any])
+    let permissions = try #require(fields["permissions"] as? [String: Any])
+    let entry = try #require(permissions["items"] as? [String: Any])
+    let refs = try #require(entry["properties"] as? [String: Any])
+    #expect((refs["advice"] as? [String: Any])?["$ref"] as? String == "#/$defs/Evidence")
+    for name in ["request", "response", "consumedBy"] {
+        #expect((refs[name] as? [String: Any])?["$ref"] as? String == "#/$defs/NullableEvidence")
+    }
+    let nullable = try #require(definitions["NullableEvidence"] as? [String: Any])
+    let variants = try #require(nullable["anyOf"] as? [[String: Any]])
+    #expect(variants.count == 2)
+    #expect(variants[0]["$ref"] as? String == "#/$defs/Evidence")
+    #expect(variants[1]["type"] as? String == "null")
+    let standing = try #require(refs["standing"] as? [String: Any])
+    #expect(standing["enum"] as? [String] == PermissionStanding.allCases.map(\.rawValue))
+    #expect(OpenRouterSchema.compactGrammar(OpenRouterSchema.responseFormat(name: "ClientReply", schema: OpenRouterSchema.reply))
+        == OpenRouterSchema.responseFormat(name: "ClientReply", schema: OpenRouterSchema.reply))
+}

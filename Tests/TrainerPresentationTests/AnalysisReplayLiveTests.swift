@@ -11,9 +11,12 @@ private actor ReplayTransport {
     let maxCalls: Int
     var calls = 0
     var reportedCost = 0.0
+    let reportedCostLimit: Double
     private enum Limit: Error { case reached }
     init(directory: URL, configuration: OpenRouterConfiguration, maxCalls: Int = 16) {
         self.directory = directory; self.maxCalls = maxCalls
+        let requested = Double(ProcessInfo.processInfo.environment["RR_LIVE_COST_LIMIT_USD"] ?? "0.10") ?? 0.10
+        reportedCostLimit = requested.isFinite && requested > 0 && requested <= 0.50 ? requested : 0.10
         let settings = URLSessionConfiguration.ephemeral
         settings.timeoutIntervalForRequest = configuration.idleSeconds
         settings.timeoutIntervalForResource = configuration.deadlineSeconds
@@ -22,7 +25,7 @@ private actor ReplayTransport {
     }
     func send(_ request: URLRequest) async throws -> (Data, URLResponse) {
         // Harte Aufrufgrenze; Kostenprüfung zusätzlich anhand bereits gemeldeter Kosten.
-        guard calls < maxCalls, reportedCost < 0.10 else {
+        guard calls < maxCalls, reportedCost < reportedCostLimit else {
             try Data("Diagnosegrenze erreicht: weitere Aufrufe wurden nicht gesendet.\n".utf8)
                 .write(to: directory.appendingPathComponent("limit-reached.txt"), options: .atomic)
             throw Limit.reached

@@ -473,6 +473,37 @@ enum OpenRouterSchema {
         ])
     }
 
+    /// Reuse evidence definitions instead of repeating nullable, nested objects.
+    /// The accepted JSON and the local validators are unchanged.
+    static func compactGrammar(_ format: JSONValue) -> JSONValue {
+        guard case var .object(root) = format,
+              case var .object(wrapper)? = root["json_schema"],
+              let schema = wrapper["schema"],
+              wrapper["name"] == .string("CounselorAnalysis") || wrapper["name"] == .string("GoalAndCharacterAnalysis")
+        else { return format }
+        func references(_ value: JSONValue) -> JSONValue {
+            if value == evidence { return .object(["$ref": .string("#/$defs/Evidence")]) }
+            if value == evidenceSchema(nullable: true) {
+                return .object(["$ref": .string("#/$defs/NullableEvidence")])
+            }
+            switch value {
+            case let .object(fields): return .object(fields.mapValues(references))
+            case let .array(values): return .array(values.map(references))
+            default: return value
+            }
+        }
+        guard case var .object(compact) = references(schema) else { return format }
+        compact["$defs"] = .object([
+            "Evidence": evidence,
+            "NullableEvidence": .object(["anyOf": .array([
+                .object(["$ref": .string("#/$defs/Evidence")]),
+                .object(["type": .string("null")])
+            ])])
+        ])
+        wrapper["schema"] = .object(compact); root["json_schema"] = .object(wrapper)
+        return .object(root)
+    }
+
     static func transcript(_ messages: [DialogueMessage], clientLabel: String) -> String {
         messages.map { "\($0.speaker == .client ? clientLabel : "Beratung"): \($0.text)" }
             .joined(separator: "\n")
@@ -739,7 +770,8 @@ enum OpenRouterSchema {
                 .object(["role": .string("system"), "content": .string(system)]),
                 .object(["role": .string("user"), "content": .string(user)])
             ]),
-            "response_format": responseFormat,
+            "response_format": configuration.model.hasPrefix("anthropic/")
+                ? compactGrammar(responseFormat) : responseFormat,
             "temperature": .double(temperature),
             "max_tokens": .int(maxTokens),
             // Abrechnungsdaten mit der Antwort anfordern; keine zusätzlichen Modellaufrufe.
