@@ -49,6 +49,9 @@ public enum ReviewBuilder {
                     lines += ["- \(segment.isUncertain ? "Unsicher" : segment.code.label): „\(escaped(segment.quote))“"]
                 }
             } else { lines += ["Keine Einordnung vorhanden. Das ist keine Entwarnung."] }
+            if turn.analysis?.memoryStatus == .unavailable {
+                lines += ["", "Die Ziel- und Beziehungseinschätzung war nicht verfügbar; der bisherige Stand bleibt erhalten."]
+            }
             // Endgültige Rückmeldung mit Beleg, Unsicherheit und verwendeten Ständen. Keine
             // Zahl: der Offenheitswert bleibt auch im Export außen vor.
             if !turn.feedback.isEmpty {

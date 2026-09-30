@@ -60,7 +60,8 @@ import TrainerStorage
     let pending = PendingTurn(id: UUID(), sessionID: snapshot.id, expectedRevision: 0, input: eingabe, createdAt: Date())
     try repository?.savePending(pending)
     let analyse = TurnAnalysis(segments: [
-        .init(quote: "Wenn Ihnen Sarah wirklich wichtig wäre", code: .confrontation, isUncertain: false)])
+        .init(quote: "Wenn Ihnen Sarah wirklich wichtig wäre", code: .confrontation, isUncertain: false)],
+        characterObservations: [], goalUpdates: [], memoryStatus: .unavailable)
     let findings = FeedbackEngine.findings(analysis: analyse, input: eingabe, context: [],
                                            characterName: "Lukas", rulesVersion: "0.1")
     #expect(findings.count == 1)
@@ -76,6 +77,9 @@ import TrainerStorage
     let geladen = try wieder.load(id: snapshot.id)
     #expect(geladen.schemaVersion == 1)
     #expect(geladen.turns.first?.feedback == findings)
+    #expect(geladen.turns.first?.analysis?.memoryStatus == .unavailable)
+    #expect(geladen.turns.first?.analysis?.goalUpdates == [])
+    #expect(ReviewBuilder.markdown(geladen).contains("Ziel- und Beziehungseinschätzung war nicht verfügbar"))
     // Derselbe Turn noch einmal: unverändert idempotent.
     #expect(try wieder.commit(sessionID: snapshot.id, expectedRevision: 0, turn: turn) == geladen)
     // Mit anderer Rückmeldung: abgewiesen statt still überschrieben.

@@ -96,6 +96,24 @@ public struct CharacterDevelopment: Codable, Sendable, Equatable {
 }
 
 public enum CharacterTracker {
+    /// Die Beratung muss für sich valide sein. Fehler im getrennten Zielgedächtnis
+    /// dürfen weder die Einordnung verwerfen noch den bisherigen Verlauf verändern.
+    public static func acceptingIndependentMemory(_ candidate: TurnAnalysis, before: CharacterDevelopment?,
+        input: String, context: [DialogueMessage], session: SessionSnapshot, turnID: UUID
+    ) throws -> (analysis: TurnAnalysis, development: CharacterDevelopment?) {
+        var counselorOnly = candidate
+        counselorOnly.discardMemory()
+        try OutputValidator.validateAnalysis(counselorOnly, input: input, context: context)
+        do {
+            let development = try advance(before, analysis: candidate, input: input,
+                                          context: context, session: session, turnID: turnID)
+            try validate(development, session: session, currentTurnID: turnID)
+            return (candidate, development)
+        } catch TrainerFailure.invalidAnalysis {
+            return (counselorOnly, before)
+        }
+    }
+
     /// Speichert nur bereits belegte Äußerungen. Keine Entwicklung durch gute Beratersätze,
     /// kein SOC-Aufstieg, keine Wirkung der noch nicht erzeugten Antwort auf deren Feedback.
     public static func advance(_ before: CharacterDevelopment?, analysis: TurnAnalysis?,

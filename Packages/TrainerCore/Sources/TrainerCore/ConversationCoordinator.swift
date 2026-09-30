@@ -183,11 +183,11 @@ public actor ConversationCoordinator {
                     let result = try await ModelTraceScope.$context.withValue(context) {
                         try await RoundDeadline.run(until: deadline) { try await model.analyze(request) }
                     }; try check(token)
-                    try OutputValidator.validateAnalysis(result.value, input: text, context: result.contextMessagesUsed)
-                    development = try CharacterTracker.advance(session.state.development, analysis: result.value,
-                        input: text, context: result.contextMessagesUsed, session: session, turnID: pending.id)
-                    try CharacterTracker.validate(development, session: session, currentTurnID: pending.id)
-                    analysis = result.value; analysisContext = result.contextMessagesUsed; metrics.append(result.metrics)
+                    let accepted = try CharacterTracker.acceptingIndependentMemory(result.value,
+                        before: session.state.development, input: text, context: result.contextMessagesUsed,
+                        session: session, turnID: pending.id)
+                    development = accepted.development
+                    analysis = accepted.analysis; analysisContext = result.contextMessagesUsed; metrics.append(result.metrics)
                     break
                 } catch TrainerFailure.invalidAnalysis where attempt == 0 {
                     try check(token)

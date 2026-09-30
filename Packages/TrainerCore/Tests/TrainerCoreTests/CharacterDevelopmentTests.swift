@@ -243,3 +243,21 @@ private func append(_ text: String, to session: inout SessionSnapshot) {
     }
     #expect(try await repo.load(id: old.id) == old)
 }
+
+@Test func ungueltigerZielteilBewahrtBestehendenVerlaufAberUngueltigeBeratungBleibtFehler() throws {
+    let session = snapshot(), context = ContextBuilder.messages(session)
+    let before = try advance(session, observations())
+    var candidate = TurnAnalysis(segments: [.init(quote: "Was beschäftigt Sie?", code: .openQuestion, isUncertain: false)],
+        characterObservations: observations(), goalUpdates: [], memoryStatus: .complete)
+    candidate.characterObservations?[0].goal = nil
+    let accepted = try CharacterTracker.acceptingIndependentMemory(candidate, before: before,
+        input: "Was beschäftigt Sie?", context: context, session: session, turnID: UUID())
+    #expect(accepted.development == before)
+    #expect(accepted.analysis.memoryStatus == .unavailable)
+    #expect(accepted.analysis.goalUpdates == [] && accepted.analysis.characterObservations == [])
+    candidate.segments[0].quote = "Erfundenes Zitat"
+    #expect(throws: TrainerFailure.invalidAnalysis) {
+        try CharacterTracker.acceptingIndependentMemory(candidate, before: before,
+            input: "Was beschäftigt Sie?", context: context, session: session, turnID: UUID())
+    }
+}

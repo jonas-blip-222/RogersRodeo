@@ -429,16 +429,20 @@ private func envelope(content: String?, finish: String?, refusal: String? = nil,
 /// Sammelt die gesendeten Anfragen und gibt der Reihe nach vorbereitete Antworten zurück.
 private actor StubTransport {
     private var responses: [Data]
+    private var memoryResponses: [Data]
     private(set) var requests: [URLRequest] = []
     /// Künstliche Dauer je Aufruf, um einen langsamen Anbieter nachzustellen.
     private let delay: Duration?
-    init(_ responses: [Data], delay: Duration? = nil) {
-        self.responses = responses; self.delay = delay
+    init(_ responses: [Data], memory: [Data] = [], delay: Duration? = nil) {
+        self.responses = responses; self.memoryResponses = memory; self.delay = delay
     }
     func handle(_ request: URLRequest) async throws -> (Data, URLResponse) {
         requests.append(request)
         if let delay { try await Task.sleep(for: delay) }
-        let body = responses.isEmpty ? Data("{}".utf8) : responses.removeFirst()
+        let isMemory = String(decoding: request.httpBody ?? Data(), as: UTF8.self).contains("GoalAndCharacterAnalysis")
+        let body = isMemory
+            ? (memoryResponses.isEmpty ? Data("{}".utf8) : memoryResponses.removeFirst())
+            : (responses.isEmpty ? Data("{}".utf8) : responses.removeFirst())
         let http = HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!
         return (body, http)
     }
@@ -507,17 +511,18 @@ private let pruefAnfrage = ReplyRequest(publicProfile: "P", behaviorInstruction:
     #expect(await stub.callCount == 2)
 }
 
-@Test func dieZielstufeBrichtDieAnalyseAbBevorDieZweiteStufeKostetGeld() async throws {
-    // `analyze` hat zwei Stufen mit je zwei Versuchen. Scheitert die erste, darf die
-    // zweite gar nicht erst gesendet werden — sonst kostet ein aussichtsloser Versuch.
-    let stub = StubTransport([modelAnswer("", finish: "error"), modelAnswer("", finish: "error"),
-                              modelAnswer(leereZielstufe)])
+@Test func defekteZielstufeVerwirftKeineGueltigeBeratungseinordnung() async throws {
+    let output = #"{"segments":[{"quote":"Hallo","code":"sonstiges","isUncertain":false}],"permissions":[]}"#
+    let stub = StubTransport([modelAnswer(output)], memory: [modelAnswer("", finish: "error"), modelAnswer("", finish: "error")])
     let provider = stubProvider(stub)
     try await provider.prepare()
-    let request = AnalysisRequest(codingGuide: "G", recentMessages: [], currentInput: "Hallo")
-    await #expect(throws: TrainerFailure.invalidAnalysis) { _ = try await provider.analyze(request) }
-    #expect(await stub.callCount == 2)
-    #expect(try await stub.sentBudgets() == [1500, 4000])
+    let result = try await provider.analyze(.init(codingGuide: "G", recentMessages: [], currentInput: "Hallo"))
+    #expect(result.value.segments.first?.quote == "Hallo")
+    #expect(result.value.memoryStatus == .unavailable)
+    #expect(result.value.goalUpdates == [] && result.value.characterObservations == [])
+    #expect(result.metrics.inputTokens == nil)
+    #expect(await stub.callCount == 3)
+    #expect(try await stub.sentBudgets().sorted() == [1500, 1500, 4000])
 }
 
 // MARK: - Erlaubnisvertrag der Beraterstufe
@@ -544,7 +549,7 @@ private let erteilteErlaubnis = """
     """
 
 @Test func dieBeraterstufeVerlangtDenErlaubnisvertragUndNimmtIhnAuf() async throws {
-    let stub = StubTransport([modelAnswer(leereZielstufe), modelAnswer(beraterstufe(erteilteErlaubnis))])
+    let stub = StubTransport([modelAnswer(beraterstufe(erteilteErlaubnis))], memory: [modelAnswer(leereZielstufe)])
     let provider = stubProvider(stub)
     try await provider.prepare()
     let result = try await provider.analyze(erlaubnisAnfrage())
@@ -554,7 +559,7 @@ private let erteilteErlaubnis = """
     #expect(permissions[0].response?.quote == "Ja, gerne.")
     // Das Schema der Stufe fordert das Feld ausdrücklich an.
     let requests = await stub.requests
-    let raw = try #require(requests[1].httpBody)
+    let raw = try #require(requests.first { String(decoding: $0.httpBody ?? Data(), as: UTF8.self).contains("CounselorAnalysis") }?.httpBody)
     let body = try #require(JSONSerialization.jsonObject(with: raw) as? [String: Any])
     let format = try #require(body["response_format"] as? [String: Any])
     let wrapper = try #require(format["json_schema"] as? [String: Any])
@@ -567,7 +572,7 @@ private let erteilteErlaubnis = """
     // Ein weggelassenes oder auf null gesetztes Feld sähe im Core wie eine ältere Analyse
     // ohne diesen Vertrag aus — und damit ein Ratschlag ohne jede Erlaubnisprüfung.
     for antwort in [beraterstufe(""), beraterstufe(",\"permissions\":null"), beraterstufe(",\"permissions\":[]")] {
-        let stub = StubTransport([modelAnswer(leereZielstufe)] + Array(repeating: modelAnswer(antwort), count: 2))
+        let stub = StubTransport(Array(repeating: modelAnswer(antwort), count: 2), memory: [modelAnswer(leereZielstufe)])
         let provider = stubProvider(stub)
         try await provider.prepare()
         await #expect(throws: TrainerFailure.invalidAnalysis) { _ = try await provider.analyze(erlaubnisAnfrage()) }
@@ -641,7 +646,7 @@ private let erteilteErlaubnis = """
     #expect(start.duration(to: .now) < .seconds(5))
     // Kein halber Zustand und keine weiteren kostenpflichtigen Aufrufe nach dem Abbruch.
     #expect(try await repository.load(id: session.id).turns.isEmpty)
-    #expect(await stub.callCount == 1)
+    #expect(await stub.callCount == 2)
 }
 
 
@@ -662,7 +667,7 @@ private let erteilteErlaubnis = """
             .init(advice: .init(source: .currentInput, speaker: .counselor, messageIndex: nil,
                                quote: advice, occurrence: 1), standing: .notRequested)])
         let output = String(decoding: try JSONEncoder().encode(analysis), as: UTF8.self)
-        let stub = StubTransport([modelAnswer(leereZielstufe), modelAnswer(output)])
+        let stub = StubTransport([modelAnswer(output)], memory: [modelAnswer(leereZielstufe)])
         let provider = stubProvider(stub)
         try await provider.prepare()
         let result = try await provider.analyze(.init(codingGuide: "G", recentMessages: context,
@@ -677,4 +682,82 @@ private let erteilteErlaubnis = """
         #expect(findings.first?.certainty == .confirmed)
         #expect(findings.first?.reviewStatus == .draft)
     }
+}
+
+// Die drei im Livevergleich beobachteten Fehler dürfen nur die Zielanalyse verwerfen.
+@Test func fehlerhafteZielbelegeAusDemLivevergleichLassenDieEinordnungDurch() async throws {
+    let input = "Hör auf zu saufen."
+    let context: [DialogueMessage] = [.init(speaker: .counselor, text: "Hören Sie auf."),
+                                     .init(speaker: .client, text: "Ich weiß, was ich tue.")]
+    let goodEvidence = EvidenceReference(source: .contextMessage, speaker: .client,
+        messageIndex: 1, quote: "Ich weiß, was ich tue.", occurrence: 1)
+    var wrongSource = goodEvidence; wrongSource.source = .currentInput
+    let wrongSpeaker = EvidenceReference(source: .contextMessage, speaker: .client,
+        messageIndex: 0, quote: "Hören Sie auf.", occurrence: 1)
+    let cases: [CharacterObservation] = [
+        .init(dimension: .readiness, assessment: .notConsidering, goal: nil, evidence: goodEvidence, isUncertain: false),
+        .init(dimension: .rapport, assessment: .strained, goal: nil, evidence: wrongSource, isUncertain: false),
+        .init(dimension: .readiness, assessment: .willing, goal: wrongSpeaker, evidence: goodEvidence, isUncertain: false)]
+    for observation in cases {
+        let data = try JSONEncoder().encode(TurnAnalysis(segments: [], characterObservations: [observation], goalUpdates: []))
+        var body = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any]); body.removeValue(forKey: "segments")
+        let memory = String(decoding: try JSONSerialization.data(withJSONObject: body), as: UTF8.self)
+        let counselor = #"{"segments":[{"quote":"Hör auf zu saufen.","code":"konfrontation","isUncertain":false}],"permissions":[]}"#
+        let stub = StubTransport([modelAnswer(counselor)], memory: [modelAnswer(memory)])
+        let provider = stubProvider(stub); try await provider.prepare()
+        let result = try await provider.analyze(.init(codingGuide: "G", recentMessages: context, currentInput: input))
+        #expect(result.value.memoryStatus == .unavailable)
+        #expect(result.value.segments.first?.code == .confrontation)
+        #expect(await stub.callCount == 2)
+    }
+}
+
+private actor SlowMemoryTransport {
+    var memoryStarted = false
+    var memoryCancelled = false
+    var counselorStartedWhileMemoryRunning = false
+    var waiting: [CheckedContinuation<Void, Never>] = []
+    func send(_ request: URLRequest) async throws -> (Data, URLResponse) {
+        let memory = String(decoding: request.httpBody ?? Data(), as: UTF8.self).contains("GoalAndCharacterAnalysis")
+        if memory {
+            memoryStarted = true; waiting.forEach { $0.resume() }; waiting = []
+            do { try await Task.sleep(for: .seconds(30)) }
+            catch { memoryCancelled = true; throw error }
+        } else {
+            if !memoryStarted { await withCheckedContinuation { waiting.append($0) } }
+            counselorStartedWhileMemoryRunning = !memoryCancelled
+        }
+        let text = memory ? leereZielstufe : #"{"segments":[{"quote":"Hallo","code":"sonstiges","isUncertain":false}],"permissions":[]}"#
+        return (modelAnswer(text), HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!)
+    }
+}
+
+@Test func langsameZielanalyseLaeuftParallelUndWirdAnEigenerFristAbgebrochen() async throws {
+    let transport = SlowMemoryTransport()
+    var config = OpenRouterConfiguration()
+    config.environment = ["OPENROUTER_API_KEY": "fixture"]
+    config.memoryTimeout = .milliseconds(100)
+    let provider = OpenRouterModelProvider(configuration: config, transport: { try await transport.send($0) })
+    try await provider.prepare()
+    let start = ContinuousClock.now
+    let result = try await provider.analyze(.init(codingGuide: "G", recentMessages: [], currentInput: "Hallo"))
+    #expect(start.duration(to: .now) < .seconds(2))
+    #expect(await transport.counselorStartedWhileMemoryRunning)
+    #expect(await transport.memoryCancelled)
+    #expect(result.value.memoryStatus == .unavailable)
+    #expect(result.value.segments.first?.quote == "Hallo")
+}
+
+@Test func transportausfallDerZielanalyseBleibtVonDerBeratungGetrennt() async throws {
+    var config = OpenRouterConfiguration(); config.environment = ["OPENROUTER_API_KEY": "fixture"]
+    let provider = OpenRouterModelProvider(configuration: config, transport: { request in
+        if String(decoding: request.httpBody ?? Data(), as: UTF8.self).contains("GoalAndCharacterAnalysis") {
+            throw URLError(.cannotConnectToHost)
+        }
+        return (modelAnswer(#"{"segments":[],"permissions":[]}"#),
+            HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!)
+    })
+    try await provider.prepare()
+    let result = try await provider.analyze(.init(codingGuide: "G", recentMessages: [], currentInput: "Hallo"))
+    #expect(result.value.memoryStatus == .unavailable)
 }

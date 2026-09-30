@@ -32,9 +32,10 @@ private func traceEnvelope(_ text: String, finish: String = "stop", usage: Bool 
 private actor TraceTransport {
     enum Step: Sendable { case response(Data, Int), failure, wait }
     var steps: [Step]
+    var memorySteps: [Step]
     private(set) var requests: [URLRequest] = []
     private var waiters: [CheckedContinuation<Void, Never>] = []
-    init(_ steps: [Step]) { self.steps = steps }
+    init(_ steps: [Step], memory: [Step] = []) { self.steps = steps; memorySteps = memory }
     func waitForStart() async {
         if !requests.isEmpty { return }
         await withCheckedContinuation { waiters.append($0) }
@@ -42,8 +43,16 @@ private actor TraceTransport {
     func handle(_ request: URLRequest) async throws -> (Data, URLResponse) {
         requests.append(request)
         for waiter in waiters { waiter.resume() }; waiters.removeAll()
-        guard !steps.isEmpty else { throw URLError(.badServerResponse) }
-        switch steps.removeFirst() {
+        let isMemory = String(decoding: request.httpBody ?? Data(), as: UTF8.self).contains("GoalAndCharacterAnalysis")
+        let step: Step
+        if isMemory {
+            guard !memorySteps.isEmpty else { throw URLError(.badServerResponse) }
+            step = memorySteps.removeFirst()
+        } else {
+            guard !steps.isEmpty else { throw URLError(.badServerResponse) }
+            step = steps.removeFirst()
+        }
+        switch step {
         case let .response(data, status):
             return (data, HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil, headerFields: nil)!)
         case .failure: throw URLError(.cannotConnectToHost, userInfo: [NSLocalizedDescriptionKey: "PRIVATE_ERROR"])
@@ -101,9 +110,16 @@ private func traceSession(_ coordinator: ConversationCoordinator) async throws -
 }
 
 @Test func messspurErsteStufeBleibtBeiScheiternderZweiterErhalten() async throws {
-    let stub = TraceTransport([.response(traceEnvelope(traceMemory), 200), .response(traceEnvelope("PRIVATE_INVALID"), 200)])
     let collector = TraceCollector()
-    let measured = traceProvider(stub, collector: collector)
+    var config = OpenRouterConfiguration()
+    config.environment = ["OPENROUTER_API_KEY": "PRIVATE_KEY_FIXTURE"]
+    let measured = OpenRouterModelProvider(configuration: config, transport: { request in
+        let memory = String(decoding: request.httpBody ?? Data(), as: UTF8.self).contains("GoalAndCharacterAnalysis")
+        // Die bereits abgeschlossene Zielstufe muss trotz des späteren Fehlers erhalten bleiben.
+        if !memory { try await Task.sleep(for: .milliseconds(100)) }
+        return (traceEnvelope(memory ? traceMemory : "PRIVATE_INVALID"),
+                HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!)
+    }, traceSink: collector.sink)
     try await measured.prepare()
     await #expect(throws: TrainerFailure.invalidAnalysis) {
         _ = try await measured.analyze(.init(codingGuide: "G", recentMessages: [], currentInput: "Hallo"))
@@ -133,7 +149,7 @@ private func traceSession(_ coordinator: ConversationCoordinator) async throws -
 }
 
 @Test func messspurAbbruchErfasstDenBereitsBegonnenenAufruf() async throws {
-    let collector = TraceCollector(), stub = TraceTransport([.wait])
+    let collector = TraceCollector(), stub = TraceTransport([.wait], memory: [.wait])
     let provider = traceProvider(stub, collector: collector)
     try await provider.prepare()
     let task = Task { try await provider.reply(traceRequest) }
@@ -147,14 +163,15 @@ private func traceSession(_ coordinator: ConversationCoordinator) async throws -
 
 @Test func messspurCoordinatorWiederholungHatEigeneVersuchsnummerUndRundenabschluss() async throws {
     let collector = TraceCollector()
-    let stub = TraceTransport([.response(traceEnvelope(traceMemory), 200), .response(traceEnvelope("invalid"), 200),
-        .response(traceEnvelope(traceMemory), 200), .response(traceEnvelope(traceAnalysis), 200), .response(traceEnvelope(traceReply), 200)])
+    let stub = TraceTransport([.response(traceEnvelope("invalid"), 200),
+        .response(traceEnvelope(traceAnalysis), 200), .response(traceEnvelope(traceReply), 200)],
+        memory: [.response(traceEnvelope(traceMemory), 200), .response(traceEnvelope(traceMemory), 200)])
     let provider = traceProvider(stub, collector: collector)
     let coordinator = ConversationCoordinator(repository: MemorySessionRepository(), provider: provider)
     let session = try await traceSession(coordinator)
     let saved = try await coordinator.send(sessionID: session.id, input: "Hallo")
     #expect(saved.turns.count == 1)
-    #expect(collector.calls.map(\.coordinatorAttempt) == [1, 1, 2, 2, 1])
+    #expect(collector.calls.filter { $0.stage != .goalMemory }.map(\.coordinatorAttempt) == [1, 2, 1])
     #expect(Set(collector.calls.compactMap(\.roundID)).count == 1)
     #expect(collector.events.filter { $0.kind == .coordinatorRetry }.map(\.retryReason) == ["invalidAnalysis"])
     #expect(collector.events.last?.kind == .roundFinished && collector.events.last?.result == "completed")
@@ -162,7 +179,7 @@ private func traceSession(_ coordinator: ConversationCoordinator) async throws -
 }
 
 @Test func messspurFristablaufIstRundenfehlerUndAufrufabbruch() async throws {
-    let collector = TraceCollector(), stub = TraceTransport([.wait])
+    let collector = TraceCollector(), stub = TraceTransport([.wait], memory: [.wait])
     let provider = traceProvider(stub, collector: collector)
     let repository = MemorySessionRepository()
     let coordinator = ConversationCoordinator(repository: repository, provider: provider, roundDeadline: .milliseconds(100))
@@ -170,7 +187,7 @@ private func traceSession(_ coordinator: ConversationCoordinator) async throws -
     await #expect(throws: TrainerFailure.roundDeadlineExceeded) {
         _ = try await coordinator.send(sessionID: session.id, input: "Hallo")
     }
-    #expect(collector.calls.count == 1 && collector.calls.first?.outcome == .cancelled)
+    #expect(collector.calls.count == 2 && collector.calls.allSatisfy { $0.outcome == .cancelled })
     #expect(collector.events.last?.result == "roundDeadlineExceeded")
     #expect(try await repository.load(id: session.id).turns.isEmpty)
 }
@@ -199,7 +216,8 @@ private func traceSession(_ coordinator: ConversationCoordinator) async throws -
     let path = ProcessInfo.processInfo.environment["RR_MODEL_TRACE_FILE"]
         ?? FileManager.default.temporaryDirectory.appendingPathComponent("rr-trace-example-\(UUID()).jsonl").path
     let stub = TraceTransport([.response(traceEnvelope("{" + String(repeating: " ", count: 256), finish: "length"), 200),
-        .response(traceEnvelope(traceMemory), 200), .response(traceEnvelope(traceAnalysis), 200), .response(traceEnvelope(traceReply), 200)])
+        .response(traceEnvelope(traceAnalysis), 200), .response(traceEnvelope(traceReply), 200)],
+        memory: [.response(traceEnvelope(traceMemory), 200)])
     let provider = traceProvider(stub, path: path)
     let coordinator = ConversationCoordinator(repository: MemorySessionRepository(), provider: provider)
     let session = try await traceSession(coordinator)
@@ -217,16 +235,18 @@ private func traceSession(_ coordinator: ConversationCoordinator) async throws -
 
 @Test func messspurErfasstBeideBudgetstufenUndZweitenCoordinatorFehlschlag() async throws {
     let collector = TraceCollector()
-    let stub = TraceTransport((0..<4).map { _ in .response(traceEnvelope(" ", finish: "error"), 200) })
+    let stub = TraceTransport((0..<4).map { _ in .response(traceEnvelope(" ", finish: "error"), 200) },
+        memory: [.response(traceEnvelope(traceMemory), 200), .response(traceEnvelope(traceMemory), 200)])
     let repository = MemorySessionRepository()
     let coordinator = ConversationCoordinator(repository: repository, provider: traceProvider(stub, collector: collector))
     let session = try await traceSession(coordinator)
     await #expect(throws: TrainerFailure.invalidAnalysis) {
         _ = try await coordinator.send(sessionID: session.id, input: "Hallo")
     }
-    #expect(collector.calls.map(\.budget) == [1500, 4000, 1500, 4000])
-    #expect(collector.calls.map(\.coordinatorAttempt) == [1, 1, 2, 2])
-    #expect(collector.calls.map(\.outcome) == Array(repeating: .generationError, count: 4))
+    let counselor = collector.calls.filter { $0.stage == .counselorAnalysis }
+    #expect(counselor.map(\.budget) == [1500, 4000, 1500, 4000])
+    #expect(counselor.map(\.coordinatorAttempt) == [1, 1, 2, 2])
+    #expect(counselor.map(\.outcome) == Array(repeating: .generationError, count: 4))
     #expect(collector.events.last?.result == "invalidAnalysis")
     #expect(try await repository.load(id: session.id).turns.isEmpty)
 }

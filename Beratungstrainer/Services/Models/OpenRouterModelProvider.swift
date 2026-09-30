@@ -85,6 +85,9 @@ struct OpenRouterConfiguration: Sendable {
     /// Budget vollständig: mit 4000 dauerte das am 29.09.2026 bis zu 148 Sekunden, mit
     /// 768 noch 18. Ein kleineres Budget kostet also nicht nur weniger, es begrenzt auch
     /// die Wartezeit im Fehlerfall.
+    /// Ergänzende Zielanalyse darf die gültige Beratungseinordnung höchstens 12 s begleiten.
+    /// Produktgrenze, keine behauptete gemessene Erfolgsquote. Cancellation erreicht URLSession.
+    var memoryTimeout: Duration = .seconds(12)
     var analysisTokens = 1500
     var analysisTokensRetry = 4000
     var replyTokens = 2000
@@ -929,9 +932,63 @@ actor OpenRouterModelProvider: TrainerModelProvider {
     func unload() { key = nil }
 
     func analyze(_ request: AnalysisRequest) async throws -> ModelResult<TurnAnalysis> {
-        // Zielverlauf zuerst, ohne den noch unbeantworteten Beratungssatz als Ablenkung
-        // oder vermeintlichen Beleg. Beide Stufen verwenden exakt dieselben Kontextindizes.
-        let (memory, memoryMetrics) = try await call(stage: .goalMemory,
+        let start = ContinuousClock.now
+        // Beide Aufgaben sehen denselben unveränderlichen Kontext. Ein Fehler der
+        // ergänzenden Zielanalyse verhindert keinen Aufruf der Beratungseinordnung.
+        async let memoryTask = optionalMemory(request)
+        let (counselor, metrics) = try await call(stage: .counselorAnalysis,
+            system: OpenRouterSchema.analysisSystemPrompt(request.codingGuide),
+            user: OpenRouterSchema.analysisPrompt(request),
+            responseFormat: OpenRouterSchema.responseFormat(name: "CounselorAnalysis", schema: OpenRouterSchema.counselorAnalysis),
+            temperature: configuration.analysisTemperature, reasoning: configuration.analysisReasoning,
+            budget: configuration.analysisTokens, retryBudget: configuration.analysisTokensRetry,
+            unusableFailure: .invalidAnalysis) { data in
+                let analysis = try OutputValidator.decodeAnalysis(OpenRouterResponse.analysisPayload(data), input: request.currentInput,
+                                                                  context: request.recentMessages)
+                guard analysis.goalUpdates == nil, analysis.characterObservations == nil,
+                      analysis.permissions != nil else { throw TrainerFailure.invalidAnalysis }
+                return analysis
+            }
+        let memory = try await memoryTask
+        try Task.checkCancellation()
+        var analysis = counselor
+        if let memory {
+            analysis.goalUpdates = memory.0.goalUpdates
+            analysis.characterObservations = memory.0.characterObservations
+            analysis.memoryStatus = .complete
+        } else { analysis.discardMemory() }
+        func sum(_ a: Int?, _ b: Int?) -> Int? { guard let a, let b else { return nil }; return a + b }
+        // Bei verworfener Zielanalyse sind deren Token unbekannt, nicht kostenlos/Null.
+        // Dauer ist wegen paralleler Aufrufe die verstrichene Zeit, nicht die Summe.
+        let combined = ModelCallMetrics(durationSeconds: ModelTraceEvent.seconds(start.duration(to: .now)),
+            inputTokens: sum(memory?.1.inputTokens, metrics.inputTokens),
+            outputTokens: sum(memory?.1.outputTokens, metrics.outputTokens))
+        return .init(value: analysis, metrics: combined, contextMessagesUsed: request.recentMessages)
+    }
+
+    private func optionalMemory(_ request: AnalysisRequest) async throws -> (TurnAnalysis, ModelCallMetrics)? {
+        let timeout = configuration.memoryTimeout
+        do {
+            return try await withThrowingTaskGroup(of: (TurnAnalysis, ModelCallMetrics)?.self) { group in
+                group.addTask { try await self.memory(request) }
+                group.addTask { try await Task.sleep(for: timeout); return nil }
+                defer { group.cancelAll() }
+                let first = try await group.next()
+                try Task.checkCancellation()
+                return first ?? nil
+            }
+        } catch {
+            try Task.checkCancellation()
+            // Nutzerabbruch, Gesamtfrist und lokale Integritätsfehler bleiben Fehler.
+            // Nur Ausfälle dieser optionalen Modellstufe werden als fehlend markiert.
+            guard let failure = error as? TrainerFailure,
+                  [.invalidAnalysis, .modelUnavailable, .modelRefusal].contains(failure) else { throw error }
+            return nil
+        }
+    }
+
+    private func memory(_ request: AnalysisRequest) async throws -> (TurnAnalysis, ModelCallMetrics) {
+        try await call(stage: .goalMemory,
             system: OpenRouterSchema.memorySystemPrompt(), user: OpenRouterSchema.memoryPrompt(request),
             responseFormat: OpenRouterSchema.responseFormat(name: "GoalAndCharacterAnalysis", schema: OpenRouterSchema.memoryAnalysis),
             temperature: configuration.analysisTemperature, reasoning: configuration.analysisReasoning,
@@ -939,28 +996,6 @@ actor OpenRouterModelProvider: TrainerModelProvider {
             unusableFailure: .invalidAnalysis) { data in
                 try OpenRouterResponse.decodeMemory(data, context: request.recentMessages)
             }
-        let (analysis, metrics) = try await call(stage: .counselorAnalysis,
-            system: OpenRouterSchema.analysisSystemPrompt(request.codingGuide),
-            user: OpenRouterSchema.analysisPrompt(request),
-            responseFormat: OpenRouterSchema.responseFormat(name: "CounselorAnalysis", schema: OpenRouterSchema.counselorAnalysis),
-            temperature: configuration.analysisTemperature, reasoning: configuration.analysisReasoning,
-            budget: configuration.analysisTokens, retryBudget: configuration.analysisTokensRetry,
-            unusableFailure: .invalidAnalysis) { data in
-                var analysis = try OutputValidator.decodeAnalysis(OpenRouterResponse.analysisPayload(data), input: request.currentInput,
-                                                                  context: request.recentMessages)
-                // Promptstand 0.6 verlangt `permissions`. Eine fehlende oder null gesetzte
-                // Liste darf nicht still als Altvertrag durchgehen: Der Unterschied zwischen
-                // „nicht erhoben" und „kein Ratschlag" entscheidet über eine Warnung.
-                guard analysis.goalUpdates == nil, analysis.characterObservations == nil,
-                      analysis.permissions != nil else { throw TrainerFailure.invalidAnalysis }
-                analysis.goalUpdates = memory.goalUpdates; analysis.characterObservations = memory.characterObservations
-                try OutputValidator.validateAnalysis(analysis, input: request.currentInput, context: request.recentMessages)
-                return analysis
-            }
-        func sum(_ a: Int?, _ b: Int?) -> Int? { guard let a, let b else { return nil }; return a + b }
-        let combined = ModelCallMetrics(durationSeconds: memoryMetrics.durationSeconds + metrics.durationSeconds,
-            inputTokens: sum(memoryMetrics.inputTokens, metrics.inputTokens), outputTokens: sum(memoryMetrics.outputTokens, metrics.outputTokens))
-        return .init(value: analysis, metrics: combined, contextMessagesUsed: request.recentMessages)
     }
 
     func reply(_ request: ReplyRequest) async throws -> ModelResult<ClientReply> {

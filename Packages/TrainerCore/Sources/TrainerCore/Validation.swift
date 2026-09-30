@@ -91,6 +91,11 @@ public enum OutputValidator {
     }
 
     public static func validateAnalysis(_ analysis: TurnAnalysis, input: String, context: [DialogueMessage]) throws {
+        if analysis.memoryStatus == .unavailable {
+            guard analysis.goalUpdates == [], analysis.characterObservations == [] else {
+                throw TrainerFailure.invalidAnalysis
+            }
+        }
         try validateGoalUpdates(analysis.goalUpdates ?? [], input: input, context: context)
         let ranges = try locations(analysis, input: input)
         try validatePermissions(analysis, input: input, context: context, ranges: ranges)

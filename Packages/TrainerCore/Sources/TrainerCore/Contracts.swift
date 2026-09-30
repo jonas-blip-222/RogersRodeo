@@ -59,6 +59,11 @@ public struct DoubleSidedReflection: Codable, Sendable, Equatable {
     }
 }
 
+/// Laufzeitstatus der getrennten Ziel-/Figurenanalyse; kein Modellurteil.
+public enum MemoryAnalysisStatus: String, Codable, Sendable {
+    case complete, unavailable
+}
+
 public struct TurnAnalysis: Codable, Sendable, Equatable {
     public var segments: [AnalysisSegment]
     /// nil heißt nicht erhoben/erkannt, niemals eine negative Bewertung.
@@ -70,12 +75,18 @@ public struct TurnAnalysis: Codable, Sendable, Equatable {
     /// Erlaubnislage je Ratschlagssegment dieses Beitrags. nil: alter Stand/nicht erhoben;
     /// leer: kein Ratschlag oder keine belegbare Einschätzung. Siehe `PermissionAssessment`.
     public var permissions: [PermissionAssessment]?
+    /// nil bewahrt ältere gespeicherte Analysen. unavailable enthält keinerlei neue Zielbelege.
+    public var memoryStatus: MemoryAnalysisStatus?
+
+    public mutating func discardMemory() {
+        goalUpdates = []; characterObservations = []; memoryStatus = .unavailable
+    }
     public init(segments: [AnalysisSegment], doubleSidedReflection: DoubleSidedReflection? = nil,
                 characterObservations: [CharacterObservation]? = nil, goalUpdates: [GoalUpdate]? = nil,
-                permissions: [PermissionAssessment]? = nil) {
+                permissions: [PermissionAssessment]? = nil, memoryStatus: MemoryAnalysisStatus? = nil) {
         self.segments = segments; self.doubleSidedReflection = doubleSidedReflection
         self.characterObservations = characterObservations; self.goalUpdates = goalUpdates
-        self.permissions = permissions
+        self.permissions = permissions; self.memoryStatus = memoryStatus
     }
 }
 

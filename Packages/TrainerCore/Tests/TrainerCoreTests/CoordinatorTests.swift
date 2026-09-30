@@ -437,3 +437,35 @@ actor SlowProvider: TrainerModelProvider {
     #expect(text.contains("zu lange"))
     #expect(text != TrainerFailure.modelUnavailable.errorDescription)
 }
+
+@Test func zielzustandsfehlerVerhindertWederWarnungNochAtomareSpeicherung() async throws {
+    var content = TestData.content
+    content.scenario.openingLine = "Ich will weniger trinken."
+    let reference = EvidenceReference(source: .contextMessage, speaker: .client, messageIndex: 0,
+        quote: content.scenario.openingLine, occurrence: 1)
+    // Formal echte Belegstelle, aber das Ziel wurde nicht eingeführt: erst der
+    // CharacterTracker kann diesen Fehler am dauerhaften Zielzustand feststellen.
+    var candidate = druckAnalyse
+    candidate.goalUpdates = []
+    candidate.characterObservations = [.init(dimension: .readiness, assessment: .willing,
+        goal: reference, evidence: reference, isUncertain: false)]
+    candidate.memoryStatus = .complete
+    let provider = ScriptedProvider(script: [druckEingabe: candidate])
+    let repository = MemorySessionRepository()
+    let coordinator = ConversationCoordinator(repository: repository, provider: provider)
+    let session = try await coordinator.create(content: content, contentHash: "test")
+    let recorder = FeedbackRecorder()
+    let saved = try await coordinator.send(sessionID: session.id, input: druckEingabe, onFeedback: await recorder.sink)
+    #expect(await provider.analyses == 1)
+    #expect(await provider.replies == 1)
+    #expect(saved.turns.count == 1)
+    #expect(saved.state.development == session.state.development)
+    #expect(saved.turns[0].analysis?.memoryStatus == .unavailable)
+    #expect(saved.turns[0].analysis?.segments == druckAnalyse.segments)
+    #expect(saved.turns[0].feedback.contains { $0.ruleID == "warnung.konfrontation" })
+    #expect(await recorder.received.first?.analysisAvailable == true)
+    #expect(try await repository.loadPending(sessionID: session.id) == nil)
+    let restored = try JSONDecoder().decode(SessionSnapshot.self, from: JSONEncoder().encode(saved))
+    #expect(restored == saved)
+    #expect(ReviewBuilder.markdown(restored).contains("Ziel- und Beziehungseinschätzung war nicht verfügbar"))
+}
