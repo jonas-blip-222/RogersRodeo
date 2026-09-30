@@ -15,7 +15,7 @@ Der Coordinator verwendet deterministische Validatoren, StateReducer, ContextBui
 
 Die normale Oberfläche bekommt nur das gespeicherte Ergebnis. Ein Turn besteht aus Eingabe, Einordnung, geprüfter Antwort, Zuständen davor/danach, ausgewähltem Tipp und tatsächlichen Messwerten. Offenheit und verborgene Fakten werden nicht als Bewertungsdaten angezeigt oder exportiert.
 
-## Analyseadapter ab Prompt 0.7
+## Analyseadapter ab Prompt 0.8
 
 Der OpenRouter-Adapter führt Beratungseinordnung und Ziel-/Charakterbeobachtungen parallel aus.
 Beide sehen dieselben nummerierten Originalnachrichten; die Zielanalyse erhält die aktuelle
@@ -42,16 +42,26 @@ Teilaufrufe sie melden; bei fehlender Zielanalyse bleiben sie unbekannt. Die ges
 enthält auch Fehlversuche und abgebrochene Aufrufe. Keine dieser Tokenangaben ersetzt eine
 vollständige Abrechnung des Anbieters, insbesondere nach Abbruch.
 
-Prompt 0.7 und Inhaltsleitfaden 0.2 unterscheiden den neuen Stand von bisherigen Sitzungen.
+Prompt 0.8 und Inhaltsleitfaden 0.3 unterscheiden den neuen Stand von bisherigen Sitzungen.
 Regeln 0.5 und Rückmeldungsbausteine 0.3 bleiben unverändert. Offene alte Sitzungen können wegen
 der Versionsbindung weiterhin gelesen/exportiert, aber nicht unter geändertem Prompt fortgesetzt
-werden. Keine Modell-, Provider- oder Rollenpromptänderung.
+werden. Rollenprompt und Providerbeschränkungen bleiben erhalten.
 
-Bei ausdrücklich konfigurierten Anthropic-Modellen verwendet der Adapter für die beiden
-Analyseschemata gemeinsame Belegdefinitionen (`$defs`/`$ref`). Die wiederholten nullable
-Objekte überschritten sonst die Grammatikgrenze des Anbieters. Das ausgegebene JSON und die
-lokale Validierung bleiben gleich; Qwen- und Rollenschemata behalten ihre bisherige Form.
-Das ist eine Schnittstellenkorrektur, keine automatische Modellumschaltung.
+Die Figur verwendet weiter `qwen/qwen3.8-27b`; beide Analysestufen verwenden
+`anthropic/claude-sonnet-5.5`. Sonnet benötigt internes Überlegen; das Feld wird ausgelassen,
+um die Vorgabe des Endpunkts zu verwenden. Das gemessene Ausgabebudget ist 4000, bei
+Abschneidung einmalig 8000 Token. Qwens Rollenbudget, Temperatur und Rollenprompt bleiben.
+Kein stiller Modellfallback: eine nicht verfügbare Berateranalyse bleibt ein Fehler.
+Die zusammengesetzte Sitzungsidentität enthält Rollen- und Analysemodell; die Messspur
+nennt je HTTP-Aufruf das tatsächlich angeforderte Modell. `analysisModel=nil` aktiviert
+nur für ausdrücklich konfigurierte Vergleiche wieder die historischen gemeinsamen Einstellungen.
+
+Die Anthropic-Analyseschemata verwenden gemeinsame Belegdefinitionen (`$defs`/`$ref`).
+Die wiederholten nullable Objekte überschritten sonst die Grammatikgrenze des Anbieters.
+Die Anfrage serialisiert Gesprächssegmente vor den davon abhängigen Erlaubnisbelegen und
+Zitate vor deren Codes. Die JSON-Bedeutung, Pflichtfelder und lokale Validierung bleiben
+erhalten. Gesprächsdaten werden weiterhin durch JSONEncoder maskiert. Der Leitfaden prüft
+positive Codes gegen den gesamten Beitrag und trennt eigenständige Ratschläge und Abwertungen.
 
 ## Ausführung und Persistenz
 

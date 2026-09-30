@@ -3,6 +3,72 @@
 Neueste Prüfungen zuerst. Ältere Abschnitte bleiben als Verlauf erhalten und werden nicht
 rückwirkend umgeschrieben.
 
+## 30. September 2026 · MI-03: konkreter Einordnungsfehler im Live-Replay behoben
+
+Arbeitsbranch `codex/analyse-ausfaelle`. Claude Code wurde ausdrücklich beauftragt;
+beide unabhängigen read-only Prüfungen liefen mit **Claude Sonnet 5**. Die erste fand einen
+Konflikt zwischen Zusammenfassen einer Begründung und getrenntem Erfassen einer Abwertung
+sowie eine unklare Reichweite der Autonomieprüfung. Die zweite fand nach Überarbeitung keinen
+Blocker; die angeregte Angleichung von Schema- und required-Reihenfolge wurde umgesetzt.
+Ein Test prüft die tatsächliche Byte-Reihenfolge und unveränderte JSON-Bedeutung.
+
+Leitfaden 0.3 / Prompt 0.8: eigenständige Empfehlungen und Abwertungen bleiben erhalten;
+positive Codes müssen im gesamten Beitrag wirksam sein. Ein eindeutiger Gegenbeleg ist
+kein bloß fehlender Beleg. Pflichtfelder, Zitat-/Erlaubnisprüfung und Regeln 0.5 bleiben strikt.
+Die Schemaeigenschaften stellen nun Segmente vor Erlaubnisbelege und Zitate vor Codes.
+Das allein reichte im Vergleich mit Sonnet 4.6 nicht: u. a. Rat ohne Erlaubnis bei gleichzeitig
+belegtem standing=erteilt wurde korrekt zurückgewiesen. Mit Qwen und neuem Leitfaden wurden
+weiter nur 3/5 Originalanalysen angenommen.
+
+**Modellentscheidung im Arbeitsbranch:** `qwen/qwen3.8-27b` spielt weiterhin die Figur;
+`anthropic/claude-sonnet-5.5` übernimmt Beratungseinordnung und Zielgedächtnis. Sonnet 5.5
+verlangt internes Überlegen, weshalb es nicht wie Qwen deaktiviert wird. Analysebudget
+4000/8000; Rollenbudget/Temperatur/Prompt bleiben. Ein Zwischenvergleich mit Qwen für das
+Zielgedächtnis lieferte vier Ausfälle in fünf Originalrunden, weshalb beide Analysestufen
+Sonnet nutzen. Kein stiller Modellfallback. Sitzungsidentität nennt beide Modelle;
+Messspur und HTTP-Anfrage nennen das tatsächliche Stufenmodell. Alte Sitzungen bleiben
+lesbar/exportierbar; Fortsetzung verlangt die passende Modell-/Promptidentität. Siehe E08.
+
+**Abschließender Live-Replay mit genau dieser Konfiguration:**
+
+- Originaldialog: **5/5 Beratungseinordnungen angenommen**, 2,17–12,57 s je Analyse.
+  Runde drei enthält Rat **mit** erteilter Erlaubnis und separate Konfrontation.
+  Runden vier/fünf belegen die verbrauchte Zustimmung. Runde fünf erzeugt keine positive
+  Autonomierückmeldung, sondern Warnungen zu Verbrauch und Druck.
+- Elf bisherige Kontraste: **11/11 formal angenommen**, 2,01–10,23 s. Keine falsche
+  Autonomie für die durch den Folgesatz aufgehobene Freigabe; keine sichere Zusammenarbeit
+  bei der selbst beantworteten Frage. Echte Autonomie bleibt in den positiven Gegenstücken.
+- Sechs unabhängige Gegenproben: **6/6 formal angenommen**, 2,01–6,93 s. Echte Autonomie
+  neben erlaubtem Rat, sachliche Direktheit, reine Abwertung, zwei Räte nach einem Ja,
+  ausdrückliche Ablehnung und neue Situation entsprechen den konkret formulierten Erwartungen.
+  Erwartungen/Erklärungen werden dem Modell nicht übermittelt.
+- Optionales Zielgedächtnis: **21/22** Analysen verfügbar. In Originalrunde vier brach die
+  eigene Zwölf-Sekunden-Frist den Zielaufruf ab; die gültige Beratungseinordnung blieb erhalten.
+  Kein vollständiger Rollen-/UI-Lauf und keine behauptete Ende-zu-Ende-Beschleunigung.
+- **44** HTTP-Aufrufe gestartet, **43** mit Antwort und Kosten, ein Zielaufruf abgebrochen.
+  Gemeldete Kosten **0,690408 USD** für diese drei Schlussläufe; mögliche Kosten des
+  abgebrochenen Aufrufs sind darin nicht belegt. Keine harte Rechnungsobergrenze behauptet.
+
+**Fachliche Grenze:** Kontrast04 („Dass Sie überhaupt hier sitzen, rechne ich Ihnen an.
+Dann hören Sie jetzt auch endlich mit dem Trinken auf.“) erhält weiter eine sichere
+Würdigung neben dem Rat. Ob Anerkennung eigenständig oder nur vorgeschoben ist, bleibt
+zur fachlichen Freigabe offen. Kontrast09 ist als einfache Reflexion plausibel; seine frühere
+Würdigungs-Erwartung ist kein verpflichtendes Goldlabel. Segmentgrenzen/Unsicherheit können
+variieren. Die Arbeitsentwürfe belegen keine allgemeine fachliche Trefferquote.
+
+Liveordner außerhalb von Git: `live-final-replay-20260930T205107Z-5daebb`,
+`live-final-contrast-20260930T205107Z-67b636` (elf Kontraste),
+`live-final-contrast-20260930T205107Z-5aa4ec` (sechs Gegenproben), im bisherigen Diagnoseordner.
+Claude-Berichte: `claude-semantik-review.json` und `claude-semantik-followup.json` dort.
+
+Lokale Prüfungen: **Core 103, Storage 5, App 81, Python 22** bestanden; vier Opt-in-Livetests
+im normalen App-Lauf deaktiviert und sechs Schlüsselbundtests ausgeschlossen. Swift- und
+iOS-Simulator-Build ohne Codesignierung bestanden, `git diff --check` sauber. Logs unter
+`/private/tmp/rr-codex-permission-y9wa7t08/`: `*-mi03-final.log`, `app-model-split.log`,
+`build-model-split-final.log`, `ios-model-split-final.log`. Kein neuer UI-/iPhone-Gerätetest.
+Nächster MI-03-Schritt: dauerhaftes Erlaubnisgedächtnis, danach Prozesshinweise; der fachliche
+Würdigungsgrenzfall und freie Simulatorprüfung bleiben separat offen. Kein Push oder Merge.
+
 ## 30. September 2026 · Claude-Schemafehler eingegrenzt und behoben
 
 Jonas' Präzisierung: bei Claude-Aufträgen zum Coden mindestens Sonnet verwenden; Lukas'

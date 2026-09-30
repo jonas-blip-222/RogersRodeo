@@ -2,6 +2,19 @@
 
 Die folgenden Punkte sind eine Diskussionsgrundlage, keine bereits fachlich freigegebene Spezifikation.
 
+## MI-03 · Einordnungsfehler bearbeitet, 30.09.2026
+
+- [x] Leitfaden 0.3: eigenständige Empfehlungen und Abwertungen trennen; echte Autonomie
+      gegen den ganzen Beitrag prüfen, Gegenbelege von fehlenden Belegen unterscheiden.
+- [x] Beratung und Zielgedächtnis mit Sonnet 5.5 vergleichen und getrennt von Qwens Rolle
+      konfigurieren. Prompt 0.8; zusammengesetzte Modellidentität und Messspur geprüft.
+- [x] Originaldialog, elf bestehende Kontraste und sechs unabhängige Gegenproben live prüfen.
+      Tatsächliche Ergebnisse und Grenzen im neuesten `STATUS.md`; keine Goldreferenz.
+- [ ] Freien Simulatorlauf mit dem neuen Stand prüfen; kein neuer UI-/iPhone-Nachweis.
+- [ ] Mehrdeutige Würdigung vor einer Forderung fachlich klären; keine pauschale Sperre
+      für positive Rückmeldung neben einem Rat.
+- [ ] Danach dauerhaftes Erlaubnisgedächtnis über das Kontextfenster ergänzen.
+
 ## MI-04 · Sitzungsrahmen beschlossen, Umsetzung offen
 
 - [x] Jonas’ Festlegungen vom 29.09.2026 in `MI-UEBERGABE.md`, Abschnitt 12/MI-04,

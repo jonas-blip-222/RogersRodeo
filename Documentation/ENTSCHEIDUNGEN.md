@@ -301,3 +301,36 @@ keine rechtliche Prüfung der Aufklärungspflichten. Der Text ist inzwischen ges
   `DisclaimerText.reviewStatus` auf `.draft`, und die Ansicht trägt sichtbar den Vermerk
   „Entwurf · fachlich nicht abgenommen". Mit der Abnahme entfällt der Vermerk; ob die Fassung
   dabei auf `"2"` steigt, entscheidet Jonas mit.
+
+
+## E08 · Analysemodell von der Figur trennen
+
+**30.09.2026, technische Entscheidung im Arbeitsbranch nach Jonas' Auftrag zur Fehlerbehebung.**
+Die Figur bleibt bei `qwen/qwen3.8-27b`; Beratungseinordnung und Zielgedächtnis verwenden
+`anthropic/claude-sonnet-5.5`. Rollenprompt, Rollenbudget und Temperatur bleiben erhalten.
+Die getrennte Ausführung mit einer eigenen Frist für das optionale Zielgedächtnis bleibt.
+
+Begründung: Qwen nahm auch nach Leitfadenpräzisierung nur 3/5 Originalanalysen an. Sonnet 4.6
+zeigte weiter Rat-/Erlaubniswidersprüche. Sonnet 5.5 nahm im Schlusslauf 5/5 Originalbeiträge,
+11/11 bestehende Kontraste und 6/6 neue Gegenproben an; die konkreten Fehler bei Rat plus
+Abwertung, Erlaubnisverbrauch und falschem Autonomie-Lob traten dort nicht mehr auf.
+Ein Zielaufruf überschritt die eigene Frist, ohne die gültige Beratung zu verwerfen.
+Fachliche Grenzen und sämtliche Prüfgrenzen stehen im neuesten STATUS; keine allgemeine
+Qualitätsfreigabe und kein Goldstandard.
+
+Sonnet 5.5 erfordert Überlegen. Die Anfrage überlässt dessen Einstellung dem Endpunkt
+(`reasoning` nicht gesendet), mit 4000 Ausgabetoken und einmalig 8000 bei Abschneidung.
+Die Rollenparameter werden nicht übernommen. Providerfilter einschließlich
+`data_collection=deny` bleiben. Es gibt keinen automatischen Rückfall auf ein anderes Modell.
+Die gemeinsame Sitzungsidentität enthält Rollen- und Analysemodell; jeder Messspureintrag
+führt das tatsächlich angefragte Modell der jeweiligen Stufe. Neue Promptversion 0.8.
+
+Gegenüber Qwen steigen die Analysekosten. Im finalen Fünf-Runden-Replay waren 0,16377 USD
+für neun beantwortete Aufrufe gemeldet; ein abgebrochener Zielaufruf hat unbekannte Kosten.
+Die öffentlich gelisteten Tokenpreise allein sind keine vollständige Kostenmessung.
+Die Modellliste vom 30.09. bestätigte für beide Modelle eine Million Kontexttoken.
+Quelle: [OpenRouter-Modellliste](https://openrouter.ai/api/v1/models).
+
+Die frühere Vorgabe „ein Modell für beide Aufgaben“ aus E01 wird damit für die
+Modellauswahl geändert. Gemeinsamer Anbieterzugang und alle übrigen Grenzen bleiben bestehen.
+Die Einbindung in main erfordert weiterhin Jonas' konkrete Freigabe.
