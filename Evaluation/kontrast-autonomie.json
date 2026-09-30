@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "quelle": "ContentSource/mi-coding-guide.md, Abschnitte 'Funktion im Kontext' und 'Pruefschritte fuer autonomie_betonen'",
+  "status": "draft",
+  "istGoldreferenz": false,
+  "hinweis": "Kontrastfaelle zur kontextabhaengigen Einordnung, vor allem zu autonomie_betonen. Fachliche Arbeitsentwuerfe von Claude vom 30.09.2026, ausdruecklich keine geprueften Soll-Ausgaben und keine Goldreferenz. Jeder negative Fall hat ein positives Gegenstueck mit aehnlicher Wortwahl: die Faelle pruefen, ob die Einordnung an der Funktion im Kontext haengt und nicht an Stichworten. Alle Gespraechsdaten sind erfunden; es sind keine echten Klientendaten. Das Auswertungsskript bildet daraus keine Trefferquote.",
+  "faelle": [
+    {
+      "id": "kontrast01_entscheidung_als_nachdruck",
+      "titel": "Aufforderung zur Entscheidung am Ende einer Kette ungefragter Ratschlaege",
+      "art": "segment",
+      "kontext": [
+        { "speaker": "client", "text": "Sarah übertreibt total. Ich hab das doch im Griff." },
+        { "speaker": "counselor", "text": "Darf ich Ihnen dazu etwas sagen?" },
+        { "speaker": "client", "text": "Na sicher, gerne." },
+        { "speaker": "counselor", "text": "Hör auf zu saufen. Alle außer dir haben schon mitbekommen, dass es zu viel ist." },
+        { "speaker": "client", "text": "Ist ja gut. Kann sein." },
+        { "speaker": "counselor", "text": "Halt dich eher fern von den Jungs, die sind kein guter Einfluss." },
+        { "speaker": "client", "text": "Hm. Die Jungs kenn ich seit der Schule." }
+      ],
+      "eingabe": "Sie sollten sich dann von Sarah trennen, entscheiden Sie sich.",
+      "erwarteteWarnung": true,
+      "fachlicheErwartung": "Kein autonomie_betonen. 'entscheiden Sie sich' traegt keine eigene Handlung, sondern setzt die unmittelbar davor genannte Empfehlung durch: der Entscheidungsraum ist nicht offen (die Richtung ist genannt) und der Druck geht zur Person hin, nicht von ihr weg. Beide Pruefschritte fuer autonomie_betonen scheitern. Erwartet wird ein Ratschlagssegment; die Erlaubnis aus 'Na sicher, gerne.' ist durch den ersten Rat verbraucht und traegt ausserdem einen anderen Gegenstand, also ratschlag_ohne_erlaubnis. Ob der Halbsatz mit im selben Segment liegt oder als eigenes Ratschlagssegment kodiert wird, ist zweitrangig; entscheidend ist, dass daraus keine positive Rueckmeldung wird.",
+      "gegenprobe": "Die Einordnung darf nicht damit begruendet werden, dass das Gespraech insgesamt draengend ist: siehe kontrast06, wo dieselbe Vorgeschichte eine echte Autonomiebetonung nicht verhindert. Sie darf ebenso wenig an den Woertern 'entscheiden' oder 'Sie' haengen."
+    },
+    {
+      "id": "kontrast02_entscheidung_als_nachdruck_ohne_vorgeschichte",
+      "titel": "Dieselbe Aufforderung ohne draengende Vorgeschichte",
+      "art": "segment",
+      "kontext": [
+        { "speaker": "client", "text": "Sarah sagt, entweder das Trinken oder sie. Ich weiß echt nicht weiter." }
+      ],
+      "eingabe": "Sie sollten sich dann von Sarah trennen, entscheiden Sie sich.",
+      "erwarteteWarnung": true,
+      "fachlicheErwartung": "Auch ohne vorherige Abwertungen kein autonomie_betonen: die Beratung benennt ein Ergebnis als das richtige und verlangt eine Festlegung darauf. Erwartet wird ratschlag_ohne_erlaubnis; eine Erlaubnis ist im Kontext nicht erkennbar. Der Fall zeigt, dass der Befund aus der Funktion des Halbsatzes folgt und nicht erst aus dem Gespraechsklima.",
+      "gegenprobe": "Die Ratlosigkeit des Klienten ist keine Bitte um einen Vorschlag; 'Ich weiß echt nicht weiter' allein ist kein vom_klienten_erbeten."
+    },
+    {
+      "id": "kontrast03_freiheitsformel_mit_richtiger_antwort",
+      "titel": "Freiheitsformel, die im selben Zug das richtige Ergebnis benennt",
+      "art": "segment",
+      "kontext": [
+        { "speaker": "client", "text": "Am Freitag bin ich immer mit den Jungs unterwegs, das ist einfach so." }
+      ],
+      "eingabe": "Sie können das natürlich halten, wie Sie wollen. Vernünftig ist aber nur der eine Weg, und den kennen Sie.",
+      "erwarteteWarnung": true,
+      "fachlicheErwartung": "Der erste Satz hat die Form einer Freigabe, wird aber im zweiten zurueckgenommen: nach dem Beitrag ist nur ein Ergebnis in Ordnung, ohne dass Lukas der Beratung widersprechen muesste. Damit scheitert Pruefschritt 1. Erwartet wird kein autonomie_betonen, sondern eine Einordnung als konfrontation oder als Ratschlag; 'Vernünftig ist aber nur der eine Weg' ist der Beleg.",
+      "gegenprobe": "Nicht jedes 'natürlich' oder 'wie Sie wollen' ist unaufrichtig. Steht keine Bewertung des richtigen Ergebnisses daneben, kann derselbe erste Satz autonomie_betonen sein: siehe kontrast08."
+    },
+    {
+      "id": "kontrast04_anerkennung_als_vorspann_einer_forderung",
+      "titel": "Anerkennung als Vorspann einer Forderung",
+      "art": "segment",
+      "kontext": [
+        { "speaker": "client", "text": "Ich bin heute hergekommen, obwohl ich es für Quatsch halte." }
+      ],
+      "eingabe": "Dass Sie überhaupt hier sitzen, rechne ich Ihnen an. Dann hören Sie jetzt auch endlich mit dem Trinken auf.",
+      "erwarteteWarnung": true,
+      "fachlicheErwartung": "Die Anerkennung leitet eine Forderung ein und gehoert zu ihr; eine gesicherte wuerdigung ist hier nicht angemessen. Erwartet werden ein Ratschlags- oder Konfrontationssegment fuer den zweiten Satz und fuer den ersten Satz entweder dieselbe Handlung oder eine als unsicher markierte Einordnung.",
+      "gegenprobe": "Eine belegte Anerkennung bleibt eine Wuerdigung, wenn keine Forderung an ihr haengt: siehe kontrast09. Das blosse Vorkommen eines Ratschlags im selben Beitrag entwertet eine Wuerdigung nicht automatisch."
+    },
+    {
+      "id": "kontrast05_abwertung_und_rat_nebeneinander",
+      "titel": "Abwertung und Rat im selben Beitrag",
+      "art": "segment",
+      "kontext": [
+        { "speaker": "client", "text": "Sarah übertreibt total. Ich hab das doch im Griff." },
+        { "speaker": "counselor", "text": "Darf ich Ihnen dazu etwas sagen?" },
+        { "speaker": "client", "text": "Na sicher, gerne." }
+      ],
+      "eingabe": "Hör auf zu saufen. Alle außer dir haben schon mitbekommen, dass es zu viel ist.",
+      "erwarteteWarnung": true,
+      "fachlicheErwartung": "Zwei Handlungen, also zwei Segmente: eine Empfehlung im ersten Satz und eine Abwertung im zweiten ('Alle außer dir haben schon mitbekommen'). Die Abwertung darf nicht entfallen, nur weil der Rat schon kodiert ist. Die Erlaubnis aus 'Na sicher, gerne.' bezieht sich auf diesen einen Rat; sie deckt die Abwertung nicht.",
+      "gegenprobe": "Eine deutliche, aber sachliche Rueckmeldung ohne Abwertung waere keine konfrontation. Die Warnung haengt nicht daran, dass Lukas protestiert."
+    },
+    {
+      "id": "kontrast06_autonomie_nach_draengen",
+      "titel": "Echte Autonomiebetonung nach einer draengenden Passage",
+      "art": "segment",
+      "kontext": [
+        { "speaker": "client", "text": "Sarah übertreibt total. Ich hab das doch im Griff." },
+        { "speaker": "counselor", "text": "Darf ich Ihnen dazu etwas sagen?" },
+        { "speaker": "client", "text": "Na sicher, gerne." },
+        { "speaker": "counselor", "text": "Hör auf zu saufen. Alle außer dir haben schon mitbekommen, dass es zu viel ist." },
+        { "speaker": "client", "text": "Ist ja gut. Kann sein." },
+        { "speaker": "counselor", "text": "Halt dich eher fern von den Jungs, die sind kein guter Einfluss." },
+        { "speaker": "client", "text": "Hm. Die Jungs kenn ich seit der Schule." }
+      ],
+      "eingabe": "Ich habe Ihnen gerade zwei Ratschläge hingelegt, ohne Sie zu fragen. Ob Sie davon irgendetwas aufgreifen oder nichts davon, entscheiden Sie; ich nehme Ihnen das nicht ab.",
+      "erwarteteWarnung": false,
+      "fachlicheErwartung": "Hier ist autonomie_betonen angemessen, obwohl dieselbe draengende Vorgeschichte vorliegt wie in kontrast01: 'oder nichts davon' haelt ausdruecklich auch das Nichtstun offen, und der Druck wird von der Person genommen statt an sie zurueckgegeben. Beide Pruefschritte sind erfuellt. Der erste Satz ist eher information oder sonstiges; er ist kein neuer Ratschlag.",
+      "gegenprobe": "Das Gespraechsklima allein darf diese Einordnung nicht verhindern. Wuerde der Beitrag mit 'aber Sie wissen ja, was richtig ist' enden, waere Pruefschritt 1 verletzt und die Einordnung eine andere."
+    },
+    {
+      "id": "kontrast07_autonomie_neben_rat_mit_erlaubnis",
+      "titel": "Autonomiebetonung neben einem Rat mit Erlaubnis",
+      "art": "segment",
+      "kontext": [
+        { "speaker": "client", "text": "Der Freitag läuft jedes Mal gleich ab, und danach ärgere ich mich." },
+        { "speaker": "counselor", "text": "Möchten Sie eine Idee dazu hören?" },
+        { "speaker": "client", "text": "Ja, gerne." }
+      ],
+      "eingabe": "Sie könnten den Freitag einmal anders anfangen lassen, etwa mit einem festen Termin am Samstagmorgen. Wenn das für Sie nicht passt, lassen Sie es einfach; das ist Ihre Entscheidung.",
+      "erwarteteWarnung": false,
+      "fachlicheErwartung": "Zwei Segmente: ratschlag_mit_erlaubnis fuer den Vorschlag, belegt durch die Erlaubnisfrage und 'Ja, gerne.', und autonomie_betonen fuer den zweiten Satz, weil das Ablehnen des Vorschlags ausdruecklich freigegeben wird. Die Autonomieformulierung ersetzt die Erlaubnis nicht, sie steht daneben.",
+      "gegenprobe": "Faellt der Freigabeteil weg und bleibt nur 'das ist Ihre Entscheidung' nach einer Empfehlung stehen, ist die Einordnung offen und im Zweifel unsicher zu markieren, nicht automatisch positiv."
+    },
+    {
+      "id": "kontrast08_autonomie_am_einstieg",
+      "titel": "Autonomiebetonung am Einstieg, ohne Richtungsangabe",
+      "art": "segment",
+      "kontext": [
+        { "speaker": "client", "text": "Ich bin nur hier, weil Sarah mich geschickt hat. Ich finde das völlig übertrieben." }
+      ],
+      "eingabe": "Ob Sie hier überhaupt etwas verändern wollen, entscheiden Sie. Ich habe keine Vorgabe, wie Ihr Freitag aussehen soll.",
+      "erwarteteWarnung": false,
+      "fachlicheErwartung": "autonomie_betonen. Nach dem Beitrag bleibt mehr als ein Ergebnis in Ordnung, und die Beratung nimmt Druck von der Person, ohne ein Ergebnis als das richtige zu benennen. Beide Pruefschritte sind erfuellt. Aus der Formulierung darf keine Veraenderungsbereitschaft abgeleitet werden.",
+      "gegenprobe": "Eine einzelne Autonomieformulierung belegt weder eine gelungene Arbeitsbeziehung noch einen Stadienwechsel."
+    },
+    {
+      "id": "kontrast09_wuerdigung_ohne_forderung",
+      "titel": "Belegte Anerkennung ohne angehaengte Forderung",
+      "art": "segment",
+      "kontext": [
+        { "speaker": "client", "text": "Letzte Woche bin ich am Freitag einfach nach Hause gefahren. Das war ungewohnt." }
+      ],
+      "eingabe": "Sie sind letzte Woche nach Hause gefahren, obwohl das für Sie ungewohnt war. Wie haben Sie das hinbekommen?",
+      "erwarteteWarnung": false,
+      "fachlicheErwartung": "Kandidat wuerdigung fuer den ersten Satz mit exaktem supportingClientQuote aus der Klientennachricht, offene_frage fuer den zweiten. An der Anerkennung haengt keine Forderung, daher greift die Einschraenkung aus kontrast04 nicht.",
+      "gegenprobe": "Eine blosse Wiederholung des Berichteten wird nicht allein durch freundlichen Ton zur Wuerdigung. Ohne wortgetreuen Beleg gibt es keinen Zustandsbonus."
+    },
+    {
+      "id": "kontrast10_scheinbare_zusammenarbeit",
+      "titel": "Frage nach dem Vorgehen mit vorweggenommener Antwort",
+      "art": "segment",
+      "kontext": [
+        { "speaker": "client", "text": "Keine Ahnung, worüber wir hier reden sollen." }
+      ],
+      "eingabe": "Womit möchten Sie heute anfangen? Am besten mit dem Alkohol, alles andere bringt ja nichts.",
+      "erwarteteWarnung": true,
+      "fachlicheErwartung": "Die Frage sucht keine Zusammenarbeit, weil ihre Antwort im selben Beitrag vorweggenommen und bewertet wird. Erwartet wird fuer den zweiten Satz ein Ratschlags- oder Konfrontationssegment; der erste Satz ist hoechstens als unsichere offene_frage einzuordnen, nicht als gesichertes zusammenarbeit_suchen.",
+      "gegenprobe": "Ohne den zweiten Satz ist 'Womit möchten Sie heute anfangen?' ein klares zusammenarbeit_suchen. Der Befund haengt am Zusammenspiel der beiden Saetze, nicht an der Frageform."
+    }
+  ]
+}
