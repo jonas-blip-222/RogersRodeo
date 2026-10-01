@@ -139,7 +139,7 @@ private func befunde(_ analysis: TurnAnalysis?, _ input: String,
 
     let zusammenfassung = befunde(TurnAnalysis(segments: [
         .init(quote: "Sie möchten selbst entscheiden und merken zugleich Folgen am Wochenende.", code: .summary, isUncertain: false,
-              supportingClientQuote: "will das selbst entscheiden")]),
+              supportingClientQuotes: ["will das selbst entscheiden", "Wochenende mich mehr ausbremst"])]),
         "Sie möchten selbst entscheiden und merken zugleich Folgen am Wochenende.", kontext)
     #expect(zusammenfassung.map(\.ruleID) == ["rueckmeldung.zusammenfassung"])
 
@@ -148,6 +148,19 @@ private func befunde(_ analysis: TurnAnalysis?, _ input: String,
               supportingClientQuote: "muss mir aber eingestehen")]),
         "Dass Sie das aussprechen, zeigt Ehrlichkeit.", kontext)
     #expect(wuerdigung.map(\.ruleID) == ["rueckmeldung.wuerdigung"])
+}
+
+@Test func zusammenfassungBrauchtZweiBelegeAusVerschiedenenKlientennachrichten() {
+    let input = "Sie möchten selbst entscheiden und merken zugleich Folgen am Wochenende."
+    let analysis = TurnAnalysis(segments: [
+        .init(quote: input, code: .summary, isUncertain: false,
+              supportingClientQuotes: ["selbst entscheiden", "Wochenende"])
+    ])
+    let eineNachricht = ["Ich will selbst entscheiden, merke aber am Wochenende Folgen."]
+    #expect(throws: TrainerFailure.invalidAnalysis) {
+        try OutputValidator.validateAnalysis(analysis, input: input,
+                                             context: eineNachricht.map { .init(speaker: .client, text: $0) })
+    }
 }
 
 @Test func reflexionOhneKlientenbelegErhaeltKeineRueckmeldung() {

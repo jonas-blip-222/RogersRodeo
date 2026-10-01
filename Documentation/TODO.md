@@ -16,7 +16,7 @@ Prozessmechaniken vor MI-04.
       konfigurieren. Prompt 0.8; zusammengesetzte Modellidentität und Messspur geprüft.
 - [x] Originaldialog, elf bestehende Kontraste und sechs unabhängige Gegenproben live prüfen.
       Tatsächliche Ergebnisse und Grenzen im neuesten `STATUS.md`; keine Goldreferenz.
-- [ ] Freien App-Lauf mit Leitfaden 0.5 / Prompt 1.0 prüfen: sichere Rückmeldung für offene
+- [ ] Freien App-Lauf mit Leitfaden 0.6 / Prompt 1.1 prüfen: sichere Rückmeldung für offene
       Fragen, einfache und komplexe Reflexionen, Zusammenfassungen und Würdigungen; kein
       neuer UI-/iPhone-Nachweis.
 - [ ] Mehrdeutige Würdigung vor einer Forderung fachlich klären; keine pauschale Sperre

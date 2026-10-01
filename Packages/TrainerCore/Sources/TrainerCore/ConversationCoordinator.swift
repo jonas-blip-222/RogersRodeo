@@ -56,10 +56,10 @@ public enum RoundDeadline {
 }
 
 public actor ConversationCoordinator {
-    /// 1.0: Kernfertigkeiten und die Unsicherheitsregel sind präzisiert.
-    public static let promptVersion = "1.0"
-    /// 0.6: Sichere Rückmeldungen umfassen die fünf Kernfertigkeiten.
-    public static let rulesVersion = "0.6"
+    /// 1.1: Zusammenfassungen bündeln belegte Aussagen aus mehreren Gesprächsrunden.
+    public static let promptVersion = "1.1"
+    /// 0.7: Zusammenfassungen verlangen mindestens zwei getrennte Klientenbelege.
+    public static let rulesVersion = "0.7"
     private let repository: any SessionRepository
     private let provider: any TrainerModelProvider
     private var generation: UUID?

@@ -35,10 +35,14 @@ public struct AnalysisSegment: Codable, Sendable, Equatable {
     public var code: CounselorCode
     public var isUncertain: Bool
     public var supportingClientQuote: String?
+    /// Eine Zusammenfassung belegt die verbundenen Gedanken mit mindestens zwei früheren
+    /// Klientennachrichten. Die einzelne Quote bleibt für Reflexionen und Würdigungen.
+    public var supportingClientQuotes: [String]?
     public init(quote: String, code: CounselorCode, isUncertain: Bool,
-                supportingClientQuote: String? = nil) {
+                supportingClientQuote: String? = nil, supportingClientQuotes: [String]? = nil) {
         self.quote = quote; self.code = code; self.isUncertain = isUncertain
         self.supportingClientQuote = supportingClientQuote
+        self.supportingClientQuotes = supportingClientQuotes
     }
 }
 

@@ -126,7 +126,7 @@ public struct FeedbackTemplate: Sendable, Equatable {
 /// Der Bestand der Textbausteine. Eigene Version, damit eine Formulierungsänderung nicht die
 /// `rulesVersion` der Sitzung anfassen muss — die entscheidet über die Fortsetzbarkeit.
 public enum FeedbackTemplates {
-    public static let version = "0.4"
+    public static let version = "0.5"
 
     /// Fachlicher Entwurf. Formulierungen sind an Abschnitt 7.1 angelehnt und noch nicht
     /// fachlich geprüft; Quellenkennungen verweisen auf Abschnitt 14 des MI-Nachtrags; E04 auf die Produktentscheidung.
@@ -191,7 +191,7 @@ public enum FeedbackTemplates {
               sourceID: "S2"),
         .init(ruleID: "rueckmeldung.zusammenfassung", kind: .observation, certainty: .confirmed,
               title: "Zusammenfassung",
-              format: "Mit „{zitat}“ fasst du mehrere Aussagen von {figur} zusammen: „{beleg}“.",
+              format: "Mit „{zitat}“ verbindest du Aussagen aus mehreren Gesprächsrunden von {figur}: „{beleg}“.",
               sourceID: "S2"),
         .init(ruleID: "rueckmeldung.offene_frage", kind: .observation, certainty: .confirmed,
               title: "Offene Frage",
@@ -407,15 +407,22 @@ public enum FeedbackEngine {
         var evidence = [EvidenceReference(source: .currentInput, speaker: .counselor, messageIndex: nil,
                                           quote: segment.quote,
                                           occurrence: occurrence(of: segment.quote, endingAt: range.upperBound, in: input))]
-        var support: String?
-        if let quote = segment.supportingClientQuote,
-           let index = context.firstIndex(where: { $0.speaker == .client && $0.text.range(of: quote, options: .literal) != nil }) {
-            support = quote
+        let quotes = segment.code == .summary ? (segment.supportingClientQuotes ?? [])
+            : (segment.supportingClientQuote.map { [$0] } ?? [])
+        var supports: [String] = []
+        var usedIndices: Set<Int> = []
+        for quote in quotes {
+            guard let index = context.indices.first(where: { index in
+                context[index].speaker == .client && !usedIndices.contains(index)
+                    && context[index].text.range(of: quote, options: .literal) != nil
+            }) else { continue }
+            usedIndices.insert(index); supports.append(quote)
             evidence.append(.init(source: .contextMessage, speaker: .client, messageIndex: index,
                                   quote: quote, occurrence: 1))
         }
+        let support = supports.joined(separator: " · ")
         // Ohne Klientenbeleg keine positive Rückmeldung für Reflexion, Zusammenfassung und Würdigung.
-        if requiresSupport, support == nil { return nil }
+        if requiresSupport, supports.isEmpty || (segment.code == .summary && supports.count < 2) { return nil }
         // Gegenprobe gegen die tatsächlich übergebenen Texte. Ein Befund ohne haltbaren
         // Beleg wird verworfen statt angezeigt.
         for reference in evidence {
@@ -423,7 +430,8 @@ public enum FeedbackEngine {
         }
         return FeedbackFinding(ruleID: ruleID, kind: template.kind, certainty: certainty,
                                title: template.title,
-                               message: template.render(character: characterName, quote: segment.quote, support: support),
+                               message: template.render(character: characterName, quote: segment.quote,
+                                                        support: support.isEmpty ? nil : support),
                                evidence: evidence, templateVersion: FeedbackTemplates.version,
                                rulesVersion: rulesVersion, sourceID: template.sourceID,
                                reviewStatus: .draft)

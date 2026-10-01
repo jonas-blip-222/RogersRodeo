@@ -36,7 +36,11 @@ public enum StateReducer {
                 case .confrontation: penalty = max(penalty, 2); reasons.append("confrontation")
                 case .adviceWithoutPermission: penalty = max(penalty, 1); reasons.append("advice_without_permission")
                 case .simpleReflection, .complexReflection, .summary, .affirmation, .autonomy, .collaboration:
-                    if [.simpleReflection, .complexReflection, .summary, .affirmation].contains(segment.code), segment.supportingClientQuote == nil {
+                    let lacksSupport = segment.code == .summary
+                        ? (segment.supportingClientQuotes?.count ?? 0) < 2
+                        : ([.simpleReflection, .complexReflection, .affirmation].contains(segment.code)
+                            && segment.supportingClientQuote == nil)
+                    if lacksSupport {
                         reasons.append("missing_support")
                     } else if before.recentCredits.contains(where: { $0 == segment.code }) {
                         reasons.append("repeat_credit_suppressed")

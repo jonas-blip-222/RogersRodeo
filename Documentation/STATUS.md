@@ -11,12 +11,13 @@ gab die FeedbackEngine bisher nur für komplexe Reflexion, Würdigung, Autonomie
 Zusammenarbeit Rückmeldung; offene Fragen und einfache Reflexionen blieben deshalb selbst bei
 sicherer Codierung unsichtbar. Zusammenfassungen hatten noch keinen eigenen Code.
 
-Leitfaden 0.5 / Prompt 1.0 schränkt `isUncertain` auf folgenrelevante Mehrdeutigkeit oder
+Leitfaden 0.6 / Prompt 1.1 schränkt `isUncertain` auf folgenrelevante Mehrdeutigkeit oder
 fehlende Belege ein. Klare offene Fragen, belegte Paraphrasen, unmittelbar gestützte
 Bedeutungsreflexionen und konkrete Anerkennung eines Eingeständnisses sollen sicher codiert
-werden. `zusammenfassung` ergänzt den Kernbestand. Alle Reflexionen, Zusammenfassungen und
-Würdigungen benötigen weiter ein wörtliches Klientenzitat; offene Fragen werden anhand ihrer
-eigenen Gesprächsfunktion rückgemeldet. Die Sitzungs- und Regelversionen sind erhöht, daher
+werden. `zusammenfassung` ergänzt den Kernbestand und bündelt mindestens zwei vorherige
+Klientennachrichten; mehrere Aspekte einer einzigen Nachricht genügen nicht. Reflexionen und
+Würdigungen benötigen ein wörtliches Klientenzitat, Zusammenfassungen zwei getrennte Belege;
+offene Fragen werden anhand ihrer eigenen Gesprächsfunktion rückgemeldet. Die Sitzungs- und Regelversionen sind erhöht, daher
 beginnen Tests mit einer neuen Sitzung.
 
 Geprüft: Inhaltscompiler und 22 Python-Inhaltstests; 105 Core- und 5 Storage-Tests; unsignierter

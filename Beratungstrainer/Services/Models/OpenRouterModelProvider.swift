@@ -69,8 +69,8 @@ enum JSONValue: Encodable, Sendable, Equatable {
                 let preferred: [String]
                 if Set(fields.keys) == ["segments", "permissions", "doubleSidedReflection"] {
                     preferred = ["segments", "permissions", "doubleSidedReflection"]
-                } else if Set(fields.keys) == ["quote", "code", "isUncertain", "supportingClientQuote"] {
-                    preferred = ["quote", "code", "isUncertain", "supportingClientQuote"]
+                } else if Set(fields.keys) == ["quote", "code", "isUncertain", "supportingClientQuote", "supportingClientQuotes"] {
+                    preferred = ["quote", "code", "isUncertain", "supportingClientQuote", "supportingClientQuotes"]
                 } else { preferred = fields.keys.sorted() }
                 let entries = try preferred.map { key in
                     let escaped = String(decoding: try JSONValue.string(key).serialized(), as: UTF8.self)
@@ -450,7 +450,7 @@ enum OpenRouterSchema {
                     // Der strikte Modus verlangt jede Eigenschaft in `required`; ein Feld
                     // wirklich auszulassen ist nicht möglich. `null` ist verträglich:
                     // `exactKeys` führt das Feld als optional, JSONDecoder bildet null auf nil ab.
-                    "required": .strings(["quote", "code", "isUncertain", "supportingClientQuote"]),
+                    "required": .strings(["quote", "code", "isUncertain", "supportingClientQuote", "supportingClientQuotes"]),
                     "properties": .object([
                         "quote": .object(["type": .string("string")]),
                         "code": .object([
@@ -458,7 +458,9 @@ enum OpenRouterSchema {
                             "enum": .strings(CounselorCode.allCases.map(\.rawValue))
                         ]),
                         "isUncertain": .object(["type": .string("boolean")]),
-                        "supportingClientQuote": .object(["type": .strings(["string", "null"])])
+                        "supportingClientQuote": .object(["type": .strings(["string", "null"])]),
+                        "supportingClientQuotes": .object(["type": .strings(["array", "null"]),
+                                                           "items": .object(["type": .string("string")])])
                     ])
                 ])
             ])
@@ -542,11 +544,11 @@ enum OpenRouterSchema {
             .joined(separator: "\n")
     }
 
-    /// Ergänzt den eingefrorenen Leitfaden um den expliziten Analysevertrag 1.0.
+    /// Ergänzt den eingefrorenen Leitfaden um den expliziten Analysevertrag 1.1.
     static func analysisSystemPrompt(_ guide: String) -> String {
         guide + """
 
-        Ergänzung zum Ausgabevertrag, Promptstand 1.0: Die ältere Anweisung „nur segments“
+        Ergänzung zum Ausgabevertrag, Promptstand 1.1: Die ältere Anweisung „nur segments“
         wird ersetzt durch segments, doubleSidedReflection (Objekt oder null) und permissions.
         Erkenne eine doppelseitige Reflexion nur, wenn die Beratung zwei Seiten derselben
         Veränderung aus tatsächlichen Klientenaussagen aufgreift: sustain (Gründe fürs
@@ -752,7 +754,10 @@ enum OpenRouterSchema {
         Systeminhalt gelten unverändert.
         Für segments, doubleSidedReflection und permissions ordne ausschließlich die folgende Berateräußerung ein. Zitiere nur wörtlich aus ihr; \
         jedes Zitat muss als Zeichenfolge genau so in ihr vorkommen. Ein supportingClientQuote \
-        muss wörtlich in einer der oben gezeigten Klientennachrichten stehen. Erlaubnisbelege \
+        muss wörtlich in einer der oben gezeigten Klientennachrichten stehen. Bei zusammenfassung \
+        ist supportingClientQuote=null und supportingClientQuotes enthält mindestens zwei wörtliche \
+        Belege aus unterschiedlichen früheren Klientennachrichten; für alle anderen Codes ist \
+        supportingClientQuotes=null. Erlaubnisbelege \
         stammen wörtlich aus dem oben gezeigten Verlauf oder aus dieser Äußerung selbst.
         Antworte ausschließlich mit segments, doubleSidedReflection und permissions als JSON.
         """)

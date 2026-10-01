@@ -12,7 +12,7 @@ public enum OutputValidator {
             let object = try exactKeys(JSONSerialization.jsonObject(with: data), required: ["segments"], optional: ["doubleSidedReflection", "characterObservations", "goalUpdates", "permissions"])
             guard let segments = object["segments"] as? [Any] else { throw TrainerFailure.invalidAnalysis }
             for value in segments {
-                _ = try exactKeys(value, required: ["quote", "code", "isUncertain"], optional: ["supportingClientQuote"])
+                _ = try exactKeys(value, required: ["quote", "code", "isUncertain"], optional: ["supportingClientQuote", "supportingClientQuotes"])
             }
             if let reflection = object["doubleSidedReflection"], !(reflection is NSNull) {
                 let pair = try exactKeys(reflection, required: ["sustain", "change", "isUncertain"])
@@ -106,6 +106,19 @@ public enum OutputValidator {
                     throw TrainerFailure.invalidAnalysis
                 }
             }
+            if let quotes = segment.supportingClientQuotes {
+                guard !quotes.isEmpty, quotes.allSatisfy({ quote in
+                    !quote.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                        && context.contains(where: { $0.speaker == .client && $0.text.range(of: quote, options: .literal) != nil })
+                }) else { throw TrainerFailure.invalidAnalysis }
+            }
+            if segment.code == .summary {
+                guard segment.supportingClientQuote == nil,
+                      let quotes = segment.supportingClientQuotes, quotes.count >= 2,
+                      quotesAreInDifferentClientMessages(quotes, context: context) else {
+                    throw TrainerFailure.invalidAnalysis
+                }
+            }
         }
         if let observations = analysis.characterObservations {
             guard observations.count <= 3, Set(observations.map(\.dimension)).count == observations.count else {
@@ -142,6 +155,18 @@ public enum OutputValidator {
             let change = try evidenceRange(pair.change.input, input: input, context: context)
             guard !sustain.overlaps(change) else { throw TrainerFailure.invalidAnalysis }
         }
+    }
+
+    private static func quotesAreInDifferentClientMessages(_ quotes: [String], context: [DialogueMessage]) -> Bool {
+        var usedIndices: Set<Int> = []
+        for quote in quotes {
+            guard let index = context.indices.first(where: { index in
+                context[index].speaker == .client && !usedIndices.contains(index)
+                    && context[index].text.range(of: quote, options: .literal) != nil
+            }) else { return false }
+            usedIndices.insert(index)
+        }
+        return usedIndices.count >= 2
     }
 
     /// Prüft eine Belegstelle gegen die Texte, die tatsächlich übergeben wurden: dieselbe
