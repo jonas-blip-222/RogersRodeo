@@ -3,6 +3,20 @@
 Neueste Prüfungen zuerst. Ältere Abschnitte bleiben als Verlauf erhalten und werden nicht
 rückwirkend umgeschrieben.
 
+## 1. Oktober 2026 · MI-03 als Textprototyp abgegrenzt
+
+Jonas hat Wanderfalle und einen eigenen Bubble-Sheet-Ablauf ausdrücklich aus dem Textprototyp
+genommen. Der Leitfaden 0.4 wertet bei der Lösungsfindung stattdessen das Einbeziehen von
+Lukas’ eigenen Ideen, Erklärungen und passenden Wegen als Zusammenarbeit. Ein eigener
+Vorschlag bleibt ein erlaubnispflichtiger Ratschlag. Der erzeugte Inhaltskatalog und sein Hash
+sind aktualisiert; deshalb werden alte Sitzungen mit dem vorherigen Inhaltsstand nicht still
+fortgesetzt.
+
+Geprüft: Inhaltscompiler mit Entwürfen und dessen Konsistenzprüfung, 22 Python-Inhaltstests
+und der unsignierte Mac-App-Build mit Xcode 27. Es gab keinen neuen Modell-, Simulator- oder
+Gerätelauf. Freie Rollenqualität, fachliche Freigabe der Textbausteine und die noch offene
+Regel für direkte Bitten bleiben Nachweise nach dem Prototypstand.
+
 ## 1. Oktober 2026 · MI-03: Erlaubnisverbrauch bleibt über das Kontextfenster belegbar
 
 `SimulationState.permissionMemory` speichert den zuletzt abgeschlossenen Erlaubnisvorgang

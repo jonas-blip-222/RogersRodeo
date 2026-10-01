@@ -2,7 +2,13 @@
 
 Die folgenden Punkte sind eine Diskussionsgrundlage, keine bereits fachlich freigegebene Spezifikation.
 
-## MI-03 · Einordnungsfehler bearbeitet, 30.09.2026
+## MI-03 · Prototypstand erreicht, 1.10.2026
+
+Der Prototyp umfasst belegte Gesprächseinordnung, kontextbezogenes Feedback,
+Erlaubnisprüfung mit dauerhaftem Verbrauchsgedächtnis sowie Zusammenarbeit bei der
+Lösungsfindung. Wanderfalle und Bubble Sheet sind keine Bestandteile dieses Textprototyps.
+Die offenen Punkte in diesem Abschnitt sind Qualitäts- und Fachnachweise, keine weiteren
+Prozessmechaniken vor MI-04.
 
 - [x] Leitfaden 0.3: eigenständige Empfehlungen und Abwertungen trennen; echte Autonomie
       gegen den ganzen Beitrag prüfen, Gegenbelege von fehlenden Belegen unterscheiden.
@@ -80,7 +86,8 @@ MI-03 bleibt teilweise offen. Der Sitzungsrahmen ist dokumentiert, noch nicht in
 - [ ] Explizite Zuversichtsskalen als strukturierte Selbstberichte mit Ziel/Skala/Zeitpunkt
       erfassen. Bis dahin bleiben die tatsächlich verwendeten Skalenformulierungen nur
       als wörtliche Belege erhalten; keine vom Modell geschätzte Zahl.
-- [ ] Skalierungsfragen und das begründete Erfragen eigener Lösungsideen erkennen.
+- [ ] Skalierungsfragen erkennen. Das begründete Erfragen eigener Lösungsideen und
+      Veränderungstheorien gehört seit Leitfaden 0.4 zu `zusammenarbeit_suchen`.
 - [ ] Wiederholungen in Lukas' Antworten untersuchen und vorhandene Beibehaltungsmotive
       situationsbezogen nutzen. Grundlage: Jonas' erster Testlauf und seine Anmerkungen.
 
@@ -107,10 +114,11 @@ statt lokaler Inferenz gemäß E01–E03. MI-03 und MI-04 bleiben insgesamt offe
 - [ ] Formulierungen der Textbausteine fachlich prüfen und freigeben. Sie tragen bis dahin
       `reviewStatus: .draft`. Zu klären ist auch die Anrede: die Bausteine duzen die übende
       Person wie die übrige Oberfläche, die Beispiele im MI-Nachtrag siezen.
-- [ ] Prozessbeobachtungen ergänzen (Wanderfalle, Bubble Sheet, verlorener Fokus). Sie lassen
-      sich nicht aus dem primären Figuren-Tag ableiten und gehören zu MI-03; die Fälle 7 bis 9
-      sowie 11 bis 14 sind dafür noch nicht abgedeckt. Die Erlaubnislage wird seit dem
-      30.09.2026 im tatsächlich verfügbaren Kontext geprüft; die Grenzen stehen oben.
+- [ ] Verlorenen Fokus als möglichen Prozesshinweis fachlich abgrenzen. Wanderfalle und ein
+      eigener Bubble-Sheet-Ablauf werden auf Produktentscheidung von Jonas nicht umgesetzt:
+      In der reinen Textübung genügt es, Lukas bei Lösungen nach eigenen Ideen und
+      Veränderungstheorien einzubeziehen. Die Erlaubnislage wird im verfügbaren Kontext
+      geprüft; die Grenzen stehen oben.
 
 ## 2. Oberfläche und Illustrationen – heute vorgesehen
 

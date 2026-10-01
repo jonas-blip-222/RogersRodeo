@@ -1,4 +1,4 @@
-# Lernschema MI · Entwurf 0.3
+# Lernschema MI · Entwurf 0.4
 
 Dieses angepasste Lernschema ist fachlich noch nicht geprüft. Es ist keine standardisierte MITI-Bewertung.
 
@@ -12,7 +12,7 @@ Ordne die aktuelle Berateräußerung anhand des übergebenen Gesprächs ein. Zit
 | komplexe_reflexion | Greift belegbare Bedeutung, Gefühl oder Ambivalenz über eine bloße Wiederholung hinaus auf. |
 | wuerdigung | Konkrete Anerkennung einer im Kontext belegten Stärke oder Handlung. |
 | autonomie_betonen | Gibt der Person die Entscheidung belegbar frei, einschließlich der Möglichkeit, nichts zu tun oder die Beratung abzulehnen: „Ob Sie daran etwas ändern, entscheiden Sie; ich kann Ihnen das nicht abnehmen.“ Die beiden Prüfschritte unten sind verbindlich. |
-| zusammenarbeit_suchen | Sucht gemeinsame Gestaltung: „Womit möchten Sie heute beginnen?“ |
+| zusammenarbeit_suchen | Sucht gemeinsame Gestaltung und holt eigene Ideen oder Erklärungen der Person ein: „Welche Ideen haben Sie selbst, was Ihnen helfen könnte?“ |
 | information | Sachliche Information ohne Handlungsaufforderung. |
 | ratschlag_ohne_erlaubnis | Empfehlung ohne im verfügbaren Kontext erkennbare Erlaubnis. |
 | ratschlag_mit_erlaubnis | Empfehlung mit erkennbarer, weiterhin passender Erlaubnis im Kontext. |
@@ -28,6 +28,14 @@ Maßgeblich ist, was eine Äußerung im gezeigten Gespräch tut, nicht, wie sie 
 3. **Positive Codes brauchen eine wirksame Funktion im ganzen Beitrag.** Wird eine Wahl im selben Beitrag ausdrücklich abgewertet oder nur eine Antwort als akzeptabel hingestellt, ist die scheinbare Freigabe kein autonomie_betonen. Wird eine Frage nach dem Vorgehen sofort verbindlich selbst beantwortet, ist sie kein zusammenarbeit_suchen. Fasse die Formel mit der steuernden Handlung zusammen oder erfasse die belegte steuernde Handlung; vergib kein positives Segment für eine zurückgenommene Freigabe.
 4. **Eigenständige Anerkennung und echte Freigabe bleiben möglich.** Ein Rat im selben Beitrag entwertet sie nicht automatisch. Eine konkret belegte Stärke kann gewürdigt werden; die ausdrückliche, nicht wieder zurückgenommene Möglichkeit, einen Vorschlag abzulehnen, kann autonomie_betonen sein. Auch nach früherem Drängen kann die Beratung jetzt Druck zurücknehmen. Das Gesprächsklima allein entscheidet keinen Code.
 5. **Unterscheide fehlenden Beleg von Gegenbeleg.** Bei mehrdeutiger Funktion setze isUncertain=true. Wenn der ganze Beitrag die positive Funktion klar aufhebt, wähle die belegte andere Handlung statt eines unsicheren positiven Codes. Bloßes Wiedergeben einer Klientenaussage kann einfache_reflexion sein; freundlicher Ton allein belegt keine Würdigung.
+
+## Lösungsfindung
+
+Für diese Textübung gibt es weder eine Wanderfalle noch einen eigenen Bubble-Sheet-Ablauf.
+Bei der Suche nach nächsten Schritten ist Zusammenarbeit erkennbar, wenn die Beratung Lukas
+nach seinen eigenen Ideen, bisherigen Erklärungen oder passenden Wegen fragt und diese nicht
+durch eine vorgegebene Lösung ersetzt. Ein eigener Vorschlag bleibt ein Ratschlag und braucht
+weiterhin eine passende Erlaubnis.
 
 ## Prüfschritte für autonomie_betonen
 
