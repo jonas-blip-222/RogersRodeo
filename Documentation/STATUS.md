@@ -3,6 +3,24 @@
 Neueste Prüfungen zuerst. Ältere Abschnitte bleiben als Verlauf erhalten und werden nicht
 rückwirkend umgeschrieben.
 
+## 1. Oktober 2026 · MI-03: Erlaubnisverbrauch bleibt über das Kontextfenster belegbar
+
+`SimulationState.permissionMemory` speichert den zuletzt abgeschlossenen Erlaubnisvorgang
+mit sitzungsstabiler Herkunft. Beim nächsten Analyseaufruf holt `ContextBuilder.analysisMemory`
+nur dessen originale Frage, Antwort und gegebenenfalls den aufbrauchenden Ratschlag zurück.
+Dadurch kann ein bereits verbrauchtes Ja auch nach mehr als sechs Zwischenrunden weiterhin
+mit den tatsächlichen Zitaten geprüft und rückgemeldet werden.
+
+Eine offene Zustimmung wird bewusst nie gespeichert: Sie gilt nur für den unmittelbar
+folgenden Beraterbeitrag. Enthält dieser keinen Ratschlag, ist sie verfallen und ein späterer
+Vorschlag braucht eine neue Erlaubnis. Speicherfehler lassen die gültige Beratungseinordnung
+und das bestehende Zielgedächtnis unverändert.
+
+Geprüft mit `swift test --package-path Packages/TrainerCore` (103 Tests) und
+`swift test --package-path Packages/TrainerStorage` (5 Tests). Der Speichertest umfasst
+Neustart, sieben Zwischenbeiträge und den bestätigten Befund eines alten Verbrauchs. Kein
+Live-Modell-, Simulator- oder Gerätecheck in diesem Schritt.
+
 ## 30. September 2026 · MI-03: konkreter Einordnungsfehler im Live-Replay behoben
 
 Arbeitsbranch `codex/analyse-ausfaelle`. Claude Code wurde ausdrücklich beauftragt;

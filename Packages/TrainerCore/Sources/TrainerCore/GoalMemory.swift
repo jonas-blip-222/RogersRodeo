@@ -155,12 +155,11 @@ extension ContextBuilder {
     /// aus höchstens drei Zielgruppen. Gruppen werden vollständig übernommen oder ausgelassen.
     /// Das Zeichenlimit ist eine technische Schranke, keine gemessene Tokenzählung.
     public static func analysisMemory(_ session: SessionSnapshot) throws -> AnalysisMemory {
-        let base = messages(session)
-        guard let development = session.state.development else { return .init(messages: base, goals: [], omittedGoalCount: 0) }
         var selected = Set(session.turns.suffix(6).map(\.id))
         let original = selected
         var chosen: [GoalDevelopment] = []
-        let ranked = development.goals.enumerated().sorted { left, right in
+        let development = session.state.development
+        let ranked = (development?.goals ?? []).enumerated().sorted { left, right in
             func recency(_ goal: GoalDevelopment) -> Int {
                 let ids = [goal.goal.origin.turnID, goal.memory?.lastEvent?.observedInTurnID, goal.readiness?.observedInTurnID, goal.confidence?.observedInTurnID]
                 return ids.compactMap { id in session.turns.firstIndex { $0.id == id } }.max() ?? -1
@@ -174,7 +173,7 @@ extension ContextBuilder {
             // Nach unsicherer neuer Deutung muss auch die letzte sichere Statusgrundlage
             // einschließlich Vereinbarungsvorschlag im geholten Originalkontext bleiben.
             let identifiers = [goal.goal] + (goal.memory?.aliases ?? [])
-            if let certain = development.goalEvents?.last(where: {
+            if let certain = development?.goalEvents?.last(where: {
                 !$0.isUncertain && [.confirmed, .withdrawn, .replaced].contains($0.kind)
                     && identifiers.contains($0.previousGoal ?? $0.currentGoal ?? $0.evidence)
             }) {
@@ -188,6 +187,15 @@ extension ContextBuilder {
             let characters = session.turns.filter { extra.contains($0.id) }.reduce(0) { $0 + $1.input.count + $1.reply.text.count }
             guard extra.count <= 6, characters <= 10_000 else { continue }
             selected = candidate; chosen.append(goal)
+        }
+        // Der Erlaubnisverlauf ist klein (höchstens Frage, Antwort und verbrauchender Rat)
+        // und wird nur als Originaltext zurückgeholt. Eine offene Zustimmung wird nie
+        // gespeichert und kann deshalb auch nicht aus einem alten Kontext reaktiviert werden.
+        if let permission = session.state.permissionMemory {
+            for evidence in [permission.request, permission.response, permission.consumedBy].compactMap({ $0 }) {
+                _ = try CharacterTracker.position(evidence, session: session)
+                if let turnID = evidence.origin.turnID { selected.insert(turnID) }
+            }
         }
         let transcript: [DialogueMessage] = [.init(speaker: .client, text: session.content.scenario.openingLine,
                                                  origin: .init(turnID: nil, speaker: .client))]
@@ -208,7 +216,7 @@ extension ContextBuilder {
                       lastEventEvidence: try goal.memory?.lastEvent.map { try reference($0.evidence) },
                       isUncertain: goal.memory?.lastEvent?.isUncertain ?? false)
         }
-        return .init(messages: transcript, goals: goals, omittedGoalCount: development.goals.count - chosen.count)
+        return .init(messages: transcript, goals: goals, omittedGoalCount: (development?.goals.count ?? 0) - chosen.count)
     }
 
     private static func references(_ goal: GoalDevelopment) -> [CharacterEvidence] {

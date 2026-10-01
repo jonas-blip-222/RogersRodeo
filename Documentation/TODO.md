@@ -13,7 +13,9 @@ Die folgenden Punkte sind eine Diskussionsgrundlage, keine bereits fachlich frei
 - [ ] Freien Simulatorlauf mit dem neuen Stand prüfen; kein neuer UI-/iPhone-Nachweis.
 - [ ] Mehrdeutige Würdigung vor einer Forderung fachlich klären; keine pauschale Sperre
       für positive Rückmeldung neben einem Rat.
-- [ ] Danach dauerhaftes Erlaubnisgedächtnis über das Kontextfenster ergänzen.
+- [x] Dauerhaftes Erlaubnisgedächtnis über das Kontextfenster ergänzt (01.10.2026):
+      ausschließlich abgeschlossene Vorgänge mit sitzungsstabiler Herkunft. Eine nicht im
+      unmittelbar folgenden Beitrag umgesetzte Zustimmung verfällt und wird nicht gespeichert.
 
 ## MI-04 · Sitzungsrahmen beschlossen, Umsetzung offen
 
@@ -45,12 +47,11 @@ MI-03 bleibt teilweise offen. Der Sitzungsrahmen ist dokumentiert, noch nicht in
 - [x] Erlaubnisablauf über Coordinator und SwiftData geprüft: Antwortfehler, PendingTurn,
       erneutes Öffnen des Speichers, Verbrauch, erneute Zustimmung und echtes gekürztes
       Kontextfenster. Kontrollierte Antworten; keine Live-/Geräteprüfung (30.09.2026).
-- [ ] **Zweiter Schritt der Erlaubnis:** dauerhaftes, belegtes Erlaubnisgedächtnis über das
-      Kontextfenster hinaus, nach dem Vorbild des Zielgedächtnisses mit sitzungsstabiler
-      Herkunft im `SimulationState`. Heute arbeitet die Einordnung nur auf dem tatsächlich
-      gesehenen Kontext; eine weiter zurückliegende Zustimmung bleibt deshalb unsicher statt
-      sicher fortgeschrieben. Erst damit lässt sich der Verbrauch über viele Runden hinweg
-      sicher statt vorsichtig beurteilen.
+- [x] **Zweiter Schritt der Erlaubnis:** dauerhaftes, belegtes Gedächtnis über das
+      Kontextfenster hinaus im `SimulationState` (01.10.2026). Es hält abgeschlossene
+      Verbräuche, Ablehnungen und Widerrufe mit stabiler Herkunft; die zugehörigen
+      Originalturns werden gezielt in die Analyse zurückgeholt. Offene Zustimmung verfällt
+      ohne Ratschlag im unmittelbar folgenden Beraterbeitrag.
 - [ ] Offen bleibt die strengere Produktregel aus Abschnitt 13: Muss nach einer direkten Bitte
       („Welchen Vorschlag haben Sie?") zusätzlich rückversichert werden? Bis zur Entscheidung
       erzeugt sie eine neutrale Rückmeldung und keinen Vorwurf.

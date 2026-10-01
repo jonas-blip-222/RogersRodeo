@@ -176,6 +176,7 @@ public actor ConversationCoordinator {
         var analysisContext = memory.messages
         var metrics: [ModelCallMetrics] = []
         var development = session.state.development
+        var permissionMemory = session.state.permissionMemory
         if !skipAnalysis {
             for attempt in 0...1 {
                 do {
@@ -187,6 +188,12 @@ public actor ConversationCoordinator {
                         before: session.state.development, input: text, context: result.contextMessagesUsed,
                         session: session, turnID: pending.id)
                     development = accepted.development
+                    // Der Erlaubnisspeicher ist bewusst unabhängig vom Zielgedächtnis. Ein
+                    // fehlerhafter Speicherübergang darf die valide Beratungseinordnung und
+                    // die übrige Figurenentwicklung nicht zurücknehmen.
+                    permissionMemory = (try? PermissionMemoryTracker.advance(permissionMemory,
+                        analysis: accepted.analysis, input: text, context: result.contextMessagesUsed,
+                        session: session, turnID: pending.id)) ?? permissionMemory
                     analysis = accepted.analysis; analysisContext = result.contextMessagesUsed; metrics.append(result.metrics)
                     break
                 } catch TrainerFailure.invalidAnalysis where attempt == 0 {
@@ -243,6 +250,7 @@ public actor ConversationCoordinator {
         metrics.append(replyResult.metrics)
         var after = reduction.state
         after.development = development
+        after.permissionMemory = permissionMemory
         after.disclosedFactIDs.formUnion(replyResult.value.disclosedFactIDs)
         let tip = TipSelector.select(tag: replyResult.value.primaryTag, approach: session.approachID,
                                      tips: session.content.tips, previousID: session.turns.last?.selectedTipID)

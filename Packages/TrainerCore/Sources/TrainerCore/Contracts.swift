@@ -160,12 +160,16 @@ public struct SimulationState: Codable, Sendable, Equatable {
     // Ältester Eintrag zuerst; maximal drei. nil bedeutet: Turn ohne Gutschrift.
     public var recentCredits: [CounselorCode?]
     public var development: CharacterDevelopment?
+    /// Der zuletzt abgeschlossene, belegte Erlaubnisvorgang. Eine offene Zustimmung wird
+    /// bewusst nicht gespeichert: Sie gilt ausschließlich für den nächsten Beitrag.
+    public var permissionMemory: PermissionMemory?
     public init(openness: Int, closedQuestionStreak: Int = 0,
                 disclosedFactIDs: Set<String> = [], recentCredits: [CounselorCode?] = [],
-                development: CharacterDevelopment? = nil) {
+                development: CharacterDevelopment? = nil, permissionMemory: PermissionMemory? = nil) {
         self.openness = openness; self.closedQuestionStreak = closedQuestionStreak
         self.disclosedFactIDs = disclosedFactIDs; self.recentCredits = recentCredits
         self.development = development
+        self.permissionMemory = permissionMemory
     }
 }
 

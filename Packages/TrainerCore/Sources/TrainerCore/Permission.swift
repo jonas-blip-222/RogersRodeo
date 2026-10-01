@@ -67,6 +67,26 @@ public struct PermissionAssessment: Codable, Sendable, Equatable {
     }
 }
 
+/// Ein abgeschlossener Erlaubnisvorgang mit sitzungsstabilen Belegen. Es gibt absichtlich
+/// keinen gespeicherten Zustand „erteilt“: Ohne unmittelbar folgenden Ratschlag verfällt
+/// die Zustimmung; mit einem Ratschlag wird sie im selben Zug verbraucht.
+public enum PermissionMemoryStanding: String, Codable, Sendable {
+    case consumed, refused, withdrawn
+}
+
+public struct PermissionMemory: Codable, Sendable, Equatable {
+    public var standing: PermissionMemoryStanding
+    public var request: CharacterEvidence?
+    public var response: CharacterEvidence
+    public var consumedBy: CharacterEvidence?
+    public var observedInTurnID: UUID
+    public init(standing: PermissionMemoryStanding, request: CharacterEvidence?,
+                response: CharacterEvidence, consumedBy: CharacterEvidence?, observedInTurnID: UUID) {
+        self.standing = standing; self.request = request; self.response = response
+        self.consumedBy = consumedBy; self.observedInTurnID = observedInTurnID
+    }
+}
+
 /// Modelleinschätzung nach der deterministischen Nachprüfung. `standing` und `isUncertain`
 /// können gegenüber der Analyse zurückhaltender sein, nie zuversichtlicher.
 public struct ResolvedPermission: Sendable, Equatable {
@@ -118,6 +138,58 @@ public enum PermissionTracker {
             }
             return .init(assessment: entry, standing: entry.standing, isUncertain: uncertain)
         }
+    }
+}
+
+/// Überführt nur abgeschlossene, bereits durch die aktuelle Einordnung belegte Vorgänge in
+/// sitzungsstabile Herkunft. Fehler im Speicherpfad dürfen nie die Beratungseinordnung
+/// verwerfen; der Coordinator behält dann den bisherigen Speicherstand.
+public enum PermissionMemoryTracker {
+    public static func advance(_ before: PermissionMemory?, analysis: TurnAnalysis?, input: String,
+                               context: [DialogueMessage], session: SessionSnapshot, turnID: UUID) throws -> PermissionMemory? {
+        guard let analysis, let entries = analysis.permissions else { return before }
+        var result = before
+        for entry in entries {
+            let candidate: PermissionMemory?
+            switch entry.standing {
+            case .granted:
+                guard let request = entry.request, let response = entry.response else { throw TrainerFailure.invalidAnalysis }
+                candidate = .init(standing: .consumed,
+                                  request: try CharacterTracker.anchored(request, input: input, context: context, session: session, speaker: .counselor),
+                                  response: try CharacterTracker.anchored(response, input: input, context: context, session: session),
+                                  consumedBy: try currentAdvice(entry.advice, input: input, turnID: turnID), observedInTurnID: turnID)
+            case .consumed:
+                guard let request = entry.request, let response = entry.response, let consumedBy = entry.consumedBy else {
+                    throw TrainerFailure.invalidAnalysis
+                }
+                candidate = .init(standing: .consumed,
+                                  request: try CharacterTracker.anchored(request, input: input, context: context, session: session, speaker: .counselor),
+                                  response: try CharacterTracker.anchored(response, input: input, context: context, session: session),
+                                  consumedBy: try anchoredCounselor(consumedBy, input: input, context: context, session: session, turnID: turnID), observedInTurnID: turnID)
+            case .refused, .withdrawn:
+                guard let response = entry.response else { throw TrainerFailure.invalidAnalysis }
+                candidate = .init(standing: entry.standing == .refused ? .refused : .withdrawn,
+                                  request: try entry.request.map { try CharacterTracker.anchored($0, input: input, context: context, session: session, speaker: .counselor) },
+                                  response: try CharacterTracker.anchored(response, input: input, context: context, session: session),
+                                  consumedBy: nil, observedInTurnID: turnID)
+            default:
+                candidate = nil
+            }
+            if let candidate { result = candidate }
+        }
+        return result
+    }
+
+    private static func currentAdvice(_ reference: EvidenceReference, input: String, turnID: UUID) throws -> CharacterEvidence {
+        guard reference.source == .currentInput, reference.speaker == .counselor else { throw TrainerFailure.invalidAnalysis }
+        _ = try OutputValidator.evidenceRange(reference, input: input, context: [])
+        return .init(origin: .init(turnID: turnID, speaker: .counselor), quote: reference.quote, occurrence: reference.occurrence)
+    }
+
+    private static func anchoredCounselor(_ reference: EvidenceReference, input: String, context: [DialogueMessage],
+                                          session: SessionSnapshot, turnID: UUID) throws -> CharacterEvidence {
+        if reference.source == .currentInput { return try currentAdvice(reference, input: input, turnID: turnID) }
+        return try CharacterTracker.anchored(reference, input: input, context: context, session: session, speaker: .counselor)
     }
 }
 

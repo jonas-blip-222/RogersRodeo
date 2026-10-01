@@ -129,16 +129,25 @@ private func permissionFlowContent() -> SessionContent {
         try #require(repository).commit(sessionID: initial.id, expectedRevision: 1, turn: altered)
     }
     coordinator = .init(repository: try #require(repository), provider: provider)
+    // Der Verbrauch muss auch außerhalb des normalen Sechs-Turn-Fensters belegbar
+    // bleiben. Eine offene Zustimmung würde hier dagegen nie aus dem Speicher kommen.
+    for index in 0..<7 {
+        _ = try await #require(coordinator).send(sessionID: initial.id, input: "Zwischenbeitrag \(index)")
+    }
     let second = try await #require(coordinator).send(sessionID: initial.id,
         input: PermissionFlowProvider.secondAdvice, onFeedback: sink)
     #expect(second.turns.last?.feedback.map(\.ruleID) == ["warnung.erlaubnis_bereits_verbraucht"])
     #expect(second.turns.last?.feedback.first?.certainty == .confirmed)
+    let secondContext = try #require(await provider.contexts[PermissionFlowProvider.secondAdvice])
+    #expect(secondContext.contains { $0.text == PermissionFlowProvider.question })
+    #expect(secondContext.contains { $0.text == PermissionFlowProvider.firstAdvice })
+    #expect(second.state.permissionMemory?.standing == .consumed)
 
     _ = try await #require(coordinator).send(sessionID: initial.id,
         input: PermissionFlowProvider.renewedQuestion, onFeedback: sink)
     let renewed = try await #require(coordinator).send(sessionID: initial.id,
         input: PermissionFlowProvider.renewedAdvice, onFeedback: sink)
-    #expect(renewed.turns.count == 5)
+    #expect(renewed.turns.count == 12)
     #expect(renewed.turns.last?.feedback.map(\.ruleID) == ["rueckmeldung.rat_mit_erlaubnis"])
     #expect(renewed.turns.prefix(2).map(\.feedback) == first.turns.map(\.feedback))
     // Auch nach Neustart bleiben alle Herkunftsangaben gegen den gesehenen Kontext prüfbar.
