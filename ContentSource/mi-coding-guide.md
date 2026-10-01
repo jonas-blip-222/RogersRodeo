@@ -1,4 +1,4 @@
-# Lernschema MI · Entwurf 0.4
+# Lernschema MI · Entwurf 0.5
 
 Dieses angepasste Lernschema ist fachlich noch nicht geprüft. Es ist keine standardisierte MITI-Bewertung.
 
@@ -10,6 +10,7 @@ Ordne die aktuelle Berateräußerung anhand des übergebenen Gesprächs ein. Zit
 | geschlossene_frage | Eng begrenzte Antwort, etwa Ja/Nein: „Waren Sie am Freitag unterwegs?“ |
 | einfache_reflexion | Gibt einen im Klientenkontext genannten Inhalt ohne wesentliche neue Bedeutung zurück. |
 | komplexe_reflexion | Greift belegbare Bedeutung, Gefühl oder Ambivalenz über eine bloße Wiederholung hinaus auf. |
+| zusammenfassung | Verbindet mehrere bereits genannte Punkte der Person nachvollziehbar, ohne neue Tatsachen hinzuzufügen. |
 | wuerdigung | Konkrete Anerkennung einer im Kontext belegten Stärke oder Handlung. |
 | autonomie_betonen | Gibt der Person die Entscheidung belegbar frei, einschließlich der Möglichkeit, nichts zu tun oder die Beratung abzulehnen: „Ob Sie daran etwas ändern, entscheiden Sie; ich kann Ihnen das nicht abnehmen.“ Die beiden Prüfschritte unten sind verbindlich. |
 | zusammenarbeit_suchen | Sucht gemeinsame Gestaltung und holt eigene Ideen oder Erklärungen der Person ein: „Welche Ideen haben Sie selbst, was Ihnen helfen könnte?“ |
@@ -46,6 +47,8 @@ Dass von Entscheiden, Wählen oder Selbstbestimmung die Rede ist, genügt nicht.
 
 Neben einem Ratschlag bleibt echte Autonomiebetonung möglich und ist dann als eigenes Segment zu codieren: nämlich dann, wenn die Beratung im selben Beitrag erkennbar auch das Ablehnen des Vorschlags freigibt. Der Ratschlag bleibt davon unberührt ein eigenes Segment mit seiner eigenen Erlaubnislage; eine Autonomieformulierung ersetzt keine Erlaubnis und hebt eine fehlende Erlaubnis nicht auf.
 
-Bei mehreren Funktionen segmentieren. Wenn die Bedeutung oder Erlaubnis im verfügbaren Kontext unklar ist, isUncertain=true setzen; sonstiges ist kein Ersatz für Unsicherheit. Komplexe Reflexion und Würdigung benötigen für einen Zustandsbonus einen exakten supportingClientQuote aus einer tatsächlich übergebenen Klientennachricht. Fehlender Beleg bewirkt keinen Bonus. Eine doppelseitige Satzform allein belegt keine komplexe Reflexion.
+Bei mehreren Funktionen segmentieren. `isUncertain=true` gilt nur bei einer echten, folgenrelevanten Mehrdeutigkeit: Wenn sich die Gesprächsfunktion aus den gezeigten Texten sinnvoll auf mehrere Arten lesen lässt oder ein nötiger Klientenbeleg fehlt. Es ist keine vorsorgliche Enthaltung. Eine offene Frage ist sicher, wenn sie erkennbar zu einer eigenen Darstellung einlädt. Eine einfache Reflexion ist sicher, wenn sie einen tatsächlich gezeigten Inhalt ohne neue Bedeutung aufgreift. Eine komplexe Reflexion ist sicher, wenn ihre zusätzliche Bedeutung unmittelbar aus einer gezeigten Klientenaussage folgt; sie wird nicht schon deshalb unsicher, weil sie ein Gefühl oder eine Bedeutung in Worte fasst. Eine Würdigung ist sicher, wenn sie eine im gezeigten Verhalten oder Eingeständnis belegte Stärke konkret anerkennt. Sonstiges ist kein Ausweg, um eine erkennbare Funktion oder echte Unsicherheit zu vermeiden.
+
+Einfache und komplexe Reflexionen, Zusammenfassungen und Würdigungen benötigen für Rückmeldung und Zustandsbonus einen exakten `supportingClientQuote` aus einer tatsächlich übergebenen Klientennachricht. Fehlender Beleg bewirkt keinen Bonus. Eine doppelseitige Satzform allein belegt keine komplexe Reflexion.
 
 Ausgabe ausschließlich als JSON mit segments und den ergänzenden Belegfeldern des übergebenen Ausgabevertrags. Jedes Segment enthält quote, code, isUncertain und optional supportingClientQuote. Ergänzende Belegfelder liefert der Ausgabevertrag. Keine Markdown-Zäune.

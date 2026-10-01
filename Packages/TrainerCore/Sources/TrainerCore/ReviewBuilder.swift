@@ -15,6 +15,7 @@ public enum ReviewBuilder {
         let counts = Dictionary(grouping: segments, by: \.code).mapValues(\.count)
         let questions = counts[.openQuestion, default: 0] + counts[.closedQuestion, default: 0]
         let reflections = counts[.simpleReflection, default: 0] + counts[.complexReflection, default: 0]
+            + counts[.summary, default: 0]
         let inputCharacters = session.turns.reduce(0) { $0 + $1.input.count }
         let coveredCharacters = session.turns.flatMap { $0.analysis?.segments ?? [] }.reduce(0) { $0 + $1.quote.count }
         return SessionReview(totalTurns: session.turns.count,
@@ -80,6 +81,7 @@ extension CounselorCode {
         case .closedQuestion: "Geschlossene Frage"
         case .simpleReflection: "Einfache Reflexion"
         case .complexReflection: "Komplexe Reflexion"
+        case .summary: "Zusammenfassung"
         case .affirmation: "Würdigung"
         case .autonomy: "Autonomie betonen"
         case .collaboration: "Zusammenarbeit suchen"

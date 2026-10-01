@@ -16,7 +16,9 @@ Prozessmechaniken vor MI-04.
       konfigurieren. Prompt 0.8; zusammengesetzte Modellidentität und Messspur geprüft.
 - [x] Originaldialog, elf bestehende Kontraste und sechs unabhängige Gegenproben live prüfen.
       Tatsächliche Ergebnisse und Grenzen im neuesten `STATUS.md`; keine Goldreferenz.
-- [ ] Freien Simulatorlauf mit dem neuen Stand prüfen; kein neuer UI-/iPhone-Nachweis.
+- [ ] Freien App-Lauf mit Leitfaden 0.5 / Prompt 1.0 prüfen: sichere Rückmeldung für offene
+      Fragen, einfache und komplexe Reflexionen, Zusammenfassungen und Würdigungen; kein
+      neuer UI-/iPhone-Nachweis.
 - [ ] Mehrdeutige Würdigung vor einer Forderung fachlich klären; keine pauschale Sperre
       für positive Rückmeldung neben einem Rat.
 - [x] Dauerhaftes Erlaubnisgedächtnis über das Kontextfenster ergänzt (01.10.2026):
@@ -102,9 +104,11 @@ statt lokaler Inferenz gemäß E01–E03. MI-03 und MI-04 bleiben insgesamt offe
 - [x] Rückmeldung zum eigenen Beitrag von Hinweisen für die nächste Reaktion unterscheiden.
       Umgesetzt am 29.09.2026: Warnung, Rückmeldung zum Beitrag und Vorschlag sind getrennte
       Flächen; der Schalter gilt nur für die Vorschläge.
-- [x] Eigene FeedbackEngine ergänzen. Umgesetzt am 29.09.2026 für klare Fälle von Druck und
-      Rat ohne Erlaubnis sowie für belegte komplexe Reflexion, Würdigung, Autonomie und
-      Zusammenarbeit. Der TipSelector bleibt daneben für den Vorschlag zur nächsten Reaktion.
+- [x] Eigene FeedbackEngine ergänzen. Umgesetzt für klare Fälle von Druck und Rat ohne
+      Erlaubnis sowie für sichere Kernfertigkeiten: offene Fragen, einfache und komplexe
+      Reflexionen, Zusammenfassungen, Würdigungen, Autonomie und Zusammenarbeit. Reflexionen,
+      Zusammenfassungen und Würdigungen brauchen ein wörtliches Klientenzitat. Der TipSelector
+      bleibt daneben für den Vorschlag zur nächsten Reaktion.
 - [x] Als Startvariante: LLM erkennt sprachliche Bedeutung; geprüfte Regeln wählen Hinweise; Vorlagen verbinden sie mit echten Gesprächszitaten. Umgesetzt; freie Umformulierungen bleiben bewusst aus.
 - [x] Anzeige entscheiden: **Keine Zahl.** Kurze Rückmeldung in Worten während des Gesprächs,
       gespeichert und im Rückblick nachlesbar. Kein Offenheitswert, keine Punkte, kein Balken,

@@ -108,11 +108,53 @@ private func befunde(_ analysis: TurnAnalysis?, _ input: String,
         .init(quote: "Was stört Sie daran, heute hier zu sein?", code: .openQuestion, isUncertain: false)])
     let findings = befunde(analyse, eingabe, ["Sarah hat gesagt, ich soll hierher. Ich finde das völlig übertrieben."])
     let rueckmeldung = try #require(findings.first)
-    #expect(findings.count == 1)
+    #expect(findings.count == 2)
     #expect(rueckmeldung.kind == .observation)
     #expect(rueckmeldung.ruleID == "rueckmeldung.autonomie_betonen")
     #expect(rueckmeldung.message.contains("Sie entscheiden selbst, ob Sie etwas verändern möchten."))
     #expect(rueckmeldung.message.contains("Lukas"))
+    #expect(findings.last?.ruleID == "rueckmeldung.offene_frage")
+}
+
+@Test func kernfertigkeitenErhaltenBeiSichererBelegterEinordnungRueckmeldung() throws {
+    let kontext = ["Ich finde die Forderung völlig übertrieben und will das selbst entscheiden.",
+                   "Ich muss mir aber eingestehen, dass das Wochenende mich mehr ausbremst, als ich zugeben will."]
+
+    let offeneFrage = befunde(TurnAnalysis(segments: [
+        .init(quote: "Wie schätzen Sie Ihr Trinken ein?", code: .openQuestion, isUncertain: false)]),
+        "Wie schätzen Sie Ihr Trinken ein?", kontext)
+    #expect(offeneFrage.map(\.ruleID) == ["rueckmeldung.offene_frage"])
+
+    let einfacheReflexion = befunde(TurnAnalysis(segments: [
+        .init(quote: "Sie wollen das selbst entscheiden.", code: .simpleReflection, isUncertain: false,
+              supportingClientQuote: "will das selbst entscheiden")]),
+        "Sie wollen das selbst entscheiden.", kontext)
+    #expect(einfacheReflexion.map(\.ruleID) == ["rueckmeldung.einfache_reflexion"])
+
+    let komplexeReflexion = befunde(TurnAnalysis(segments: [
+        .init(quote: "Sie fühlen sich dadurch bevormundet.", code: .complexReflection, isUncertain: false,
+              supportingClientQuote: "Forderung völlig übertrieben")]),
+        "Sie fühlen sich dadurch bevormundet.", kontext)
+    #expect(komplexeReflexion.map(\.ruleID) == ["rueckmeldung.komplexe_reflexion"])
+
+    let zusammenfassung = befunde(TurnAnalysis(segments: [
+        .init(quote: "Sie möchten selbst entscheiden und merken zugleich Folgen am Wochenende.", code: .summary, isUncertain: false,
+              supportingClientQuote: "will das selbst entscheiden")]),
+        "Sie möchten selbst entscheiden und merken zugleich Folgen am Wochenende.", kontext)
+    #expect(zusammenfassung.map(\.ruleID) == ["rueckmeldung.zusammenfassung"])
+
+    let wuerdigung = befunde(TurnAnalysis(segments: [
+        .init(quote: "Dass Sie das aussprechen, zeigt Ehrlichkeit.", code: .affirmation, isUncertain: false,
+              supportingClientQuote: "muss mir aber eingestehen")]),
+        "Dass Sie das aussprechen, zeigt Ehrlichkeit.", kontext)
+    #expect(wuerdigung.map(\.ruleID) == ["rueckmeldung.wuerdigung"])
+}
+
+@Test func reflexionOhneKlientenbelegErhaeltKeineRueckmeldung() {
+    let input = "Sie wollen das selbst entscheiden."
+    let analysis = TurnAnalysis(segments: [
+        .init(quote: input, code: .simpleReflection, isUncertain: false)])
+    #expect(befunde(analysis, input, ["Ich will nicht bevormundet werden."]).isEmpty)
 }
 
 @Test func komplexeReflexionNurMitBelegAusEinerEchtenKlientennachricht() throws {

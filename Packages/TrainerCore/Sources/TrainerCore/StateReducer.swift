@@ -35,8 +35,8 @@ public enum StateReducer {
                 switch segment.code {
                 case .confrontation: penalty = max(penalty, 2); reasons.append("confrontation")
                 case .adviceWithoutPermission: penalty = max(penalty, 1); reasons.append("advice_without_permission")
-                case .complexReflection, .affirmation, .autonomy, .collaboration:
-                    if [.complexReflection, .affirmation].contains(segment.code), segment.supportingClientQuote == nil {
+                case .simpleReflection, .complexReflection, .summary, .affirmation, .autonomy, .collaboration:
+                    if [.simpleReflection, .complexReflection, .summary, .affirmation].contains(segment.code), segment.supportingClientQuote == nil {
                         reasons.append("missing_support")
                     } else if before.recentCredits.contains(where: { $0 == segment.code }) {
                         reasons.append("repeat_credit_suppressed")

@@ -3,6 +3,27 @@
 Neueste Prüfungen zuerst. Ältere Abschnitte bleiben als Verlauf erhalten und werden nicht
 rückwirkend umgeschrieben.
 
+## 1. Oktober 2026 · Kernfertigkeiten erhalten belegte Rückmeldung
+
+Die freie Prüfung zeigte, dass Sonnet klare offene Fragen, einfache und komplexe Reflexionen
+sowie Würdigungen oft zutreffend codierte, sie aber vorsorglich als unsicher markierte. Zudem
+gab die FeedbackEngine bisher nur für komplexe Reflexion, Würdigung, Autonomie und
+Zusammenarbeit Rückmeldung; offene Fragen und einfache Reflexionen blieben deshalb selbst bei
+sicherer Codierung unsichtbar. Zusammenfassungen hatten noch keinen eigenen Code.
+
+Leitfaden 0.5 / Prompt 1.0 schränkt `isUncertain` auf folgenrelevante Mehrdeutigkeit oder
+fehlende Belege ein. Klare offene Fragen, belegte Paraphrasen, unmittelbar gestützte
+Bedeutungsreflexionen und konkrete Anerkennung eines Eingeständnisses sollen sicher codiert
+werden. `zusammenfassung` ergänzt den Kernbestand. Alle Reflexionen, Zusammenfassungen und
+Würdigungen benötigen weiter ein wörtliches Klientenzitat; offene Fragen werden anhand ihrer
+eigenen Gesprächsfunktion rückgemeldet. Die Sitzungs- und Regelversionen sind erhöht, daher
+beginnen Tests mit einer neuen Sitzung.
+
+Geprüft: Inhaltscompiler und 22 Python-Inhaltstests; 105 Core- und 5 Storage-Tests; unsignierter
+Mac-App-Build. Die Testfälle decken offene Frage, einfache und komplexe Reflexion,
+Zusammenfassung, Würdigung sowie fehlende Belege ab. Ein erneuter freier Modell-/UI-Lauf steht
+noch aus.
+
 ## 1. Oktober 2026 · MI-03 als Textprototyp abgegrenzt
 
 Jonas hat Wanderfalle und einen eigenen Bubble-Sheet-Ablauf ausdrücklich aus dem Textprototyp

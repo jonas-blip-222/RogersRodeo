@@ -126,7 +126,7 @@ public struct FeedbackTemplate: Sendable, Equatable {
 /// Der Bestand der Textbausteine. Eigene Version, damit eine Formulierungsänderung nicht die
 /// `rulesVersion` der Sitzung anfassen muss — die entscheidet über die Fortsetzbarkeit.
 public enum FeedbackTemplates {
-    public static let version = "0.3"
+    public static let version = "0.4"
 
     /// Fachlicher Entwurf. Formulierungen sind an Abschnitt 7.1 angelehnt und noch nicht
     /// fachlich geprüft; Quellenkennungen verweisen auf Abschnitt 14 des MI-Nachtrags; E04 auf die Produktentscheidung.
@@ -185,6 +185,18 @@ public enum FeedbackTemplates {
               title: "Komplexe Reflexion",
               format: "Deine Reflexion „{zitat}“ greift auf, was {figur} gesagt hat: „{beleg}“.",
               sourceID: "S2"),
+        .init(ruleID: "rueckmeldung.einfache_reflexion", kind: .observation, certainty: .confirmed,
+              title: "Einfache Reflexion",
+              format: "Mit „{zitat}“ greifst du eine Aussage von {figur} auf: „{beleg}“.",
+              sourceID: "S2"),
+        .init(ruleID: "rueckmeldung.zusammenfassung", kind: .observation, certainty: .confirmed,
+              title: "Zusammenfassung",
+              format: "Mit „{zitat}“ fasst du mehrere Aussagen von {figur} zusammen: „{beleg}“.",
+              sourceID: "S2"),
+        .init(ruleID: "rueckmeldung.offene_frage", kind: .observation, certainty: .confirmed,
+              title: "Offene Frage",
+              format: "Mit „{zitat}“ öffnest du Raum für die eigene Sicht von {figur}.",
+              sourceID: "S2"),
         .init(ruleID: "rueckmeldung.wuerdigung", kind: .observation, certainty: .confirmed,
               title: "Würdigung",
               format: "Du würdigst mit „{zitat}“ etwas, das {figur} selbst berichtet hat: „{beleg}“.",
@@ -209,13 +221,16 @@ public enum FeedbackTemplates {
 /// tatsächlich vorlag. Kein Zugriff auf die Figurenantwort, keinen Zustand, keine
 /// Offenheit: derselbe Beitrag ergibt beim zweiten Mal dieselbe Rückmeldung.
 public enum FeedbackEngine {
-    /// Regelkennung je Code. Nur diese sechs Codes erzeugen heute eine Rückmeldung.
+    /// Regelkennung je Code. Die Kernfertigkeiten erhalten eine kurze, belegte Rückmeldung.
     static let warningRules: [(CounselorCode, String)] = [
         (.confrontation, "warnung.konfrontation"),
         (.adviceWithoutPermission, "warnung.rat_ohne_erlaubnis")
     ]
     static let observationRules: [(CounselorCode, String)] = [
+        (.openQuestion, "rueckmeldung.offene_frage"),
+        (.simpleReflection, "rueckmeldung.einfache_reflexion"),
         (.complexReflection, "rueckmeldung.komplexe_reflexion"),
+        (.summary, "rueckmeldung.zusammenfassung"),
         (.affirmation, "rueckmeldung.wuerdigung"),
         (.autonomy, "rueckmeldung.autonomie_betonen"),
         (.collaboration, "rueckmeldung.zusammenarbeit_suchen")
@@ -263,9 +278,9 @@ public enum FeedbackEngine {
             // Das spezifische Lob ersetzt das allgemeine Reflexionslob dieser Runde.
             if doubleSided != nil && code == .complexReflection { continue }
             // Nur belegte, sichere Segmente. Eine elegante Satzform allein beweist weder
-            // Empathie noch eine zutreffende komplexe Reflexion (Abschnitt 4.3).
+            // Empathie noch eine zutreffende Reflexion oder Würdigung (Abschnitt 4.3).
             guard let candidate = placed.first(where: { $0.0.code == code && !$0.0.isUncertain }) else { continue }
-            let needsSupport = code == .complexReflection || code == .affirmation
+            let needsSupport = [.simpleReflection, .complexReflection, .summary, .affirmation].contains(code)
             guard let finding = build(segment: candidate.0, range: candidate.1, ruleID: ruleID,
                                       certainty: .confirmed, requiresSupport: needsSupport, input: input,
                                       context: context, characterName: characterName,
@@ -399,7 +414,7 @@ public enum FeedbackEngine {
             evidence.append(.init(source: .contextMessage, speaker: .client, messageIndex: index,
                                   quote: quote, occurrence: 1))
         }
-        // Ohne Klientenbeleg keine positive Rückmeldung für Reflexion und Würdigung.
+        // Ohne Klientenbeleg keine positive Rückmeldung für Reflexion, Zusammenfassung und Würdigung.
         if requiresSupport, support == nil { return nil }
         // Gegenprobe gegen die tatsächlich übergebenen Texte. Ein Befund ohne haltbaren
         // Beleg wird verworfen statt angezeigt.

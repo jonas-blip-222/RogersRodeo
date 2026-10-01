@@ -8,6 +8,7 @@ public enum CounselorCode: String, Codable, Sendable, CaseIterable {
     case closedQuestion = "geschlossene_frage"
     case simpleReflection = "einfache_reflexion"
     case complexReflection = "komplexe_reflexion"
+    case summary = "zusammenfassung"
     case affirmation = "wuerdigung"
     case autonomy = "autonomie_betonen"
     case collaboration = "zusammenarbeit_suchen"
