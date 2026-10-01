@@ -56,8 +56,8 @@ public enum RoundDeadline {
 }
 
 public actor ConversationCoordinator {
-    /// 0.8: Eigenständige Gesprächshandlungen und positive Codes im gesamten Beitrag prüfen.
-    public static let promptVersion = "0.8"
+    /// 0.9: Rollenantworten greifen einen konkreten Gedanken aus dem Gespräch wieder auf.
+    public static let promptVersion = "0.9"
     /// 0.5: Erlaubnisbefunde und die Abstufung bei unvollständigem Kontext.
     public static let rulesVersion = "0.5"
     private let repository: any SessionRepository

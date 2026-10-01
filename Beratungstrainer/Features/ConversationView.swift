@@ -16,6 +16,8 @@ struct ConversationView: View {
                         MessageBubble(speaker: session.content.scenario.name, text: session.content.scenario.openingLine, isCounselor: false)
                         ForEach(session.turns, id: \.id) { turn in
                             MessageBubble(speaker: "Du", text: turn.input, isCounselor: true)
+                            feedbackSection(findings: turn.feedback, analysisAvailable: turn.analysis != nil,
+                                            hasUncertainSegment: turn.analysis?.segments.contains(where: \.isUncertain) ?? false)
                             MessageBubble(speaker: session.content.scenario.name, text: turn.reply.text, isCounselor: false)
                         }
                         if model.busy {
@@ -48,27 +50,15 @@ struct ConversationView: View {
         !model.busy && !model.input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
-    /// Was gerade zum eigenen Beitrag zu sagen ist: entweder die vorläufige Rückmeldung zum
-    /// laufenden Versuch — sie erscheint, sobald die Analyse validiert ist, und damit
-    /// möglichst vor der Antwort von Lukas — oder die gespeicherte Rückmeldung zur letzten
-    /// abgeschlossenen Runde.
-    private var feedback: (findings: [FeedbackFinding], analysisAvailable: Bool)? {
-        if let pending = model.currentFeedback { return (pending.findings, pending.analysisAvailable) }
-        // Solange der neue Beitrag eingeordnet wird, gehört die Rückmeldung zur vorigen Runde
-        // nicht mehr hierher: sie stünde direkt unter einem Text, für den sie nicht gilt.
-        if model.busy { return nil }
-        if let turn = session.turns.last { return (turn.feedback, turn.analysis != nil) }
-        return nil
-    }
-
     /// Warnung und Rückmeldung zum Beitrag sind etwas anderes als der Vorschlag für die
     /// nächste Reaktion und bleiben deshalb getrennt sichtbar. Der Schalter unten schaltet
     /// nur die Vorschläge; die Kernwarnungen bleiben in jedem Fall stehen
     /// (MI-Nachtrag, Abschnitt 7.1 und 7.2).
-    @ViewBuilder private var feedbackSection: some View {
-        if let feedback {
-            let warnings = feedback.findings.filter { $0.kind == .warning }
-            let observations = feedback.findings.filter { $0.kind == .observation }
+    @ViewBuilder private func feedbackSection(findings: [FeedbackFinding], analysisAvailable: Bool,
+                                              hasUncertainSegment: Bool) -> some View {
+        if !findings.isEmpty || !analysisAvailable || hasUncertainSegment {
+            let warnings = findings.filter { $0.kind == .warning }
+            let observations = findings.filter { $0.kind == .observation }
             VStack(alignment: .leading, spacing: 8) {
                 ForEach(Array(warnings.enumerated()), id: \.offset) { _, finding in
                     FeedbackNotice(finding: finding)
@@ -76,13 +66,16 @@ struct ConversationView: View {
                 ForEach(Array(observations.enumerated()), id: \.offset) { _, finding in
                     FeedbackNotice(finding: finding)
                 }
-                if !feedback.analysisAvailable {
+                if !analysisAvailable {
                     // Keine Einordnung ist keine Entwarnung. Das muss dastehen, sonst liest
                     // sich die leere Fläche wie „alles in Ordnung“.
                     Text("Für diesen Beitrag liegt keine Einordnung vor. Das ist keine Entwarnung.")
                         .font(.caption).foregroundStyle(.secondary)
-                } else if !feedback.findings.isEmpty {
+                } else if !findings.isEmpty {
                     Text("Fachlicher Entwurf, keine geprüfte Bewertung deiner Beratung.")
+                        .font(.caption).foregroundStyle(.secondary)
+                } else if hasUncertainSegment {
+                    Text("Die Einordnung ist unsicher; deshalb gibt es dazu keine sichere Rückmeldung.")
                         .font(.caption).foregroundStyle(.secondary)
                 }
             }
@@ -97,7 +90,10 @@ struct ConversationView: View {
                     Button("Ohne Einordnung fortsetzen") { model.send(skipAnalysis: true) }.disabled(model.busy)
                 }
             }
-            feedbackSection
+            if let pending = model.currentFeedback {
+                feedbackSection(findings: pending.findings, analysisAvailable: pending.analysisAvailable,
+                                hasUncertainSegment: false)
+            }
             if model.showHints {
                 if let id = session.turns.last?.selectedTipID, let tip = session.content.tips.first(where: { $0.id == id }) {
                     VStack(alignment: .leading, spacing: 6) {
