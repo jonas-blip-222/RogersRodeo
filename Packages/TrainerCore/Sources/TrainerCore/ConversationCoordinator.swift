@@ -57,9 +57,9 @@ public enum RoundDeadline {
 
 public actor ConversationCoordinator {
     /// 1.1: Zusammenfassungen bündeln belegte Aussagen aus mehreren Gesprächsrunden.
-    public static let promptVersion = "1.1"
+    public static let promptVersion = "1.2"
     /// 0.7: Zusammenfassungen verlangen mindestens zwei getrennte Klientenbelege.
-    public static let rulesVersion = "0.7"
+    public static let rulesVersion = "0.8"
     private let repository: any SessionRepository
     private let provider: any TrainerModelProvider
     private var generation: UUID?

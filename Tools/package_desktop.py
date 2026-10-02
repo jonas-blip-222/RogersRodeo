@@ -23,7 +23,7 @@ shutil.copy2(executable, contents / "MacOS/RogersRodeo")
 shutil.copytree(resource, contents / "Resources" / resource.name)
 with (contents / "Info.plist").open("wb") as file:
     plistlib.dump({"CFBundleExecutable": "RogersRodeo", "CFBundleIdentifier": "de.rogersrodeo.desktop-preview",
-                  "CFBundleName": "Rogers Rodeo Demo", "CFBundleDisplayName": "Rogers Rodeo Demo",
+                  "CFBundleName": "Rogers Rodeo", "CFBundleDisplayName": "Rogers Rodeo",
                   "CFBundlePackageType": "APPL", "CFBundleShortVersionString": "0.1.0", "CFBundleVersion": "1",
                   "LSMinimumSystemVersion": "15.0", "NSHighResolutionCapable": True}, file)
 subprocess.run(["codesign", "--force", "--sign", "-", str(args.output)], check=True)

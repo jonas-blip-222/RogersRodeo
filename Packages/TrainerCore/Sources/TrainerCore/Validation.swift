@@ -115,7 +115,7 @@ public enum OutputValidator {
             if segment.code == .summary {
                 guard segment.supportingClientQuote == nil,
                       let quotes = segment.supportingClientQuotes, quotes.count >= 2,
-                      quotesAreInDifferentClientMessages(quotes, context: context) else {
+                      clientSupports(quotes, context: context).count >= 2 else {
                     throw TrainerFailure.invalidAnalysis
                 }
             }
@@ -157,16 +157,31 @@ public enum OutputValidator {
         }
     }
 
-    private static func quotesAreInDifferentClientMessages(_ quotes: [String], context: [DialogueMessage]) -> Bool {
-        var usedIndices: Set<Int> = []
-        for quote in quotes {
-            guard let index = context.indices.first(where: { index in
-                context[index].speaker == .client && !usedIndices.contains(index)
-                    && context[index].text.range(of: quote, options: .literal) != nil
-            }) else { return false }
-            usedIndices.insert(index)
+    /// Ordnet Belege möglichst vielen verschiedenen Klientennachrichten zu.
+    /// Ein kurzes Zitat kann in mehreren Nachrichten vorkommen; eine gierige erste
+    /// Fundstelle darf einen späteren eindeutigen Beleg nicht verdrängen.
+    static func clientSupports(_ quotes: [String], context: [DialogueMessage]) -> [(quote: String, messageIndex: Int)] {
+        let candidates = quotes.map { quote in
+            context.indices.filter { context[$0].speaker == .client
+                && context[$0].text.range(of: quote, options: .literal) != nil }
         }
-        return usedIndices.count >= 2
+        var owners: [Int: Int] = [:]
+        func assign(_ quoteIndex: Int, visited: inout Set<Int>) -> Bool {
+            for index in candidates[quoteIndex] where visited.insert(index).inserted {
+                if let previous = owners[index] {
+                    guard assign(previous, visited: &visited) else { continue }
+                }
+                owners[index] = quoteIndex
+                return true
+            }
+            return false
+        }
+        for index in quotes.indices {
+            var visited: Set<Int> = []
+            _ = assign(index, visited: &visited)
+        }
+        return owners.map { (quote: quotes[$0.value], messageIndex: $0.key, order: $0.value) }
+            .sorted { $0.order < $1.order }.map { ($0.quote, $0.messageIndex) }
     }
 
     /// Prüft eine Belegstelle gegen die Texte, die tatsächlich übergeben wurden: dieselbe

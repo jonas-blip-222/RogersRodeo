@@ -54,16 +54,18 @@ Was am Modell bereits gemessen ist und was ausdrücklich nicht, steht in
 
 Benötigt macOS 15 oder neuer und eine Swift-6-Toolchain. Die Mac-Prüf-App verwendet dieselben SwiftUI-Quellen wie das iPhone-Projekt.
 
-```sh
-swift run RogersRodeo
-```
-
-Für eine anklickbare lokale Debug-App:
+Für die bedienbare Mac-Prüf-App den SwiftPM-Build als App-Bundle verpacken:
 
 ```sh
 swift build
 python3 Tools/package_desktop.py --bin-path "$(swift build --show-bin-path)" --output dist/RogersRodeo.app
+open dist/RogersRodeo.app
 ```
+
+Der Start zeigt die Prüfung des Modellzugangs an. Eine macOS-Schlüsselbundfreigabe darf dabei
+nicht den Hauptthread blockieren. Die App heißt unabhängig vom Modellmodus Rogers Rodeo;
+der tatsächlich aktive KI- oder Demo-Betrieb steht in der Oberfläche. Ein nacktes Executable
+ist kein Ersatz für diesen App-Build bei Bedienungstests.
 
 Das Verpackungsskript überschreibt keine bestehende Ausgabe. Der Build ist lokal signiert, nicht für öffentliche Verteilung notarisiert. Sitzungsspeicher der Mac-Prüf-App: Application Support/RogersRodeo/Conversations im Benutzerkonto. Tests können im Debug-Build mit `ROGERS_RODEO_TEST_STORAGE` einen getrennten Stammordner verwenden.
 

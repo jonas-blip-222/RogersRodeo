@@ -150,6 +150,7 @@ private struct ContrastCollection: Decodable {
     var faelle: [Case]
 }
 private struct ContrastResult: Encodable {
+    var feedback: [FeedbackFinding]?
     var id: String
     var elapsedSeconds: Double
     var analysis: TurnAnalysis?
@@ -182,6 +183,9 @@ func autonomieKontrasteLiveNachpruefen() async throws {
                 try await RoundDeadline.run(until: .now.advanced(by: .seconds(120))) { try await provider.analyze(request) }
             }
             row.analysis = result.value
+            row.feedback = FeedbackEngine.findings(analysis: result.value, input: item.eingabe,
+                context: result.contextMessagesUsed, characterName: "Lukas",
+                rulesVersion: ConversationCoordinator.rulesVersion)
         } catch { row.error = ModelTraceEvent.resultCode(error) }
         row.elapsedSeconds = ModelTraceEvent.seconds(start.duration(to: .now))
         results.append(row)

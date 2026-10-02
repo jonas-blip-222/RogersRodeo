@@ -36,7 +36,7 @@ private func object(_ data: Data) throws -> [String: Any] {
     let required = try #require(items["required"] as? [String])
     let fields = try #require(items["properties"] as? [String: Any])
     #expect(Set(required) == Set(fields.keys))
-    #expect(Set(required) == ["quote", "code", "isUncertain", "supportingClientQuote"])
+    #expect(Set(required) == ["quote", "code", "isUncertain", "supportingClientQuote", "supportingClientQuotes"])
     let code = try #require(fields["code"] as? [String: Any])
     #expect(code["enum"] as? [String] == CounselorCode.allCases.map(\.rawValue))
     let support = try #require(fields["supportingClientQuote"] as? [String: Any])

@@ -1,4 +1,4 @@
-# Lernschema MI · Entwurf 0.6
+# Lernschema MI · Entwurf 0.7
 
 Dieses angepasste Lernschema ist fachlich noch nicht geprüft. Es ist keine standardisierte MITI-Bewertung.
 
@@ -9,7 +9,7 @@ Ordne die aktuelle Berateräußerung anhand des übergebenen Gesprächs ein. Zit
 | offene_frage | Einladung zu einer eigenen Darstellung: „Was beschäftigt Sie daran?“ |
 | geschlossene_frage | Eng begrenzte Antwort, etwa Ja/Nein: „Waren Sie am Freitag unterwegs?“ |
 | einfache_reflexion | Gibt einen im Klientenkontext genannten Inhalt ohne wesentliche neue Bedeutung zurück. |
-| komplexe_reflexion | Greift belegbare Bedeutung, Gefühl oder Ambivalenz über eine bloße Wiederholung hinaus auf. |
+| komplexe_reflexion | Formuliert eine im gezeigten Kontext plausible weiterführende Bedeutung, ein Gefühl oder eine Ambivalenz über eine bloße Wiederholung hinaus. |
 | zusammenfassung | Bündelt Aussagen aus mindestens zwei vorherigen Gesprächsrunden der Person nachvollziehbar, ohne neue Tatsachen hinzuzufügen. Mehrere Aspekte aus nur einer Nachricht sind keine Zusammenfassung. |
 | wuerdigung | Konkrete Anerkennung einer im Kontext belegten Stärke oder Handlung. |
 | autonomie_betonen | Gibt der Person die Entscheidung belegbar frei, einschließlich der Möglichkeit, nichts zu tun oder die Beratung abzulehnen: „Ob Sie daran etwas ändern, entscheiden Sie; ich kann Ihnen das nicht abnehmen.“ Die beiden Prüfschritte unten sind verbindlich. |
@@ -30,6 +30,14 @@ Maßgeblich ist, was eine Äußerung im gezeigten Gespräch tut, nicht, wie sie 
 4. **Eigenständige Anerkennung und echte Freigabe bleiben möglich.** Ein Rat im selben Beitrag entwertet sie nicht automatisch. Eine konkret belegte Stärke kann gewürdigt werden; die ausdrückliche, nicht wieder zurückgenommene Möglichkeit, einen Vorschlag abzulehnen, kann autonomie_betonen sein. Auch nach früherem Drängen kann die Beratung jetzt Druck zurücknehmen. Das Gesprächsklima allein entscheidet keinen Code.
 5. **Unterscheide fehlenden Beleg von Gegenbeleg.** Bei mehrdeutiger Funktion setze isUncertain=true. Wenn der ganze Beitrag die positive Funktion klar aufhebt, wähle die belegte andere Handlung statt eines unsicheren positiven Codes. Bloßes Wiedergeben einer Klientenaussage kann einfache_reflexion sein; freundlicher Ton allein belegt keine Würdigung.
 
+## Reflexion, Würdigung und Zusammenfassung
+
+Die Sicherheit des Codes betrifft die erkennbare Gesprächshandlung und ihre Verankerung im Kontext. Sie ist keine Gewissheit über das Innenleben der Person und keine Vorhersage, ob die Person zustimmen wird. Eine komplexe Reflexion ist eine Bedeutungshypothese: Eine plausible Deutung darf über den Wortlaut hinausgehen. Der Klientenbeleg muss die Ausgangsaussage zeigen, nicht die gesamte weiterführende Deutung bereits ausdrücklich enthalten. Setze Unsicherheit bei mehreren wesentlich verschiedenen Lesarten, fehlendem Kontext oder einer Deutung gegen eine ausdrücklich gezeigte Aussage. Bloßes Benennen eines nicht ausdrücklich genannten Gefühls ist kein Unsicherheitsgrund.
+
+Eine Würdigung anerkennt eine konkrete gezeigte Handlung, Anstrengung oder Haltung. Unterscheide diese Anerkennung von pauschalen Behauptungen über stabile Eigenschaften oder uneingeschränkte Fähigkeiten. Dass jemand werktags wenig trinkt, belegt weder jederzeitige Kontrolle noch allgemeine Willensstärke. Ein ehrliches Eingeständnis kann dagegen als Ehrlichkeit anerkannt werden.
+
+Prüfe vor der Aufteilung in einzelne Reflexionen die bündelnde Funktion: Verbindet eine zusammenhängende Passage Inhalte aus mindestens zwei früheren Klientennachrichten zu einem Rückblick auf die letzten Gesprächsrunden, codiere diese Passage insgesamt als zusammenfassung. Dafür ist kein Einleitungssatz wie „Ich fasse zusammen“ nötig; die Passage darf mehrere Sätze umfassen. Teile sie nicht bloß an Satzgrenzen in einfache oder komplexe Reflexionen auf. Eigenständige anschließende Fragen, Würdigungen oder neue Bedeutungshypothesen bekommen weiterhin eigene Segmente. Zwei Aspekte aus derselben Klientennachricht bleiben Reflexionen. Bei unvollständigem Kontext erfinde keine früheren Gesprächsrunden und keine Belege.
+
 ## Lösungsfindung
 
 Für diese Textübung gibt es weder eine Wanderfalle noch einen eigenen Bubble-Sheet-Ablauf.
@@ -47,7 +55,7 @@ Dass von Entscheiden, Wählen oder Selbstbestimmung die Rede ist, genügt nicht.
 
 Neben einem Ratschlag bleibt echte Autonomiebetonung möglich und ist dann als eigenes Segment zu codieren: nämlich dann, wenn die Beratung im selben Beitrag erkennbar auch das Ablehnen des Vorschlags freigibt. Der Ratschlag bleibt davon unberührt ein eigenes Segment mit seiner eigenen Erlaubnislage; eine Autonomieformulierung ersetzt keine Erlaubnis und hebt eine fehlende Erlaubnis nicht auf.
 
-Bei mehreren Funktionen segmentieren. `isUncertain=true` gilt nur bei einer echten, folgenrelevanten Mehrdeutigkeit: Wenn sich die Gesprächsfunktion aus den gezeigten Texten sinnvoll auf mehrere Arten lesen lässt oder ein nötiger Klientenbeleg fehlt. Es ist keine vorsorgliche Enthaltung. Eine offene Frage ist sicher, wenn sie erkennbar zu einer eigenen Darstellung einlädt. Eine einfache Reflexion ist sicher, wenn sie einen tatsächlich gezeigten Inhalt ohne neue Bedeutung aufgreift. Eine komplexe Reflexion ist sicher, wenn ihre zusätzliche Bedeutung unmittelbar aus einer gezeigten Klientenaussage folgt; sie wird nicht schon deshalb unsicher, weil sie ein Gefühl oder eine Bedeutung in Worte fasst. Eine Würdigung ist sicher, wenn sie eine im gezeigten Verhalten oder Eingeständnis belegte Stärke konkret anerkennt. Sonstiges ist kein Ausweg, um eine erkennbare Funktion oder echte Unsicherheit zu vermeiden.
+Bei mehreren Funktionen segmentieren. `isUncertain=true` gilt nur bei einer echten, folgenrelevanten Mehrdeutigkeit: Wenn sich die Gesprächsfunktion aus den gezeigten Texten sinnvoll auf mehrere Arten lesen lässt oder ein nötiger Klientenbeleg fehlt. Es ist keine vorsorgliche Enthaltung. Eine offene Frage ist sicher, wenn sie erkennbar zu einer eigenen Darstellung einlädt. Eine einfache Reflexion ist sicher, wenn sie einen tatsächlich gezeigten Inhalt ohne neue Bedeutung aufgreift. Eine komplexe Reflexion ist sicher, wenn ihre zusätzliche Bedeutung eine plausible, durch die gezeigte Klientenaussage verankerte Hypothese ist; sie wird nicht schon deshalb unsicher, weil sie ein Gefühl oder eine Bedeutung in Worte fasst. Eine Würdigung ist sicher, wenn sie eine im gezeigten Verhalten oder Eingeständnis belegte Stärke konkret anerkennt. Sonstiges ist kein Ausweg, um eine erkennbare Funktion oder echte Unsicherheit zu vermeiden.
 
 Einfache und komplexe Reflexionen sowie Würdigungen benötigen für Rückmeldung und Zustandsbonus einen exakten `supportingClientQuote` aus einer tatsächlich übergebenen Klientennachricht. Eine Zusammenfassung benötigt mindestens zwei exakte `supportingClientQuotes` aus unterschiedlichen früheren Klientennachrichten. Fehlende Belege bewirken keinen Bonus. Eine doppelseitige Satzform allein belegt keine komplexe Reflexion.
 

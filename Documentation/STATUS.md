@@ -1105,3 +1105,54 @@ Antworten. Gemessen wurde außerhalb der App mit `Tools/openrouter_eval.py`.
 - Sprache, PDF, fachliche Inhaltsfreigabe, vollständiger Offline-Geräteversuch und iPhone-14/15-Freigabe stehen aus.
 
 Der Stand ist eine technische Demo und Grundlage für die weitere Umsetzung, keine fertige Trainings-App.
+
+
+## 2. Oktober 2026 — MI-Rückmeldungen und prüfbarer App-Build
+
+Arbeitsbranch `codex/analyse-ausfaelle`; keine Veröffentlichung oder Zusammenführung.
+Prompt 1.2, Regeln 0.8, Leitfaden 0.7, Feedbacktexte unverändert 0.5.
+
+Belegte Ursachen und Änderungen:
+- Das positive Rückmeldelimit von zwei Befunden verbarg weitere sicher erkannte Fertigkeiten,
+  etwa Würdigungen nach zwei Reflexionen. Jetzt ein Befund je erkannter belegter Fertigkeit;
+  Warnungen bleiben zuerst, doppelseitige Reflexion ersetzt weiterhin deren allgemeines Lob.
+  Ein erstes unbelegtes Segment darf ein späteres belegtes Segment desselben Codes nicht blockieren.
+- Eine mehrsätzige Zusammenfassung wurde live als einzelne Reflexionen zerlegt. Der Leitfaden
+  prüft jetzt ausdrücklich die bündelnde Funktion über die letzten Gesprächsrunden vor der
+  Segmentierung. Kein Schlüsselwortzwang; mindestens zwei frühere Klientennachrichten bleiben nötig.
+- Komplexe Reflexion bedeutet eine plausible, verankerte Bedeutungshypothese, keine Gewissheit
+  über das Innenleben. Fehlender Kontext, echte Mehrdeutigkeit und Gegenbelege bleiben unsicher.
+  Pauschale Willensstärke oder jederzeitige Konsumkontrolle werden nicht automatisch gewürdigt.
+- Die Zusammenfassungsprüfung verlangte zuvor für jedes einzelne Zitat eine eigene Nachricht
+  und wählte gierig die erste Fundstelle. Nun maximale Zuordnung zu verschiedenen Nachrichten:
+  mindestens zwei, zusätzliche Belege derselben Nachricht erlauben keine unnötige Ablehnung.
+- Prozess-Stichprobe des verpackten Ausgangsbuilds zeigte `SecItemCopyMatching` wartend auf
+  dem Hauptthread vor dem ersten Fenster. Der Schlüsselzugang läuft jetzt vor AppModel-Erzeugung
+  asynchron mit sichtbarem Startzustand. Das Verpackungsskript nennt die App nicht pauschal Demo.
+
+Tatsächlich verifiziert:
+- 11 fiktive Kontrastfälle mit produktivem OpenRouter-Adapter vor Änderung und zweimal nach
+  Leitfadenänderung, dazu fünf zusätzliche Fälle. Alle Analysen angenommen. Zusammenfassung,
+  offene Frage, einfache Reflexion, plausible Gefühlsreflexionen und konkrete Würdigungen erhalten
+  passende Rückmeldungen. Fehlender Kontext, Gegenbeleg und unbelegte Eigenschaftsbehauptungen
+  erhalten kein sicheres positives Feedback. Zwei Aspekte derselben Nachricht bleiben Reflexion.
+- Variabilität bleibt: „Da sind sie stark“ wurde im mehrteiligen Beitrag einmal sicher, einmal
+  unsicher gewürdigt. Konkrete Anerkennung des offenen Eingeständnisses wurde sicher erkannt.
+  Dies ist eine begrenzte technische Stichprobe, kein fachlich geprüfter Referenzsatz.
+- Opt-in `appGespraechMitEchtemProviderLive`: echte AppModel-Kette mit neuem isoliertem Teststore,
+  echter Analyse, Zielgedächtnis und generierten Lukas-Antworten; drei Runden gespeichert.
+  Identität: Prompt 1.2 / Regeln 0.8, Rolle qwen/qwen3.8-27b, Analyse anthropic/claude-sonnet-5.5.
+  Rückmeldungen für offene Frage, einfache Reflexion und Zusammenfassung nachgewiesen.
+- 108 Core-Tests, 5 Storage-Tests, 88 Präsentationstests und 22 Python-Inhaltstests bestanden;
+  Inhaltsprüfung sowie SwiftPM-Mac-Build und Xcode-Build für iOS Simulator bestanden.
+
+Grenze: Der sichtbare UI-Test, insbesondere Tastatureingabe und die Darstellung nach dem Senden,
+war in diesem Lauf nicht möglich: Computer Use scheiterte wiederholt an ScreenCaptureKit -3811.
+Die App-Kette ist live geprüft; die sichtbare Bildschirmbedienung ist damit ausdrücklich nicht
+belegt. Kein alter Sitzungsspeicher wurde verändert oder gelöscht. Diagnoseberichte liegen
+außerhalb des Repositorys unter `Agents/codex/mi-feedback-20261002`, ohne Zugangsdaten.
+
+Reproduzierbare App-Kettenprüfung: `RR_RUN_APP_FLOW_LIVE=1`,
+`ROGERS_RODEO_TEST_STORAGE=<neuer isolierter Ordner>`, `RR_APP_FLOW_REPORT=<Berichtspfad>`
+und vorhandenen sicheren OpenRouter-Zugang setzen; dann
+`swift test --filter appGespraechMitEchtemProviderLive`. Ausschließlich fiktive Übungsdaten.

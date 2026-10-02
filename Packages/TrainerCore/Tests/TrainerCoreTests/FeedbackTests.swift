@@ -200,7 +200,7 @@ private func befunde(_ analysis: TurnAnalysis?, _ input: String,
     #expect(befunde(analyse, eingabe).isEmpty)
 }
 
-@Test func hoechstensZweiPositiveRueckmeldungenJeRunde() throws {
+@Test func verschiedeneFertigkeitenVerschwindenNichtHinterEinemZweierlimit() throws {
     let kontext = ["Im Urlaub habe ich zwei Wochen fast nichts getrunken."]
     let eingabe = "Sie haben im Urlaub etwas geschafft. Sie entscheiden selbst, wie es weitergeht. Wir könnten das zusammen anschauen."
     let analyse = TurnAnalysis(segments: [
@@ -209,9 +209,9 @@ private func befunde(_ analysis: TurnAnalysis?, _ input: String,
         .init(quote: "Sie entscheiden selbst, wie es weitergeht.", code: .autonomy, isUncertain: false),
         .init(quote: "Wir könnten das zusammen anschauen.", code: .collaboration, isUncertain: false)])
     let findings = befunde(analyse, eingabe, kontext)
-    #expect(findings.count == 2)
+    #expect(findings.count == 3)
     // In der Reihenfolge des eigenen Beitrags, damit die Rückmeldung nachvollziehbar bleibt.
-    #expect(findings.map(\.ruleID) == ["rueckmeldung.wuerdigung", "rueckmeldung.autonomie_betonen"])
+    #expect(findings.map(\.ruleID) == ["rueckmeldung.wuerdigung", "rueckmeldung.autonomie_betonen", "rueckmeldung.zusammenarbeit_suchen"])
 }
 
 @Test func warnungStehtVorDerPositivenRueckmeldung() throws {
@@ -337,4 +337,27 @@ private func befunde(_ analysis: TurnAnalysis?, _ input: String,
         templateVersion: "0.1", rulesVersion: "0.1", sourceID: "S3", reviewStatus: .draft)
     let data = try JSONEncoder().encode(finding)
     #expect(try JSONDecoder().decode(FeedbackFinding.self, from: data) == finding)
+}
+
+@Test func spaeteresBelegtesSegmentWirdTrotzFrueheremUnbelegtemRueckgemeldet() {
+    let input = "Das war mutig. Dass Sie das zugeben, zeigt Ehrlichkeit."
+    let analysis = TurnAnalysis(segments: [
+        .init(quote: "Das war mutig.", code: .affirmation, isUncertain: false),
+        .init(quote: "Dass Sie das zugeben, zeigt Ehrlichkeit.", code: .affirmation, isUncertain: false,
+              supportingClientQuote: "Ich will mir nichts vormachen.")])
+    let findings = befunde(analysis, input, ["Ich will mir nichts vormachen."])
+    #expect(findings.map(\.ruleID) == ["rueckmeldung.wuerdigung"])
+    #expect(findings.first?.evidence.first?.quote == "Dass Sie das zugeben, zeigt Ehrlichkeit.")
+}
+
+@Test func zusammenfassungAkzeptiertMehrereBelegeProNachrichtUndMehrdeutigeFundstellen() throws {
+    let context = ["Ich will weniger trinken und ehrlich sein.", "Ich will weniger trinken."]
+    let input = "Sie wollen weniger trinken und ehrlich sein."
+    for quotes in [["weniger trinken", "ehrlich sein"], ["weniger trinken", "ehrlich sein", "Ich will"]] {
+        let analysis = TurnAnalysis(segments: [.init(quote: input, code: .summary, isUncertain: false,
+                                                    supportingClientQuotes: quotes)])
+        try OutputValidator.validateAnalysis(analysis, input: input,
+            context: context.map { .init(speaker: .client, text: $0) })
+        #expect(befunde(analysis, input, context).map(\.ruleID) == ["rueckmeldung.zusammenfassung"])
+    }
 }

@@ -111,7 +111,7 @@ enum FeedbackGate {
     /// `defaults` ist überschreibbar, damit Tests die leichtgewichtigen Einstellungen
     /// (Porträtrotation, Bestätigung des Disclaimers) in einem eigenen Bereich führen
     /// können. Die App benutzt weiterhin `.standard`.
-    init(defaults: UserDefaults = .standard) throws {
+    init(defaults: UserDefaults = .standard, hasModelKey: Bool? = nil) throws {
         let content = try ContentCatalog.load()
         catalog = content.catalog; contentHash = content.hash
         let rotation = HomePortraitRotation(pool: try HomePortrait.loadPool(), defaults: defaults)
@@ -140,7 +140,7 @@ enum FeedbackGate {
         // Sitzungsidentität und der Demo-Hinweis im Rückblick.
         let settings = OpenRouterConfiguration()
         modelSettings = settings
-        let demo = OpenRouterKey.lookup(service: settings.keychainService) == nil
+        let demo = !(hasModelKey ?? (OpenRouterKey.lookup(service: settings.keychainService) != nil))
         usesDemoResponses = demo
         let built = Self.makeProvider(demo: demo, settings: settings)
         provider = built.provider

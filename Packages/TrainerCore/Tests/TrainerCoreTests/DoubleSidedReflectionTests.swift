@@ -150,6 +150,6 @@ private func findings(_ analysis: TurnAnalysis, _ input: String) -> [FeedbackFin
         .init(quote: "Sie müssen!", code: .confrontation, isUncertain: false)], at: 0)
     let result = findings(analysis, input)
     #expect(result.first?.kind == .warning)
-    #expect(result.filter { $0.kind == .observation }.count == 2)
+    #expect(result.filter { $0.kind == .observation }.count == 3)
     #expect(result.contains { $0.ruleID == rule })
 }

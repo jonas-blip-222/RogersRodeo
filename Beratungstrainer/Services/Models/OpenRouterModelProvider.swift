@@ -544,11 +544,11 @@ enum OpenRouterSchema {
             .joined(separator: "\n")
     }
 
-    /// Ergänzt den eingefrorenen Leitfaden um den expliziten Analysevertrag 1.1.
+    /// Ergänzt den eingefrorenen Leitfaden um den expliziten Analysevertrag 1.2.
     static func analysisSystemPrompt(_ guide: String) -> String {
         guide + """
 
-        Ergänzung zum Ausgabevertrag, Promptstand 1.1: Die ältere Anweisung „nur segments“
+        Ergänzung zum Ausgabevertrag, Promptstand 1.2: Die ältere Anweisung „nur segments“
         wird ersetzt durch segments, doubleSidedReflection (Objekt oder null) und permissions.
         Erkenne eine doppelseitige Reflexion nur, wenn die Beratung zwei Seiten derselben
         Veränderung aus tatsächlichen Klientenaussagen aufgreift: sustain (Gründe fürs

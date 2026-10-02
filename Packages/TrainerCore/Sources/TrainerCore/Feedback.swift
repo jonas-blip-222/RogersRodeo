@@ -235,8 +235,6 @@ public enum FeedbackEngine {
         (.autonomy, "rueckmeldung.autonomie_betonen"),
         (.collaboration, "rueckmeldung.zusammenarbeit_suchen")
     ]
-    /// Höchstens so viele positive Rückmeldungen je Runde, damit die Fläche kurz bleibt.
-    static let observationLimit = 2
 
     public static func findings(analysis: TurnAnalysis?, input: String, context: [DialogueMessage],
                                 characterName: String, rulesVersion: String,
@@ -279,23 +277,23 @@ public enum FeedbackEngine {
             if doubleSided != nil && code == .complexReflection { continue }
             // Nur belegte, sichere Segmente. Eine elegante Satzform allein beweist weder
             // Empathie noch eine zutreffende Reflexion oder Würdigung (Abschnitt 4.3).
-            guard let candidate = placed.first(where: { $0.0.code == code && !$0.0.isUncertain }) else { continue }
             let needsSupport = [.simpleReflection, .complexReflection, .summary, .affirmation].contains(code)
-            guard let finding = build(segment: candidate.0, range: candidate.1, ruleID: ruleID,
-                                      certainty: .confirmed, requiresSupport: needsSupport, input: input,
-                                      context: context, characterName: characterName,
-                                      rulesVersion: rulesVersion) else { continue }
-            observations.append((candidate.1.lowerBound, finding))
+            for candidate in placed where candidate.0.code == code && !candidate.0.isUncertain {
+                guard let finding = build(segment: candidate.0, range: candidate.1, ruleID: ruleID,
+                                          certainty: .confirmed, requiresSupport: needsSupport, input: input,
+                                          context: context, characterName: characterName,
+                                          rulesVersion: rulesVersion) else { continue }
+                observations.append((candidate.1.lowerBound, finding))
+                break // Eine Rückmeldung je Fertigkeit, auch bei wiederholten Segmenten.
+            }
         }
         observations.sort { $0.position < $1.position }
         if let doubleSided {
-            // Die ausdrücklich gewünschte Reihenfolge darf nicht durch das Anzeigelimit verschwinden.
             results.append(doubleSided)
         }
-        // Belegte Erlaubnis und doppelseitige Reflexion sind die spezifischeren Rückmeldungen
-        // und zählen gegen dasselbe knappe Anzeigebudget.
-        let reserved = (doubleSided == nil ? 0 : 1) + assessed.results.filter { $0.finding.kind == .observation }.count
-        results += observations.prefix(max(0, observationLimit - reserved))
+        // Jede belegte Fertigkeit bleibt sichtbar. Ein pauschales Zweierlimit würde
+        // beispielsweise eine Würdigung nach zwei Reflexionen still unterdrücken.
+        results += observations
 
         // Warnungen zuerst, innerhalb einer Art in der Reihenfolge des eigenen Beitrags.
         return results.sorted { left, right in
@@ -410,15 +408,10 @@ public enum FeedbackEngine {
         let quotes = segment.code == .summary ? (segment.supportingClientQuotes ?? [])
             : (segment.supportingClientQuote.map { [$0] } ?? [])
         var supports: [String] = []
-        var usedIndices: Set<Int> = []
-        for quote in quotes {
-            guard let index = context.indices.first(where: { index in
-                context[index].speaker == .client && !usedIndices.contains(index)
-                    && context[index].text.range(of: quote, options: .literal) != nil
-            }) else { continue }
-            usedIndices.insert(index); supports.append(quote)
-            evidence.append(.init(source: .contextMessage, speaker: .client, messageIndex: index,
-                                  quote: quote, occurrence: 1))
+        for match in OutputValidator.clientSupports(quotes, context: context) {
+            supports.append(match.quote)
+            evidence.append(.init(source: .contextMessage, speaker: .client, messageIndex: match.messageIndex,
+                                  quote: match.quote, occurrence: 1))
         }
         let support = supports.joined(separator: " · ")
         // Ohne Klientenbeleg keine positive Rückmeldung für Reflexion, Zusammenfassung und Würdigung.
