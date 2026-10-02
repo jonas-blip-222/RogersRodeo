@@ -1166,7 +1166,7 @@ Stellen 1, 5 und 8 zweimal. Je 17 gültige Antworten. Kein neuer vollständiger 
 Alternative Antworten wurden nicht in nachfolgende Kontexte übernommen. Qualitative,
 nicht verblindete Beurteilung: Sonnet spricht natürlicher, reagiert differenzierter und bleibt
 ambivalent; ein weiterer vollständiger Sonnet-Test muss mögliche zu schnelle Zustimmung prüfen.
-Median 2,50 s (Qwen) / 2,80 s (Sonnet); gemeldete Kosten 0,005698 / 0,129748 USD.
+Median 2,50 s (Qwen) / 2,80 s (Sonnet); gemeldete Kosten 0,005713 / 0,129748 USD.
 
 Sonnet als Rollenmodell war zuerst technisch blockiert: Reasoning darf dort nicht ausgeschaltet
 werden, und das nullable Enum von primaryTag mit type=[string,null] wurde zurückgewiesen.
