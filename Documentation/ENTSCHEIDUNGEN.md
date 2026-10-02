@@ -334,3 +334,23 @@ Quelle: [OpenRouter-Modellliste](https://openrouter.ai/api/v1/models).
 Die frühere Vorgabe „ein Modell für beide Aufgaben“ aus E01 wird damit für die
 Modellauswahl geändert. Gemeinsamer Anbieterzugang und alle übrigen Grenzen bleiben bestehen.
 Die Einbindung in main erfordert weiterhin Jonas' konkrete Freigabe.
+
+
+## E09 · Sonnet spielt auch Lukas
+
+**02.10.2026, nach direktem Rollenvergleich und Jonas' ausdrücklicher Auswahl.**
+Neue Sitzungen verwenden `anthropic/claude-sonnet-5.5` sowohl für die Figur als auch für
+Beratungseinordnung und Zielgedächtnis. Die Aufrufe und Kontexte bleiben getrennt;
+die Rollenantwort erhält keine Einordnungslabels. Rollenprompt, Temperatur 0,8 und
+Ausgabebudget 2000/4000 bleiben. Die Rolle übernimmt die erforderliche Anbieter-
+Reasoningvorgabe; das nullable Tag-Enum wird für Anthropic gleichwertig als anyOf übertragen.
+
+Grundlage: 17 gültige Antworten je Modell an 14 identischen Originalstellen, darunter drei
+Wiederholungen. Jonas bevorzugt Sonnet deutlich. Median 2,8 s statt 2,5 s; gemeldete
+Rollenkosten 0,129748 statt 0,005713 USD für diesen Test. Keine allgemeine Qualitätsgarantie.
+Ein separater vollständiger AppModel-Livetest prüft die neue Standardkonfiguration.
+
+E08s Trennung der Aufgaben und Fehlerbehandlung bleibt; seine Wahl von Qwen für die Figur
+ist hiermit abgelöst. Kein stiller Fallback, Providerfilter unverändert. Alte Sitzungen
+bleiben lesbar und exportierbar; für den neuen Rollenstandard eine neue Sitzung beginnen.
+Die Modellidentität verhindert ein stilles Fortsetzen einer Qwen-Sitzung mit Sonnet.

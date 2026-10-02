@@ -1179,3 +1179,18 @@ Opt-in: `RR_RUN_ROLE_COMPARISON=1`, `RR_ROLE_COMPARISON_INPUT=<SessionRecord.jso
 `RR_ROLE_COMPARISON_REPORT=<Bericht.json>` mit sicherem vorhandenem Zugang; dann
 `swift test --filter lukasRollenmodelleLiveVergleichen`. Nur fiktive autorisierte Sitzungen.
 Diagnose außerhalb des Repositorys: `Agents/codex/lukas-model-20261002`. Kein Push/Merge.
+
+
+### 2. Oktober 2026 — Sonnet als Standard übernommen
+
+Nach Jonas' Auswahl spielt `anthropic/claude-sonnet-5.5` jetzt auch Lukas. Rollen- und
+Analyseaufrufe bleiben getrennt; Reasoning der Rolle folgt der erforderlichen
+Anbietervorgabe. Temperatur, Budget, Providerfilter und Prompt bleiben unverändert.
+E09 dokumentiert die Entscheidung. Sitzungsidentität nennt Sonnet für beide Aufgaben;
+Qwen-Sitzungen werden nicht still mit einem anderen Rollenmodell fortgesetzt.
+
+AppModel-Livetest mit neuem isoliertem Teststore und der tatsächlichen neuen
+Standardkonfiguration bestanden: drei Runden mit echten Sonnet-Rollenantworten,
+Analyse und persistierten Rückmeldungen für offene Frage, einfache Reflexion und
+Zusammenfassung. 90 Präsentationstests und Mac-App-Build bestanden. Die sichtbare
+UI-Bedienung ist in diesem Schritt nicht erneut geprüft. Kein Push oder Merge.

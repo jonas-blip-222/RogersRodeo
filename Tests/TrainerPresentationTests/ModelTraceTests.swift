@@ -328,7 +328,7 @@ private func traceSession(_ coordinator: ConversationCoordinator) async throws -
     try await provider.prepare()
     _ = try await provider.analyze(.init(codingGuide: "G", recentMessages: [], currentInput: "Hallo"))
     _ = try await provider.reply(traceRequest)
-    let expected = ["CounselorAnalysis": "anthropic/claude-sonnet-5.5", "GoalAndCharacterAnalysis": "anthropic/claude-sonnet-5.5", "ClientReply": "qwen/qwen3.8-27b"]
+    let expected = ["CounselorAnalysis": "anthropic/claude-sonnet-5.5", "GoalAndCharacterAnalysis": "anthropic/claude-sonnet-5.5", "ClientReply": "anthropic/claude-sonnet-5.5"]
     for request in await stub.requests {
         let body = try #require(JSONSerialization.jsonObject(with: request.httpBody!) as? [String: Any])
         let format = try #require(body["response_format"] as? [String: Any])
@@ -339,7 +339,7 @@ private func traceSession(_ coordinator: ConversationCoordinator) async throws -
             #expect(body["reasoning"] == nil)
             #expect(body["max_tokens"] as? Int == 4000)
         } else {
-            #expect((body["reasoning"] as? [String: Bool])?["enabled"] == false)
+            #expect(body["reasoning"] == nil)
         }
     }
     #expect(collector.calls.count == 3)

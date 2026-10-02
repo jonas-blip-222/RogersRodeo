@@ -57,7 +57,7 @@ func lukasRollenmodelleLiveVergleichen() async throws {
         var configuration = OpenRouterConfiguration(); configuration.model = model
         // Sonnet-Endpunkt verlangt Reasoning (live HTTP 400 bei enabled=false).
         // Identische Rollenvorgaben, notwendige anbieterspezifische Transporteinstellung.
-        if model.hasPrefix("anthropic/") { configuration.replyReasoning = nil }
+        configuration.replyReasoning = model.hasPrefix("anthropic/") ? nil : false
         let provider = OpenRouterModelProvider(configuration: configuration, transport: { try await transport.send($0) })
         try await provider.prepare()
         for (index, turn) in record.snapshot.turns.prefix(Int(env["RR_ROLE_MAX_ROUNDS"] ?? "20") ?? 20).enumerated() {

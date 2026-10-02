@@ -265,7 +265,7 @@ private func envelope(content: String?, finish: String?, refusal: String? = nil,
 @Test func modellkennungUnterscheidetSichVonDerDemo() async {
     let provider = OpenRouterModelProvider()
     let descriptor = provider.descriptor()
-    #expect(descriptor.id == "openrouter/role=qwen/qwen3.8-27b;analysis=anthropic/claude-sonnet-5.5")
+    #expect(descriptor.id == "openrouter/role=anthropic/claude-sonnet-5.5;analysis=anthropic/claude-sonnet-5.5")
     // Der Coordinator vergleicht die Kennung mit der gespeicherten Sitzung. Eine Demo-Sitzung
     // lässt sich deshalb lesen, aber nicht mit echtem Modell fortsetzen — das ist gewollt.
     #expect(descriptor != DemoModelProvider.identity)
@@ -768,7 +768,8 @@ private actor SlowMemoryTransport {
     var claude = OpenRouterConfiguration(); claude.model = "anthropic/claude-sonnet-4.6"
     let claudeBody = try object(try OpenRouterSchema.body(configuration: claude, system: "S", user: "U",
         responseFormat: format, temperature: 0, maxTokens: 1500, reasoning: false).serialized())
-    let qwenBody = try object(try OpenRouterSchema.body(configuration: .init(), system: "S", user: "U",
+    var qwen = OpenRouterConfiguration(); qwen.model = "qwen/qwen3.8-27b"
+    let qwenBody = try object(try OpenRouterSchema.body(configuration: qwen, system: "S", user: "U",
         responseFormat: format, temperature: 0, maxTokens: 1500, reasoning: false).serialized())
     #expect(NSDictionary(dictionary: try #require(qwenBody["response_format"] as? [String: Any]))
         == NSDictionary(dictionary: try object(try format.serialized())))

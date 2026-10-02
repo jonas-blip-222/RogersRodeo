@@ -89,8 +89,8 @@ enum JSONValue: Encodable, Sendable, Equatable {
 // MARK: - Einstellungen
 
 struct OpenRouterConfiguration: Sendable {
-    /// The figure keeps the established Qwen model.
-    var model = "qwen/qwen3.8-27b"
+    /// Jonas selected Sonnet after the 02.10.2026 role comparison.
+    var model = "anthropic/claude-sonnet-5.5"
     /// Live comparison 30.09.2026: separate model for both analysis stages. nil selects `model`
     /// with the historical analysis settings for explicit diagnostic comparisons.
     var analysisModel: String? = "anthropic/claude-sonnet-5.5"
@@ -166,7 +166,8 @@ struct OpenRouterConfiguration: Sendable {
     /// Erneuter Versuch mit Zielvertrag 0.5: langsame unbrauchbare Ausgabe trotz 4000/8000;
     /// deshalb weiterhin ohne Überlegen. Siehe aktuelle Live-Prüfung in STATUS.md.
     var analysisReasoning: Bool? = false
-    var replyReasoning: Bool? = false
+    /// Sonnet requires reasoning; keep the provider default validated in the role comparison.
+    var replyReasoning: Bool? = nil
     /// Frist ohne Datenfluss.
     var idleSeconds: Double = 90
     /// Harte Gesamtfrist je Aufruf. E02: Eine reine Socket-Frist verhindert kein Hängen;
