@@ -539,6 +539,23 @@ enum OpenRouterSchema {
         return .object(root)
     }
 
+    /// Der Sonnet-Rollenendpunkt weist ein nullable Enum mit type=[string,null]
+    /// zurück (live HTTP 400). anyOf beschreibt dieselben erlaubten Werte.
+    static func anthropicGrammar(_ format: JSONValue) -> JSONValue {
+        guard case var .object(root) = format,
+              case var .object(wrapper)? = root["json_schema"],
+              wrapper["name"] == .string("ClientReply"),
+              case var .object(schema)? = wrapper["schema"],
+              case var .object(properties)? = schema["properties"] else { return compactGrammar(format) }
+        properties["primaryTag"] = .object(["anyOf": .array([
+            .object(["type": .string("string"), "enum": .strings(ClientTag.allCases.map(\.rawValue))]),
+            .object(["type": .string("null")])
+        ])])
+        schema["properties"] = .object(properties); wrapper["schema"] = .object(schema)
+        root["json_schema"] = .object(wrapper)
+        return .object(root)
+    }
+
     static func transcript(_ messages: [DialogueMessage], clientLabel: String) -> String {
         messages.map { "\($0.speaker == .client ? clientLabel : "Beratung"): \($0.text)" }
             .joined(separator: "\n")
@@ -821,7 +838,7 @@ enum OpenRouterSchema {
                 .object(["role": .string("user"), "content": .string(user)])
             ]),
             "response_format": configuration.model.hasPrefix("anthropic/")
-                ? compactGrammar(responseFormat) : responseFormat,
+                ? anthropicGrammar(responseFormat) : responseFormat,
             "temperature": .double(temperature),
             "max_tokens": .int(maxTokens),
             // Abrechnungsdaten mit der Antwort anfordern; keine zusätzlichen Modellaufrufe.

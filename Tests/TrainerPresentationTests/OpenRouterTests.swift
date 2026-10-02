@@ -819,3 +819,21 @@ private actor SlowMemoryTransport {
     let code = try #require(text.range(of: "\"code\":{"))
     #expect(quote.lowerBound < code.lowerBound)
 }
+
+@Test func sonnetRollenformatBeschreibtNullableTagAlsGetrennteAlternativen() throws {
+    var configuration = OpenRouterConfiguration(); configuration.model = "anthropic/claude-sonnet-5.5"
+    let body = try object(try OpenRouterSchema.body(configuration: configuration, system: "S", user: "U",
+        responseFormat: OpenRouterSchema.responseFormat(name: "ClientReply", schema: OpenRouterSchema.reply),
+        temperature: 0.8, maxTokens: 2000).serialized())
+    let format = try #require(body["response_format"] as? [String: Any])
+    let wrapper = try #require(format["json_schema"] as? [String: Any])
+    let schema = try #require(wrapper["schema"] as? [String: Any])
+    let properties = try #require(schema["properties"] as? [String: Any])
+    let tag = try #require(properties["primaryTag"] as? [String: Any])
+    let variants = try #require(tag["anyOf"] as? [[String: Any]])
+    #expect(variants.count == 2)
+    #expect(variants.first?["enum"] as? [String] == ClientTag.allCases.map(\.rawValue))
+    #expect(variants.last?["type"] as? String == "null")
+    #expect(schema["required"] as? [String] == ["text", "primaryTag", "disclosedFactIDs"])
+    #expect(schema["additionalProperties"] as? Bool == false)
+}

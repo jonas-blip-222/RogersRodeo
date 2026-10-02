@@ -1156,3 +1156,26 @@ Reproduzierbare App-Kettenprüfung: `RR_RUN_APP_FLOW_LIVE=1`,
 `ROGERS_RODEO_TEST_STORAGE=<neuer isolierter Ordner>`, `RR_APP_FLOW_REPORT=<Berichtspfad>`
 und vorhandenen sicheren OpenRouter-Zugang setzen; dann
 `swift test --filter appGespraechMitEchtemProviderLive`. Ausschließlich fiktive Übungsdaten.
+
+
+### 2. Oktober 2026 — Vergleich der Lukas-Rollenmodelle
+
+Auf Jonas' Auftrag 14 Stellen seines fiktiven Testlaufs mit identischen eingefrorenen
+Originalkontexten, Zuständen und Rollenprompts an Qwen 3.8-27b und Sonnet 5.5 geschickt;
+Stellen 1, 5 und 8 zweimal. Je 17 gültige Antworten. Kein neuer vollständiger Verlauf:
+Alternative Antworten wurden nicht in nachfolgende Kontexte übernommen. Qualitative,
+nicht verblindete Beurteilung: Sonnet spricht natürlicher, reagiert differenzierter und bleibt
+ambivalent; ein weiterer vollständiger Sonnet-Test muss mögliche zu schnelle Zustimmung prüfen.
+Median 2,50 s (Qwen) / 2,80 s (Sonnet); gemeldete Kosten 0,005698 / 0,129748 USD.
+
+Sonnet als Rollenmodell war zuerst technisch blockiert: Reasoning darf dort nicht ausgeschaltet
+werden, und das nullable Enum von primaryTag mit type=[string,null] wurde zurückgewiesen.
+Der Vergleich nutzt die Anbieter-Reasoningvorgabe; der Produktionsadapter stellt nur für
+Anthropic das Rollen-Enum semantisch gleichwertig als anyOf(String-Enum, null) dar. Lokale
+Validierung bleibt identisch, Qwen-Format und Modellstandard unverändert. Danach alle 17
+Sonnet-Antworten angenommen. 90 Präsentationstests und Mac-App-Build bestanden.
+
+Opt-in: `RR_RUN_ROLE_COMPARISON=1`, `RR_ROLE_COMPARISON_INPUT=<SessionRecord.json>`,
+`RR_ROLE_COMPARISON_REPORT=<Bericht.json>` mit sicherem vorhandenem Zugang; dann
+`swift test --filter lukasRollenmodelleLiveVergleichen`. Nur fiktive autorisierte Sitzungen.
+Diagnose außerhalb des Repositorys: `Agents/codex/lukas-model-20261002`. Kein Push/Merge.
