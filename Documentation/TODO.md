@@ -149,17 +149,21 @@ statt lokaler Inferenz gemäß E01–E03. MI-03 und MI-04 bleiben insgesamt offe
 Inferenz entfällt als Weg für die Kernfunktion. Der Abschnitt bleibt als Verlauf stehen. Was
 stattdessen zu tun ist, steht in Abschnitt 5. Siehe `ENTSCHEIDUNGEN.md`, E01 bis E03.
 
-- [ ] Direkte MLX-Anbindung gegen die bisher vorgesehene FoundationModels-Brücke abwägen. iOS 27 ist eine Anforderung der ausgewählten Brücke, keine allgemeine Voraussetzung lokaler Inferenz.
-- [ ] Zwei Aufgaben mit einem geladenen Modell und getrennten Kontexten: Figur spielen und Gespräch einordnen.
-- [ ] Modellkandidat, genaue Revision, Lizenz und Gewichtsformat festlegen; kleinen Integrationsversuch vor endgültigem Pin durchführen.
-- [ ] Lokales Laden, strukturierte Ausgabe, Tokenbudget, Abbruch und Fehlerverhalten implementieren.
-- [ ] Rollenqualität und Einordnung mit denselben geprüften Fällen messen; danach Geschwindigkeit und Speicher auf iPhone 17.
+Die folgenden Punkte entfallen durch E01 und sind deshalb keine offenen Aufgaben mehr
+(Bereinigung 22.10.2026):
+
+- Entfällt (E01): Direkte MLX-Anbindung gegen die bisher vorgesehene FoundationModels-Brücke abwägen. iOS 27 ist eine Anforderung der ausgewählten Brücke, keine allgemeine Voraussetzung lokaler Inferenz.
+- Entfällt (E01): Zwei Aufgaben mit einem geladenen Modell und getrennten Kontexten: Figur spielen und Gespräch einordnen.
+- Entfällt (E01): Modellkandidat, genaue Revision, Lizenz und Gewichtsformat festlegen; kleinen Integrationsversuch vor endgültigem Pin durchführen.
+- Entfällt (E01): Lokales Laden, strukturierte Ausgabe, Tokenbudget, Abbruch und Fehlerverhalten implementieren.
+- Entfällt (E01): Rollenqualität und Einordnung mit denselben geprüften Fällen messen; danach Geschwindigkeit und Speicher auf iPhone 17.
 
 ## 4. Xcode und Geräteprüfung
 
 - [ ] Xcodes vorhandene MCP-Brücke verbinden und projektbezogene Freigabe in Xcode einrichten.
 - [ ] Lokalen iPhone-Build und Simulatorstart prüfen; die aktuelle Shell erreicht CoreSimulator nicht.
-- [ ] Deployment-Target nach der Laufzeitentscheidung anpassen, statt iOS 27 ungeprüft vorauszusetzen.
+- [x] Deployment-Target nach der Laufzeitentscheidung anpassen, statt iOS 27 ungeprüft vorauszusetzen.
+      Erledigt in `957757e`: Mindestversion iOS 17.0.
 - [ ] Reales iPhone für Offline-Erststart, Modellleistung, Dateischutz und Wiederaufnahme testen.
 - [ ] Danach Spracheingabe mit Transkriptkorrektur, Sprachausgabe, PDF-Export und ältere Geräte bearbeiten.
 
@@ -180,10 +184,11 @@ stattdessen zu tun ist, steht in Abschnitt 5. Siehe `ENTSCHEIDUNGEN.md`, E01 bis
 
 ### Technisch
 
-- [ ] OpenRouter-Adapter als zweite Konformität von `TrainerModelProvider` bauen, außerhalb von
+- [x] OpenRouter-Adapter als zweite Konformität von `TrainerModelProvider` bauen, außerhalb von
       `TrainerCore` unter `Beratungstrainer/Services/Models/`. Muss `null` für
       `supportingClientQuote` annehmen, weil `strict: true` das Auslassen eines Feldes nicht
-      erlaubt.
+      erlaubt. Erledigt in `0a75ed2` (`OpenRouterModelProvider.swift`), Schlüsseleingabe in
+      `c985f05`; seither mehrfach live geprüft, siehe STATUS.md.
 - [ ] Ausgabebudget nach E03 festlegen und Abschneidung als eigenen, wiederholbaren Fehlerfall
       behandeln — nicht als ungültige Analyse. Eine Wiederholung ohne höheres Budget läuft ins
       selbe Ergebnis.
@@ -239,9 +244,10 @@ stattdessen zu tun ist, steht in Abschnitt 5. Siehe `ENTSCHEIDUNGEN.md`, E01 bis
       `require_parameters` und `ignore`. Offen bleibt die Messung: die acht Anbieter aus E02
       wurden mit `deny` allein gemessen, nicht zusammen mit `require_parameters` und der
       Ausschlussliste. Verfügbarkeit im nächsten bezahlten Lauf beobachten.
-- [ ] **Einmaligen Disclaimer bauen (E07).** Datenverarbeitung und die pädagogische
-      Vereinfachung der Szenarien, zu bestätigen vor der ersten Benutzung. Text noch nicht
-      geschrieben und nicht fachlich abgenommen.
+- [x] **Einmaligen Disclaimer bauen (E07).** Datenverarbeitung und die pädagogische
+      Vereinfachung der Szenarien, zu bestätigen vor der ersten Benutzung. Gebaut in
+      `2c40f5c`, `c7c4480` und `6ad56f4` (Text, Bestätigung, Sperre, Tests).
+- [ ] Disclaimer-Text fachlich abnehmen; offen laut E07-Nachtrag `5f1f08c`.
 - [x] **Markdown-Hülle inkonsistent behandelt.** Vereinheitlicht: `OpenRouterResponse.payload`
       entfernt die einzelne Transporthülle für beide Wege; `analysisPayload` und der neue
       `replyPayload` unterscheiden nur noch, welcher `TrainerFailure` nach außen geht.
@@ -345,11 +351,12 @@ stattdessen zu tun ist, steht in Abschnitt 5. Siehe `ENTSCHEIDUNGEN.md`, E01 bis
       Gesprächsdaten, kann aber neben dem neuen Hinweis zur Modellnutzung missverstanden werden.
 - [ ] Offline-Aussagen in README, `ARCHITEKTUR.md` und Oberfläche anpassen. Eine App, die Text an
       einen Dienst sendet, darf nicht weiter vollständig lokale Verarbeitung versprechen.
-- [ ] Deployment-Target neu bestimmen. Ohne MLX und ohne FoundationModels-Brücke gibt es keinen
+- [x] Deployment-Target neu bestimmen. Ohne MLX und ohne FoundationModels-Brücke gibt es keinen
       technischen Grund mehr für iOS 27, womit iPhone 14 und 15 leichter erreichbar werden.
-- [ ] iOS-Simulator-Build in die CI aufnehmen. Der am 29.09. gefundene Fehler stand in
+      Erledigt in `957757e`: iOS 17.0.
+- [x] iOS-Simulator-Build in die CI aufnehmen. Der am 29.09. gefundene Fehler stand in
       `#if os(iOS)` und war für Paket- und Mac-Prüfungen unsichtbar; weitere solche Stellen sind
-      möglich.
+      möglich. Erledigt in `957757e` (`.github/workflows`, ohne Codesignierung).
 - [ ] Ursache der nicht reagierenden Schaltflächen auf der Startseite klären.
 - [ ] Nicht auf Determinismus bauen: bei `temperature: 0` waren nur 9 von 14 Fällen über zwei
       Läufe wortgleich.
