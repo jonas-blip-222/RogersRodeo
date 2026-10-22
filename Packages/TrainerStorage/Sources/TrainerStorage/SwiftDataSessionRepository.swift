@@ -77,12 +77,27 @@ import TrainerCore
         context.insert(StoredSession(record: record, payload: try encoder.encode(record)))
         try save()
     }
+    public func createFollowUp(after id: UUID, identity: BuildIdentity, at date: Date) throws -> SessionSnapshot {
+        let parentRow = try required(id)
+        var parent = try record(parentRow)
+        try VisitBuilder.validateIdentity(parent.snapshot.identity, new: identity)
+        if let nextID = parent.snapshot.followUpSessionID { return try load(id: nextID) }
+        let next = try VisitBuilder.followUp(after: parent.snapshot, identity: identity, at: date)
+        parent.snapshot.followUpSessionID = next.id
+        let child = SessionRecord(snapshot: next)
+        // Erst beide Payloads kodieren, dann eine einzige Transaktion für Elternverweis und Kind.
+        let parentData = try encoder.encode(parent), childData = try encoder.encode(child)
+        parentRow.payload = parentData
+        context.insert(StoredSession(record: child, payload: childData))
+        try save()
+        return next
+    }
     public func load(id: UUID) throws -> SessionSnapshot { try record(required(id)).snapshot }
     public func list() throws -> [SessionSummary] {
         let rows = try context.fetch(FetchDescriptor<StoredSession>(sortBy: [SortDescriptor(\.startedAt, order: .reverse)]))
         return try rows.map { row in
             let value = try record(row).snapshot
-            return SessionSummary(id: value.id, scenarioName: value.content.scenario.name, startedAt: value.startedAt, status: value.status)
+            return SessionSummary(id: value.id, scenarioName: value.content.scenario.name, startedAt: value.startedAt, status: value.status, visitNumber: value.sessionNumber)
         }
     }
     @discardableResult private func mutate(_ id: UUID, _ update: (inout SessionRecord) throws -> Void) throws -> SessionSnapshot {
@@ -108,6 +123,11 @@ import TrainerCore
         try mutate(sessionID) { try RepositoryRules.finish(expectedRevision: expectedRevision, at: endedAt, in: &$0) }
     }
     public func delete(id: UUID) throws {
-        if let row = try row(id) { context.delete(row); try save() }
+        guard let row = try row(id) else { return }
+        let caseID = try record(row).snapshot.caseID
+        let rows = try context.fetch(FetchDescriptor<StoredSession>())
+        let related = try rows.filter { try record($0).snapshot.caseID == caseID }
+        for row in related { context.delete(row) }
+        try save()
     }
 }

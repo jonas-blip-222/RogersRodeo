@@ -25,21 +25,29 @@ Prozessmechaniken vor MI-04.
       ausschließlich abgeschlossene Vorgänge mit sitzungsstabiler Herkunft. Eine nicht im
       unmittelbar folgenden Beitrag umgesetzte Zustimmung verfällt und wird nicht gespeichert.
 
-## MI-04 · Sitzungsrahmen beschlossen, Umsetzung offen
+## MI-04 · MI-04a umgesetzt, weitere Entwicklung offen
 
 - [x] Jonas’ Festlegungen vom 29.09.2026 in `MI-UEBERGABE.md`, Abschnitt 12/MI-04,
       dokumentiert: Begrüßung und offene Einstiegsfrage als Standard; 20 Runden entsprechen
       60 fiktionalen Minuten; eine fiktionale Woche zwischen Sitzungen desselben Falls;
       kurze belegte Dokumentation vor jedem Folgetermin.
-- [ ] **MI-04a:** Sitzung 1 abschließen → Dokumentation lesen → Sitzung 2 desselben Falls
+- [x] **MI-04a (13.10.2026):** Sitzung 1 abschließen → Dokumentation lesen → Sitzung 2 desselben Falls
       beginnen. Fall-/Sitzungsverknüpfung, getrennte Rundenzählung, fiktionale Zeit und
-      kompatible Speicherung implementieren. Neustart darf keine zusätzlichen Termine erzeugen.
-- [ ] Vor Umsetzung Umgang mit vorzeitigem manuellem Abschluss und technische Erzeugung der
-      Notiz festlegen. Kein zusätzlicher Modellaufruf allein aufgrund der Produktentscheidung.
-- [ ] Danach Zwischenereignisse, berichtete Erfahrungen, Rückbewegungen und Maintenance-
-      Kriterien ausgestalten. Keine automatische Entwicklung allein durch den Wochenabstand.
+      kompatible Speicherung implementiert. Neustart und wiederholtes Starten erzeugen keine zusätzlichen Termine.
+- [x] Vorzeitiger Abschluss ermöglicht auf Jonas’ Bestätigung ebenfalls einen Folgetermin
+      nach einer fiktionalen Woche. Notiz aus belegten Zitaten und gespeicherten Zielen; kein zusätzlicher Modellaufruf.
+- [x] **MI-04b (13.10.2026):** Ideen, selbst gewählte Versuche und berichtete Erfahrungen
+      getrennt mit Originalbelegen speichern. Kuratierte Entwurfsvarianten (gelungen,
+      teilweise, nicht umgesetzt) zu einem sicheren konkreten Vorhaben im Folgetermin
+      erzählen lassen; einmalige Speicherung und keine Vorab-Spoiler in der Notiz.
+- [ ] Die kuratierten Entwurfsvarianten und die semantische Plan-/Erfahrungserkennung
+      fachlich prüfen. Technische/Livetests sind keine Goldreferenz.
+- [ ] **MI-04c:** längerfristigen Verlauf und fachlich begründete Maintenance-/Abschlusskriterien
+      festlegen; keine automatische Entwicklung allein durch Wochenabstand oder Offenheit.
 
-MI-03 bleibt teilweise offen. Der Sitzungsrahmen ist dokumentiert, noch nicht in der App gebaut.
+MI-03 bleibt teilweise offen. MI-04a ist technisch umgesetzt und live geprüft;
+MI-04b ergänzt erste kuratierte Erfahrungen und ihre belegte Erinnerung. Fachliche Abnahme,
+längerfristiger Verlauf und Abschlusskriterien bleiben offen.
 
 ## Aktueller Teilschritt · 29.09.2026
 

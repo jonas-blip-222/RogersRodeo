@@ -354,3 +354,31 @@ E08s Trennung der Aufgaben und Fehlerbehandlung bleibt; seine Wahl von Qwen für
 ist hiermit abgelöst. Kein stiller Fallback, Providerfilter unverändert. Alte Sitzungen
 bleiben lesbar und exportierbar; für den neuen Rollenstandard eine neue Sitzung beginnen.
 Die Modellidentität verhindert ein stilles Fortsetzen einer Qwen-Sitzung mit Sonnet.
+
+**Kompatibilitätskorrektur, 12.10.2026:** Sonnet 5.5 akzeptiert den Parameter
+`temperature` nicht mehr. Mit `require_parameters=true` lehnt OpenRouter die Anfrage
+mit HTTP 404 („Filter by Parameters“) ab. Eine begrenzte Gegenprobe bestätigte:
+ohne `usage` weiter HTTP 404, ohne `temperature` HTTP 200 mit Kostenangabe.
+Für genau dieses Modell lassen Anfrage und Messspur die Temperatur deshalb weg;
+die obige historische Angabe 0,8 gilt nicht mehr für neue Aufrufe. Beide Analysestufen
+verwenden dieselbe Korrektur. Andere Modelle behalten ihre konfigurierte Temperatur.
+Modell, Prompt, Budgets, strukturierte Ausgabe und Providerfilter bleiben erhalten.
+Quelle: [Sonnet-5.5-Migrationsleitfaden](https://platform.claude.com/docs/en/models/sonnet-5-5/migration-guide).
+
+
+## E10 · Kuratierte Zwischenverläufe zu selbst gewählten Versuchen
+
+**13.10.2026, Jonas bestätigt den MI-04b-Vorschlag im Arbeitsgespräch.**
+Ein sicher belegter, selbst gewählter Versuch kann im nächsten Termin einmal gelingen,
+teilweise gelingen oder noch nicht umgesetzt sein. Die Variante wird gespeichert und
+bezieht sich auf den wörtlichen Plan; ohne solchen Beleg wird kein Ausgang ergänzt.
+Fall und Originalbeleg verteilen die kuratierten Entwurfsvarianten unabhängig von Offenheit,
+Veränderungsbereitschaft, Beratungsqualität und Gerätezeit. Keine Prognose und keine Kompetenznote.
+
+Die Vorbereitung enthält nur bereits berichtete Inhalte. Ein noch nicht erzählter
+Zwischenverlauf wird ausschließlich der Rolle vorgegeben; die Analyse erfasst später den
+tatsächlich gesprochenen Selbstbericht. Die vorhandene optionale Erinnerung übernimmt auch
+Vorhaben und Erfahrungen, ohne zusätzlichen Modellaufruf. Eine spät in der letzten Antwort
+geäußerte Absicht kann im ersten regulären Aufruf des Folgetermins berücksichtigt werden.
+Eine einzelne Umsetzung begründet keinen automatischen Erfolgsschluss oder Maintenance.
+Fachliche Abnahme der Varianten und langfristige Abschlusskriterien bleiben offen.

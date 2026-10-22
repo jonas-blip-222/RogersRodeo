@@ -9,7 +9,7 @@ public enum OutputValidator {
 
     public static func decodeAnalysis(_ data: Data, input: String, context: [DialogueMessage]) throws -> TurnAnalysis {
         do {
-            let object = try exactKeys(JSONSerialization.jsonObject(with: data), required: ["segments"], optional: ["doubleSidedReflection", "characterObservations", "goalUpdates", "permissions"])
+            let object = try exactKeys(JSONSerialization.jsonObject(with: data), required: ["segments"], optional: ["doubleSidedReflection", "characterObservations", "goalUpdates", "permissions", "narrativeObservations"])
             guard let segments = object["segments"] as? [Any] else { throw TrainerFailure.invalidAnalysis }
             for value in segments {
                 _ = try exactKeys(value, required: ["quote", "code", "isUncertain"], optional: ["supportingClientQuote", "supportingClientQuotes"])
@@ -44,6 +44,17 @@ public enum OutputValidator {
                                                optional: ["previousGoal", "currentGoal", "proposal"])
                     for field in ["previousGoal", "currentGoal", "evidence", "proposal"] {
                         if let reference = update[field], !(reference is NSNull) {
+                            _ = try exactKeys(reference, required: ["source", "speaker", "quote", "occurrence"], optional: ["messageIndex"])
+                        }
+                    }
+                }
+            }
+            if let raw = object["narrativeObservations"], !(raw is NSNull) {
+                guard let entries = raw as? [Any] else { throw TrainerFailure.invalidAnalysis }
+                for value in entries {
+                    let entry = try exactKeys(value, required: ["kind", "evidence", "isUncertain"], optional: ["goal", "plan"])
+                    for field in ["evidence", "goal", "plan"] {
+                        if let reference = entry[field], !(reference is NSNull) {
                             _ = try exactKeys(reference, required: ["source", "speaker", "quote", "occurrence"], optional: ["messageIndex"])
                         }
                     }
@@ -92,11 +103,13 @@ public enum OutputValidator {
 
     public static func validateAnalysis(_ analysis: TurnAnalysis, input: String, context: [DialogueMessage]) throws {
         if analysis.memoryStatus == .unavailable {
-            guard analysis.goalUpdates == [], analysis.characterObservations == [] else {
+            guard analysis.goalUpdates == [], analysis.characterObservations == [],
+                  analysis.narrativeObservations == nil || analysis.narrativeObservations == [] else {
                 throw TrainerFailure.invalidAnalysis
             }
         }
         try validateGoalUpdates(analysis.goalUpdates ?? [], input: input, context: context)
+        try validateNarrative(analysis.narrativeObservations ?? [], input: input, context: context)
         let ranges = try locations(analysis, input: input)
         try validatePermissions(analysis, input: input, context: context, ranges: ranges)
         for segment in analysis.segments {

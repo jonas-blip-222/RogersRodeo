@@ -13,7 +13,7 @@ struct ConversationView: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 20) {
-                        MessageBubble(speaker: session.content.scenario.name, text: session.content.scenario.openingLine, isCounselor: false)
+                        MessageBubble(speaker: session.content.scenario.name, text: session.openingLine, isCounselor: false)
                         ForEach(session.turns, id: \.id) { turn in
                             MessageBubble(speaker: "Du", text: turn.input, isCounselor: true)
                             feedbackSection(findings: turn.feedback, analysisAvailable: turn.analysis != nil,
@@ -111,7 +111,7 @@ struct ConversationView: View {
                 Button(model.showHints ? "Vorschläge ausblenden" : "Vorschläge einblenden", systemImage: "lightbulb") { model.showHints.toggle() }
                     .font(.caption).buttonStyle(.plain)
                 Spacer()
-                Text("\(session.turns.count) / 20 Runden").font(.caption).foregroundStyle(.secondary).monospacedDigit()
+                Text("Sitzung \(session.sessionNumber) · \(session.turns.count) / 20 Runden").font(.caption).foregroundStyle(.secondary).monospacedDigit()
                     // Verborgener Zugang zur Entwicklerdiagnostik. Nicht Teil des normalen
                     // Ablaufs: nur dort darf der Offenheitswert überhaupt vorkommen.
                     .contentShape(Rectangle())

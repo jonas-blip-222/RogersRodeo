@@ -19,6 +19,7 @@ struct ReviewView: View {
     @State private var exportError: String?
     @State private var showingDiagnostics = false
     var review: SessionReview { ReviewBuilder.build(session) }
+    var narrative: [VisitNote.Entry] { (try? VisitBuilder.narrativeEntries(in: session)) ?? [] }
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
@@ -38,6 +39,39 @@ struct ReviewView: View {
                     LabeledContent("Text durch Einordnung erfasst", value: review.characterCoverage.map { String(format: "%.0f %%", $0 * 100) } ?? "Nicht berechenbar")
                     Text("Automatische Einordnungen können fehlerhaft sein. Diese Übersicht ist keine standardisierte Kompetenzbewertung.").font(.caption).foregroundStyle(.secondary)
                 }.padding(20).background(.white, in: RoundedRectangle(cornerRadius: 20))
+                if !narrative.isEmpty {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Vorhaben und berichtete Erfahrungen").font(.headline)
+                        ForEach(Array(narrative.enumerated()), id: \.offset) { _, entry in
+                            VStack(alignment: .leading, spacing: 5) {
+                                Text(entry.heading).font(.subheadline.weight(.semibold))
+                                Text(verbatim: "„\(entry.quote)“")
+                                Text(entry.sourceLabel).font(.caption).foregroundStyle(.secondary)
+                            }
+                        }
+                        Text("Eine Absicht ist keine Umsetzung. Einzelne Erfahrungen belegen noch keine langfristige Stabilität.")
+                            .font(.footnote).foregroundStyle(.secondary)
+                    }.padding(20).frame(maxWidth: .infinity, alignment: .leading)
+                        .background(.white, in: RoundedRectangle(cornerRadius: 20))
+                }
+                Text(session.visitLabel).font(.subheadline).foregroundStyle(.secondary)
+                if session.status == .completed {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text(session.turns.count == 20 ? "60 fiktionale Minuten abgeschlossen." : "Vorzeitig abgeschlossen: \(session.turns.count) von 20 Runden.")
+                        Text("Der nächste Termin liegt eine fiktionale Woche später. Ein Sitzungsende bedeutet noch keine Zielerreichung.")
+                            .font(.footnote).foregroundStyle(.secondary)
+                        if model.mayStartFollowUp {
+                            Button(session.followUpSessionID == nil ? "Nächsten Termin vorbereiten" : "Zum Folgetermin") {
+                                model.prepareFollowUp()
+                            }.buttonStyle(.borderedProminent).disabled(model.busy)
+                        } else {
+                            Text("Dieser ältere Modell- oder Regelstand kann als Protokoll gelesen werden. Starte für weitere Übungen einen neuen Fall.")
+                                .font(.footnote).foregroundStyle(.secondary)
+                        }
+                    }.padding(20).frame(maxWidth: .infinity, alignment: .leading)
+                        .background(.white, in: RoundedRectangle(cornerRadius: 20))
+                }
+                if let error = model.errorMessage { ErrorNotice(text: error) }
                 HStack {
                     ShareLink(item: ReviewBuilder.markdown(session)) { Label("Teilen", systemImage: "square.and.arrow.up") }
                     Button("Markdown speichern", systemImage: "arrow.down.document") { export = true }
@@ -48,7 +82,7 @@ struct ReviewView: View {
                     .contentShape(Rectangle())
                     .onLongPressGesture(minimumDuration: 1.2) { showingDiagnostics = true }
                     .accessibilityAction(named: "Entwicklerdiagnostik") { showingDiagnostics = true }
-                MessageBubble(speaker: session.content.scenario.name, text: session.content.scenario.openingLine, isCounselor: false)
+                MessageBubble(speaker: session.content.scenario.name, text: session.openingLine, isCounselor: false)
                 ForEach(session.turns, id: \.id) { turn in
                     VStack(alignment: .leading, spacing: 12) {
                         MessageBubble(speaker: "Du", text: turn.input, isCounselor: true)
@@ -76,5 +110,49 @@ struct ReviewView: View {
                       defaultFilename: "Gespraech-\(session.content.scenario.name).md") { result in
             if case .failure = result { exportError = "Das Protokoll konnte nicht exportiert werden." }
         }
+    }
+}
+
+
+struct VisitPreparationView: View {
+    @Bindable var model: AppModel
+    let previous: SessionSnapshot
+    let note: VisitNote
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 22) {
+                Text("Vor dem nächsten Gespräch").font(.largeTitle.weight(.semibold))
+                Text("Sitzung \(previous.sessionNumber + 1) · eine fiktionale Woche später")
+                    .font(.headline)
+                Text("Kurze Dokumentation aus den bisherigen Gesprächen. Zitate sind wörtlich; automatische Zieleinordnungen können unsicher sein.")
+                    .font(.subheadline).foregroundStyle(.secondary)
+                if note.entries.isEmpty { Text("Im letzten Termin wurden noch keine Gesprächsrunden abgeschlossen.") }
+                ForEach(Array(note.entries.enumerated()), id: \.offset) { _, entry in
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(entry.heading).font(.headline)
+                        Text(verbatim: "„\(entry.quote)“")
+                        Text(entry.sourceLabel).font(.caption).foregroundStyle(.secondary)
+                    }.padding(18).frame(maxWidth: .infinity, alignment: .leading)
+                        .background(.white, in: RoundedRectangle(cornerRadius: 18))
+                }
+                if note.omittedGoals > 0 {
+                    Text("Weitere \(note.omittedGoals) frühere Ziele stehen im Gesprächsverlauf.").font(.footnote)
+                }
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Vereinbarungen und nächste Schritte").font(.headline)
+                    Text(note.hasConfirmedGoal ? "Bestätigte Ziele sind oben belegt. Konkrete nächste Schritte werden daraus nicht automatisch abgeleitet." : "Keine sichere Zielvereinbarung dokumentiert. Fehlende nächste Schritte werden nicht ergänzt.")
+                    Text("Offen für den Einstieg").font(.headline).padding(.top, 8)
+                    Text("Was beschäftigt Sie heute? Was möchten Sie aus dem letzten Gespräch wieder aufgreifen?")
+                    Text("Die Notiz verrät keine noch nicht berichteten Zwischenereignisse. Lukas kann im Gespräch erzählen, was er seit dem letzten Termin erlebt hat.")
+                        .font(.footnote).foregroundStyle(.secondary)
+                }
+                DemoNotice(usesDemoResponses: previous.identity.model.id == DemoModelProvider.identity.id)
+                if let error = model.errorMessage { ErrorNotice(text: error) }
+                Button(model.busy ? "Wird vorbereitet …" : "Sitzung \(previous.sessionNumber + 1) beginnen") {
+                    model.startFollowUp()
+                }.buttonStyle(.borderedProminent).disabled(model.busy)
+                Button("Zurück zum Protokoll") { model.preparation = nil }.disabled(model.busy)
+            }.padding(24).frame(maxWidth: 760).frame(maxWidth: .infinity)
+        }.navigationTitle("Nächster Termin mit \(previous.content.scenario.name)")
     }
 }

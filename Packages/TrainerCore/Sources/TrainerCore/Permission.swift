@@ -201,7 +201,7 @@ extension ContextBuilder {
         func contains(_ origin: MessageOrigin, text: String) -> Bool {
             context.contains { $0.origin == origin && $0.text == text && $0.speaker == origin.speaker }
         }
-        guard contains(.init(turnID: nil, speaker: .client), text: session.content.scenario.openingLine) else {
+        guard contains(.init(turnID: nil, speaker: .client), text: session.openingLine) else {
             return false
         }
         return session.turns.allSatisfy {

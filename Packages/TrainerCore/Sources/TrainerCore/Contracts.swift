@@ -77,6 +77,7 @@ public struct TurnAnalysis: Codable, Sendable, Equatable {
     /// nil: alter Stand/nicht erhoben; leer: im gesehenen Kontext keine Beobachtung.
     public var characterObservations: [CharacterObservation]?
     public var goalUpdates: [GoalUpdate]?
+    public var narrativeObservations: [NarrativeObservation]?
     /// Erlaubnislage je Ratschlagssegment dieses Beitrags. nil: alter Stand/nicht erhoben;
     /// leer: kein Ratschlag oder keine belegbare Einschätzung. Siehe `PermissionAssessment`.
     public var permissions: [PermissionAssessment]?
@@ -84,14 +85,15 @@ public struct TurnAnalysis: Codable, Sendable, Equatable {
     public var memoryStatus: MemoryAnalysisStatus?
 
     public mutating func discardMemory() {
-        goalUpdates = []; characterObservations = []; memoryStatus = .unavailable
+        goalUpdates = []; characterObservations = []; narrativeObservations = []; memoryStatus = .unavailable
     }
     public init(segments: [AnalysisSegment], doubleSidedReflection: DoubleSidedReflection? = nil,
                 characterObservations: [CharacterObservation]? = nil, goalUpdates: [GoalUpdate]? = nil,
-                permissions: [PermissionAssessment]? = nil, memoryStatus: MemoryAnalysisStatus? = nil) {
+                permissions: [PermissionAssessment]? = nil, memoryStatus: MemoryAnalysisStatus? = nil,
+                narrativeObservations: [NarrativeObservation]? = nil) {
         self.segments = segments; self.doubleSidedReflection = doubleSidedReflection
         self.characterObservations = characterObservations; self.goalUpdates = goalUpdates
-        self.permissions = permissions; self.memoryStatus = memoryStatus
+        self.permissions = permissions; self.memoryStatus = memoryStatus; self.narrativeObservations = narrativeObservations
     }
 }
 
@@ -165,6 +167,7 @@ public struct SimulationState: Codable, Sendable, Equatable {
     // Ältester Eintrag zuerst; maximal drei. nil bedeutet: Turn ohne Gutschrift.
     public var recentCredits: [CounselorCode?]
     public var development: CharacterDevelopment?
+    public var narrative: NarrativeMemory?
     /// Der zuletzt abgeschlossene, belegte Erlaubnisvorgang. Eine offene Zustimmung wird
     /// bewusst nicht gespeichert: Sie gilt ausschließlich für den nächsten Beitrag.
     public var permissionMemory: PermissionMemory?
@@ -182,7 +185,9 @@ public struct DialogueMessage: Codable, Sendable, Equatable {
     public var speaker: Speaker
     public var text: String
     public var origin: MessageOrigin?
-    public init(speaker: Speaker, text: String, origin: MessageOrigin? = nil) {
+    public var visitNumber: Int?
+    public init(speaker: Speaker, text: String, origin: MessageOrigin? = nil, visitNumber: Int? = nil) {
+        self.visitNumber = visitNumber
         self.speaker = speaker; self.text = text; self.origin = origin
     }
 }
@@ -198,19 +203,25 @@ public struct VisibleFact: Codable, Sendable, Equatable {
 }
 
 public struct AnalysisRequest: Sendable {
+    public var visitContext: String?
     public var codingGuide: String
     public var recentMessages: [DialogueMessage]
     public var currentInput: String
     public var knownGoals: [KnownGoal]
     public var omittedGoalCount: Int
+    public var knownPlans: [KnownPlan]
+    public var omittedNarrativeCount: Int
     public init(codingGuide: String, recentMessages: [DialogueMessage], currentInput: String,
-                knownGoals: [KnownGoal] = [], omittedGoalCount: Int = 0) {
+                knownGoals: [KnownGoal] = [], omittedGoalCount: Int = 0, visitContext: String? = nil,
+                knownPlans: [KnownPlan] = [], omittedNarrativeCount: Int = 0) {
+        self.visitContext = visitContext; self.knownPlans = knownPlans; self.omittedNarrativeCount = omittedNarrativeCount
         self.codingGuide = codingGuide; self.recentMessages = recentMessages
         self.currentInput = currentInput; self.knownGoals = knownGoals; self.omittedGoalCount = omittedGoalCount
     }
 }
 
 public struct ReplyRequest: Sendable {
+    public var visitContext: String?
     public var publicProfile: String
     public var behaviorInstruction: String
     public var visibleFacts: [VisibleFact]
@@ -218,7 +229,8 @@ public struct ReplyRequest: Sendable {
     public var currentInput: String
     public var analysis: TurnAnalysis?
     public init(publicProfile: String, behaviorInstruction: String, visibleFacts: [VisibleFact],
-                recentMessages: [DialogueMessage], currentInput: String, analysis: TurnAnalysis?) {
+                recentMessages: [DialogueMessage], currentInput: String, analysis: TurnAnalysis?, visitContext: String? = nil) {
+        self.visitContext = visitContext
         self.publicProfile = publicProfile; self.behaviorInstruction = behaviorInstruction
         self.visibleFacts = visibleFacts; self.recentMessages = recentMessages
         self.currentInput = currentInput; self.analysis = analysis
@@ -310,6 +322,7 @@ public struct CompletedTurn: Codable, Sendable, Equatable {
     public var stateBefore: SimulationState
     public var stateAfter: SimulationState
     public var stateChangeReasons: [String]
+    public var introducedExperience: BetweenVisitExperience?
     public var selectedTipID: String?
     /// Endgültige Rückmeldung zu diesem Beitrag, gemeinsam mit ihm gespeichert. Sie entsteht
     /// vor der Figurenantwort und wird bei einer Commit-Wiederholung unverändert mitgeführt;
@@ -360,6 +373,9 @@ public struct SessionSnapshot: Codable, Sendable, Equatable {
     public var status: SessionStatus
     public var startedAt: Date
     public var endedAt: Date?
+    public var openingMessage: String?
+    public var continuity: CaseContinuity?
+    public var followUpSessionID: UUID?
     public init(schemaVersion: Int, id: UUID, revision: Int, approachID: String,
                 identity: BuildIdentity, content: SessionContent, state: SimulationState,
                 turns: [CompletedTurn], status: SessionStatus, startedAt: Date, endedAt: Date? = nil) {
@@ -373,9 +389,11 @@ public struct SessionSnapshot: Codable, Sendable, Equatable {
 public struct SessionSummary: Codable, Sendable, Equatable {
     public var id: UUID
     public var scenarioName: String
+    public var visitNumber: Int?
     public var startedAt: Date
     public var status: SessionStatus
-    public init(id: UUID, scenarioName: String, startedAt: Date, status: SessionStatus) {
+    public init(id: UUID, scenarioName: String, startedAt: Date, status: SessionStatus, visitNumber: Int? = nil) {
+        self.visitNumber = visitNumber
         self.id = id; self.scenarioName = scenarioName; self.startedAt = startedAt; self.status = status
     }
 }
@@ -383,6 +401,7 @@ public struct SessionSummary: Codable, Sendable, Equatable {
 public protocol SessionRepository: Sendable {
     func create(_ snapshot: SessionSnapshot) async throws
     func load(id: UUID) async throws -> SessionSnapshot
+    func createFollowUp(after id: UUID, identity: BuildIdentity, at date: Date) async throws -> SessionSnapshot
     func list() async throws -> [SessionSummary]
     func savePending(_ pending: PendingTurn) async throws
     func loadPending(sessionID: UUID) async throws -> PendingTurn?
@@ -398,6 +417,7 @@ public enum TrainerFailure: Error, Sendable, Equatable {
     case invalidInput
     case operationInProgress
     case modelUnavailable
+    case modelPaymentRequired
     case artifactInvalid
     case contextLimit
     case invalidAnalysis

@@ -63,6 +63,9 @@ actor FailingCommitRepository: SessionRepository {
     func finish(sessionID: UUID, expectedRevision: Int, endedAt: Date) async throws -> SessionSnapshot {
         try await base.finish(sessionID: sessionID, expectedRevision: expectedRevision, endedAt: endedAt)
     }
+    func createFollowUp(after id: UUID, identity: BuildIdentity, at date: Date) async throws -> SessionSnapshot {
+        try await base.createFollowUp(after: id, identity: identity, at: date)
+    }
     func delete(id: UUID) async { await base.delete(id: id) }
 }
 
@@ -436,6 +439,14 @@ actor SlowProvider: TrainerModelProvider {
     let text = try! #require(TrainerFailure.roundDeadlineExceeded.errorDescription)
     #expect(text.contains("zu lange"))
     #expect(text != TrainerFailure.modelUnavailable.errorDescription)
+}
+
+@Test func fehlendesGuthabenFordertKeineNetzpruefung() throws {
+    let text = try #require(TrainerFailure.modelPaymentRequired.errorDescription)
+    #expect(text.contains("Guthaben"))
+    #expect(text.contains("Zugangsschlüssel"))
+    #expect(!text.contains("Internetverbindung"))
+    #expect(ModelTraceEvent.resultCode(TrainerFailure.modelPaymentRequired) == "modelPaymentRequired")
 }
 
 @Test func zielzustandsfehlerVerhindertWederWarnungNochAtomareSpeicherung() async throws {

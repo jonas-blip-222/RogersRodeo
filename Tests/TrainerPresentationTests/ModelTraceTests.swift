@@ -14,7 +14,7 @@ private final class TraceCollector: @unchecked Sendable {
 }
 
 private let traceReply = #"{"text":"Vielleicht.","primaryTag":null,"disclosedFactIDs":[]}"#
-private let traceMemory = #"{"goalUpdates":[],"characterObservations":[]}"#
+private let traceMemory = #"{"goalUpdates":[],"characterObservations":[],"narrativeObservations":[]}"#
 private let traceAnalysis = #"{"segments":[{"quote":"Hallo","code":"sonstiges","isUncertain":false,"supportingClientQuote":null}],"doubleSidedReflection":null,"permissions":[]}"#
 private let traceRequest = ReplyRequest(publicProfile: "PRIVATE_PROFILE", behaviorInstruction: "PRIVATE_BEHAVIOR",
     visibleFacts: [], recentMessages: [], currentInput: "PRIVATE_INPUT", analysis: nil)
@@ -76,6 +76,34 @@ private func traceSession(_ coordinator: ConversationCoordinator) async throws -
     return try await coordinator.create(content: .init(scenario: scenario, codingGuide: "G", tips: []), contentHash: "fixture")
 }
 
+@Test func fehlendesGuthabenBehaeltEntwurfOhneWiederholungUndErlaubtSpaeteresSenden() async throws {
+    let stub = TraceTransport([
+        .response(Data(#"{"error":{"message":"Insufficient credits"}}"#.utf8), 402),
+        .response(traceEnvelope(traceAnalysis), 200),
+        .response(traceEnvelope(traceReply), 200)
+    ], memory: Array(repeating: .response(traceEnvelope(traceMemory), 200), count: 2))
+    let collector = TraceCollector()
+    let repository = MemorySessionRepository()
+    let coordinator = ConversationCoordinator(repository: repository,
+        provider: traceProvider(stub, collector: collector))
+    let session = try await traceSession(coordinator)
+
+    await #expect(throws: TrainerFailure.modelPaymentRequired) {
+        _ = try await coordinator.send(sessionID: session.id, input: "Hallo")
+    }
+    #expect(try await repository.load(id: session.id).turns.isEmpty)
+    #expect(try await repository.loadPending(sessionID: session.id)?.input == "Hallo")
+    #expect(collector.calls.filter { $0.stage == .counselorAnalysis }.count == 1)
+    #expect(!collector.calls.contains { $0.stage == .roleReply })
+    #expect(!collector.events.contains { $0.kind == .coordinatorRetry })
+    #expect(collector.events.last?.result == "modelPaymentRequired")
+
+    // Nach Beheben der Guthabenfrage kann dieselbe Sitzung fortgesetzt werden.
+    let saved = try await coordinator.send(sessionID: session.id, input: "Hallo")
+    #expect(saved.turns.count == 1)
+    #expect(try await repository.loadPending(sessionID: session.id) == nil)
+}
+
 @Test func messspurBehaeltAbgeschnittenenVersuchKostenUndLeerraumOhneText() async throws {
     let whitespace = "PRIVATE_CONTENT" + String(repeating: " \n", count: 100)
     let stub = TraceTransport([.response(traceEnvelope(whitespace, finish: "length"), 200), .response(traceEnvelope(traceReply), 200)])
@@ -86,6 +114,7 @@ private func traceSession(_ coordinator: ConversationCoordinator) async throws -
     _ = try await measured.reply(traceRequest)
     let calls = collector.calls
     #expect(calls.count == 2)
+    #expect(calls.allSatisfy { $0.temperature == nil })
     #expect(calls.map(\.outcome) == [.truncated, .accepted])
     #expect(calls.map(\.budget) == [2000, 4000])
     #expect(calls.map(\.budgetAttempt) == [1, 2])

@@ -10,6 +10,7 @@ public enum RepositoryRules {
     public static func validateNew(_ snapshot: SessionSnapshot) throws {
         try OutputValidator.validateScenario(snapshot.content.scenario, allowDrafts: true)
         guard snapshot.schemaVersion == 1, snapshot.revision == 0, snapshot.turns.isEmpty,
+              snapshot.continuity == nil, snapshot.followUpSessionID == nil,
               snapshot.status == .active, snapshot.endedAt == nil,
               snapshot.state == SimulationState(openness: snapshot.content.scenario.opennessStart),
               snapshot.content.scenario.approaches.contains(snapshot.approachID) else { throw TrainerFailure.artifactInvalid }
@@ -55,10 +56,30 @@ public enum RepositoryRules {
             throw TrainerFailure.invalidAnalysis
         }
         try CharacterTracker.validate(turn.stateAfter.development, session: record.snapshot, currentTurnID: turn.id)
+        let previousNarrative = turn.stateBefore.narrative?.records ?? []
+        let nextNarrative = turn.stateAfter.narrative?.records ?? []
+        guard Array(nextNarrative.prefix(previousNarrative.count)) == previousNarrative,
+              nextNarrative.dropFirst(previousNarrative.count).allSatisfy({ $0.observedInTurnID == turn.id && $0.observedInSessionID == record.snapshot.id }) else {
+            throw TrainerFailure.invalidAnalysis
+        }
+        try NarrativeTracker.validate(turn.stateAfter.narrative, session: record.snapshot, currentTurnID: turn.id)
+        if let experience = turn.introducedExperience {
+            var candidate = record.snapshot; candidate.state = turn.stateAfter
+            var expected = try ExperienceSelector.selectForFirstTurn(in: candidate)
+            expected?.id = experience.id
+            guard record.snapshot.turns.isEmpty, record.snapshot.continuity?.experience == nil,
+                  record.snapshot.continuity?.previousSessionID == experience.fromSessionID,
+                  nextNarrative.contains(where: { $0.kind == .planned && !$0.isUncertain && $0.evidence == experience.plan }),
+                  experience == expected else { throw TrainerFailure.invalidAnalysis }
+            record.snapshot.continuity?.experience = experience
+        }
         record.snapshot.turns.append(turn)
         record.snapshot.state = turn.stateAfter
         record.snapshot.revision += 1
         record.pending = nil
+        if record.snapshot.turns.count == 20 {
+            record.snapshot.status = .completed; record.snapshot.endedAt = turn.completedAt
+        }
     }
     public static func finish(expectedRevision: Int, at date: Date, in record: inout SessionRecord) throws {
         if record.snapshot.status == .completed {
@@ -80,6 +101,16 @@ public actor MemorySessionRepository: SessionRepository {
         guard records[snapshot.id] == nil else { throw TrainerFailure.revisionConflict }
         records[snapshot.id] = SessionRecord(snapshot: snapshot)
     }
+    public func createFollowUp(after id: UUID, identity: BuildIdentity, at date: Date) throws -> SessionSnapshot {
+        try Task.checkCancellation()
+        var parent = try record(id)
+        try VisitBuilder.validateIdentity(parent.snapshot.identity, new: identity)
+        if let nextID = parent.snapshot.followUpSessionID { return try record(nextID).snapshot }
+        let next = try VisitBuilder.followUp(after: parent.snapshot, identity: identity, at: date)
+        parent.snapshot.followUpSessionID = next.id
+        records[next.id] = SessionRecord(snapshot: next); records[id] = parent
+        return next
+    }
     private func record(_ id: UUID) throws -> SessionRecord {
         guard let record = records[id] else { throw TrainerFailure.sessionNotFound }
         return record
@@ -87,7 +118,7 @@ public actor MemorySessionRepository: SessionRepository {
     public func load(id: UUID) throws -> SessionSnapshot { try record(id).snapshot }
     public func list() -> [SessionSummary] {
         records.values.map { .init(id: $0.snapshot.id, scenarioName: $0.snapshot.content.scenario.name,
-                                    startedAt: $0.snapshot.startedAt, status: $0.snapshot.status) }.sorted { $0.startedAt > $1.startedAt }
+                                    startedAt: $0.snapshot.startedAt, status: $0.snapshot.status, visitNumber: $0.snapshot.sessionNumber) }.sorted { $0.startedAt > $1.startedAt }
     }
     public func savePending(_ pending: PendingTurn) throws {
         try Task.checkCancellation(); var value = try record(pending.sessionID)
@@ -107,5 +138,8 @@ public actor MemorySessionRepository: SessionRepository {
         try RepositoryRules.finish(expectedRevision: expectedRevision, at: endedAt, in: &value)
         records[sessionID] = value; return value.snapshot
     }
-    public func delete(id: UUID) { records[id] = nil }
+    public func delete(id: UUID) {
+        guard let caseID = records[id]?.snapshot.caseID else { return }
+        records = records.filter { $0.value.snapshot.caseID != caseID }
+    }
 }

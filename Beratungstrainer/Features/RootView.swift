@@ -25,7 +25,8 @@ struct RootView: View {
         NavigationStack {
             Group {
                 if let session = model.session {
-                    if model.showReview { ReviewView(model: model, session: session) }
+                    if let note = model.preparation { VisitPreparationView(model: model, previous: session, note: note) }
+                    else if model.showReview { ReviewView(model: model, session: session) }
                     else { ConversationView(model: model, session: session) }
                 } else { home }
             }
@@ -35,14 +36,16 @@ struct RootView: View {
             .toolbar {
                 if model.session != nil {
                     ToolbarItem(placement: .navigation) {
-                        Button("Übersicht", systemImage: "chevron.left") { model.close() }.disabled(model.busy)
+                        Button("Übersicht", systemImage: "chevron.left") {
+                            if model.preparation != nil { model.preparation = nil } else { model.close() }
+                        }.disabled(model.busy)
                     }
                 }
             }
-            .confirmationDialog("Sitzung endgültig löschen?", isPresented: Binding(get: { deletion != nil }, set: { if !$0 { deletion = nil } }), titleVisibility: .visible) {
-                Button("Sitzung löschen", role: .destructive) { if let id = deletion { model.delete(id) }; deletion = nil }
+            .confirmationDialog("Gesprächsfall endgültig löschen?", isPresented: Binding(get: { deletion != nil }, set: { if !$0 { deletion = nil } }), titleVisibility: .visible) {
+                Button("Fall löschen", role: .destructive) { if let id = deletion { model.delete(id) }; deletion = nil }
                 Button("Abbrechen", role: .cancel) { deletion = nil }
-            } message: { Text("Das gespeicherte Gespräch und sein Entwurf werden von diesem Gerät entfernt.") }
+            } message: { Text("Dieses Gespräch, alle verknüpften Termine desselben Falls und ihre Entwürfe werden von diesem Gerät entfernt.") }
             .confirmationDialog("Gespräch abschließen?", isPresented: $model.showFinishConfirmation, titleVisibility: .visible) {
                 Button("Entwurf verwerfen und abschließen", role: .destructive) { model.finish(discardDraft: true) }
                 Button("Weiter schreiben", role: .cancel) {}
@@ -144,7 +147,7 @@ struct RootView: View {
                     .font(.subheadline.weight(.semibold)).padding(.horizontal, 20).padding(.vertical, 17)
                     .foregroundStyle(.white).background(Palette.ink, in: Capsule())
             }.buttonStyle(.plain).disabled(model.busy)
-            Text("Fiktive Figur · bis zu 20 Runden · fachlicher Entwurf")
+            Text("Fiktive Figur · 20 Runden entsprechen 60 fiktionalen Minuten · fachlicher Entwurf")
                 .font(.caption).foregroundStyle(.secondary)
         }.padding(24).background(.white, in: RoundedRectangle(cornerRadius: 24))
             .overlay(RoundedRectangle(cornerRadius: 24).stroke(Palette.line))
@@ -168,7 +171,7 @@ struct RootView: View {
                         HStack(spacing: 14) {
                             Image(systemName: item.status == .active ? "bubble.left" : "checkmark.bubble").font(.title3)
                             VStack(alignment: .leading, spacing: 5) {
-                                Text(item.scenarioName).font(.headline)
+                                Text("\(item.scenarioName) · Sitzung \(item.visitNumber ?? 1)").font(.headline)
                                 Text(item.startedAt, format: .dateTime.day().month().hour().minute()).font(.caption).foregroundStyle(.secondary)
                                 Text(item.status == .active ? "Fortsetzen" : "Rückblick ansehen").font(.caption.weight(.medium))
                             }

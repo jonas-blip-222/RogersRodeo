@@ -166,6 +166,17 @@ private func anzahlEintraege(service: String) -> Int {
                                    cancelsRunningOperation: false, closesOpenSession: false))
 }
 
+@Test func ersetzterSchluesselErneuertAdapterUndBehaeltSitzung() {
+    for busy in [false, true] {
+        let plan = ProviderChange.make(hasKey: true, usesDemoResponses: false,
+                                      busy: busy, hasSession: true, keyWasReplaced: true)
+        #expect(plan.changes)
+        #expect(plan.switchesToDemo == false)
+        #expect(plan.cancelsRunningOperation == busy)
+        #expect(!plan.closesOpenSession)
+    }
+}
+
 @Test func entfernterSchluesselWechseltZurueckInDieDemo() {
     let plan = ProviderChange.make(hasKey: false, usesDemoResponses: false,
                                    busy: false, hasSession: false)

@@ -56,8 +56,8 @@ public enum RoundDeadline {
 }
 
 public actor ConversationCoordinator {
-    /// 1.1: Zusammenfassungen bündeln belegte Aussagen aus mehreren Gesprächsrunden.
-    public static let promptVersion = "1.2"
+    /// 1.4: Belegte Vorhaben und Erfahrungen sowie kuratierte Rollenepisoden getrennt führen.
+    public static let promptVersion = "1.4"
     /// 0.7: Zusammenfassungen verlangen mindestens zwei getrennte Klientenbelege.
     public static let rulesVersion = "0.8"
     private let repository: any SessionRepository
@@ -77,18 +77,31 @@ public actor ConversationCoordinator {
     }
     public func cancel() { generation = nil; prepared = nil }
 
-    public func create(content: SessionContent, contentHash: String) async throws -> SessionSnapshot {
+    public func create(content: SessionContent, contentHash: String, openingLine: String? = nil) async throws -> SessionSnapshot {
         guard generation == nil else { throw TrainerFailure.operationInProgress }
         let token = UUID(); generation = token
         defer { if generation == token { generation = nil } }
         try OutputValidator.validateScenario(content.scenario, allowDrafts: true)
         try await provider.prepare(); try check(token)
         let descriptor = await provider.descriptor(); try check(token)
-        let snapshot = SessionSnapshot(schemaVersion: 1, id: UUID(), revision: 0, approachID: "mi",
+        var snapshot = SessionSnapshot(schemaVersion: 1, id: UUID(), revision: 0, approachID: "mi",
             identity: .init(contentHash: contentHash, rulesVersion: Self.rulesVersion, promptVersion: Self.promptVersion, model: descriptor),
             content: content, state: .init(openness: content.scenario.opennessStart), turns: [], status: .active, startedAt: Date())
+        snapshot.openingMessage = openingLine
         try await repository.create(snapshot)
         return snapshot
+    }
+
+    public func createFollowUp(after id: UUID) async throws -> SessionSnapshot {
+        guard generation == nil else { throw TrainerFailure.operationInProgress }
+        let token = UUID(); generation = token
+        defer { if generation == token { generation = nil } }
+        let previous = try await repository.load(id: id); try check(token)
+        let descriptor = await provider.descriptor(); try check(token)
+        let identity = BuildIdentity(contentHash: previous.identity.contentHash, rulesVersion: Self.rulesVersion,
+                                     promptVersion: Self.promptVersion, model: descriptor)
+        try await provider.prepare(); try check(token)
+        return try await repository.createFollowUp(after: id, identity: identity, at: Date())
     }
 
     public func send(sessionID: UUID, input: String, skipAnalysis: Bool = false,
@@ -171,11 +184,13 @@ public actor ConversationCoordinator {
         let messages = ContextBuilder.messages(session)
         let memory = try ContextBuilder.analysisMemory(session)
         let request = AnalysisRequest(codingGuide: session.content.codingGuide, recentMessages: memory.messages,
-                                      currentInput: text, knownGoals: memory.goals, omittedGoalCount: memory.omittedGoalCount)
+                                      currentInput: text, knownGoals: memory.goals, omittedGoalCount: memory.omittedGoalCount, visitContext: ContextBuilder.visitContext(session),
+                                      knownPlans: memory.plans, omittedNarrativeCount: memory.omittedNarrativeCount)
         var analysis: TurnAnalysis?
         var analysisContext = memory.messages
         var metrics: [ModelCallMetrics] = []
         var development = session.state.development
+        var narrative = session.state.narrative
         var permissionMemory = session.state.permissionMemory
         if !skipAnalysis {
             for attempt in 0...1 {
@@ -184,10 +199,11 @@ public actor ConversationCoordinator {
                     let result = try await ModelTraceScope.$context.withValue(context) {
                         try await RoundDeadline.run(until: deadline) { try await model.analyze(request) }
                     }; try check(token)
+                    try ContextBuilder.validateCurrentPermission(result.value, context: result.contextMessagesUsed, session: session)
                     let accepted = try CharacterTracker.acceptingIndependentMemory(result.value,
                         before: session.state.development, input: text, context: result.contextMessagesUsed,
                         session: session, turnID: pending.id)
-                    development = accepted.development
+                    development = accepted.development; narrative = accepted.narrative
                     // Der Erlaubnisspeicher ist bewusst unabhängig vom Zielgedächtnis. Ein
                     // fehlerhafter Speicherübergang darf die valide Beratungseinordnung und
                     // die übrige Figurenentwicklung nicht zurücknehmen.
@@ -227,9 +243,15 @@ public actor ConversationCoordinator {
         }
         let reduction = try StateReducer.reduce(session.state, analysis: analysis, input: text, context: analysisContext)
         let visible = ContextBuilder.visibleFacts(session.content.scenario, state: reduction.state)
+        var roleSession = session
+        roleSession.state.narrative = narrative; roleSession.state.development = development
+        if roleSession.continuity?.experience == nil {
+            let selected = try ExperienceSelector.selectForFirstTurn(in: roleSession)
+            roleSession.continuity?.experience = selected
+        }
         let replyRequest = ReplyRequest(publicProfile: session.content.scenario.publicProfile,
             behaviorInstruction: ContextBuilder.behavior(reduction.state.openness), visibleFacts: visible,
-            recentMessages: messages, currentInput: text, analysis: analysis)
+            recentMessages: messages, currentInput: text, analysis: analysis, visitContext: ContextBuilder.roleVisitContext(roleSession))
         var replyResult: ModelResult<ClientReply>?
         for attempt in 0...1 {
             do {
@@ -249,14 +271,15 @@ public actor ConversationCoordinator {
         guard let replyResult else { throw TrainerFailure.invalidReply }
         metrics.append(replyResult.metrics)
         var after = reduction.state
-        after.development = development
+        after.development = development; after.narrative = narrative
         after.permissionMemory = permissionMemory
         after.disclosedFactIDs.formUnion(replyResult.value.disclosedFactIDs)
         let tip = TipSelector.select(tag: replyResult.value.primaryTag, approach: session.approachID,
                                      tips: session.content.tips, previousID: session.turns.last?.selectedTipID)
-        let turn = CompletedTurn(id: pending.id, input: text, analysis: analysis, reply: replyResult.value,
+        var turn = CompletedTurn(id: pending.id, input: text, analysis: analysis, reply: replyResult.value,
             stateBefore: session.state, stateAfter: after, stateChangeReasons: reduction.reasons,
             selectedTipID: tip?.id, metrics: metrics, completedAt: Date(), feedback: findings)
+        if session.continuity?.experience == nil { turn.introducedExperience = roleSession.continuity?.experience }
         try check(token)
         prepared = (sessionID, session.revision, turn)
         let saved = try await repository.commit(sessionID: sessionID, expectedRevision: session.revision, turn: turn)

@@ -69,6 +69,7 @@ public struct ModelTraceEvent: Codable, Sendable, Equatable {
         case .modelRefusal: return "modelRefusal"
         case .contextLimit: return "contextLimit"
         case .modelUnavailable: return "modelUnavailable"
+        case .modelPaymentRequired: return "modelPaymentRequired"
         case .artifactInvalid: return "artifactInvalid"
         case .storageUnavailable: return "storageUnavailable"
         case .revisionConflict: return "revisionConflict"

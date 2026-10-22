@@ -7,7 +7,8 @@ import TrainerStorage
 /// ergibt sich, was zu tun ist. Ohne Oberfläche und ohne Netz prüfbar. Die Ausführung bleibt
 /// in `AppModel` und benutzt die vorhandene Maschinerie (`cancel()`, `close()`).
 struct ProviderChange: Equatable {
-    /// nil bedeutet: kein Wechsel nötig.
+    /// nil bedeutet: kein Wechsel nötig. Derselbe Modus kann einen neuen Adapter brauchen,
+    /// wenn ein bereits geladener Zugangsschlüssel ersetzt wurde.
     var switchesToDemo: Bool?
     /// Eine laufende Operation muss zuerst über `AppModel.cancel()` beendet und abgewartet
     /// werden. Mitten in einem Turn darf der Anbieter nie getauscht werden.
@@ -18,11 +19,12 @@ struct ProviderChange: Equatable {
     var changes: Bool { switchesToDemo != nil }
 
     static func make(hasKey: Bool, usesDemoResponses: Bool,
-                     busy: Bool, hasSession: Bool) -> ProviderChange {
+                     busy: Bool, hasSession: Bool, keyWasReplaced: Bool = false) -> ProviderChange {
         let target = !hasKey
-        guard target != usesDemoResponses else { return ProviderChange() }
+        let modeChanged = target != usesDemoResponses
+        guard modeChanged || (hasKey && keyWasReplaced) else { return ProviderChange() }
         return ProviderChange(switchesToDemo: target,
-                              cancelsRunningOperation: busy, closesOpenSession: hasSession)
+                              cancelsRunningOperation: busy, closesOpenSession: modeChanged && hasSession)
     }
 
     /// Dieselbe Bedingung, die `ConversationCoordinator.send` prüft, nur früher gestellt.
@@ -82,6 +84,7 @@ enum FeedbackGate {
     /// Turn. Lesen über `currentFeedback`, damit sie nie zu einem anderen Beitrag,
     /// einer anderen Sitzung oder einer bereits erhöhten Revision angezeigt wird.
     private(set) var pendingFeedback: PreliminaryFeedback?
+    var preparation: VisitNote?
     var showFinishConfirmation = false
     var homePortrait: HomePortrait
     /// Wahr, sobald die Aufklärung nach E07 in ihrer aktuellen Fassung bestätigt wurde.
@@ -111,7 +114,8 @@ enum FeedbackGate {
     /// `defaults` ist überschreibbar, damit Tests die leichtgewichtigen Einstellungen
     /// (Porträtrotation, Bestätigung des Disclaimers) in einem eigenen Bereich führen
     /// können. Die App benutzt weiterhin `.standard`.
-    init(defaults: UserDefaults = .standard, hasModelKey: Bool? = nil) throws {
+    init(defaults: UserDefaults = .standard, hasModelKey: Bool? = nil,
+         repository testRepository: SwiftDataSessionRepository? = nil) throws {
         let content = try ContentCatalog.load()
         catalog = content.catalog; contentHash = content.hash
         let rotation = HomePortraitRotation(pool: try HomePortrait.loadPool(), defaults: defaults)
@@ -132,7 +136,7 @@ enum FeedbackGate {
         root = try FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
         #endif
         let storeURL = root.appendingPathComponent("RogersRodeo/Conversations/sessions.store")
-        repository = try SwiftDataSessionRepository(storeURL: storeURL)
+        repository = try testRepository ?? SwiftDataSessionRepository(storeURL: storeURL)
         // Echte Modellaufrufe laufen über OpenRouter (Documentation/ENTSCHEIDUNGEN.md, E01).
         // Ohne hinterlegten Schlüssel bleibt es bei den festen Demo-Antworten, statt jede
         // Sitzung mit „Modell nicht verfügbar" abzubrechen. Die beiden Wege sind
@@ -191,7 +195,7 @@ enum FeedbackGate {
         let outcome = await OpenRouterKeyProbe.check(key: trimmed)
         guard outcome.isSuccess else { return outcome }
         guard OpenRouterKey.save(trimmed, service: modelSettings.keychainService) else { return .notStored }
-        await applyKeyChange()
+        await applyKeyChange(keyWasReplaced: true)
         return .accepted
     }
 
@@ -207,13 +211,13 @@ enum FeedbackGate {
     ///
     /// Der Tausch findet nie mitten in einer Operation statt: `cancel()` bricht eine
     /// laufende Operation ab und wartet sie ab — danach ist `busy` falsch und der
-    /// Coordinator frei. Eine offene Sitzung wird über `close()` mit gesichertem Entwurf
-    /// geschlossen, weil sie zur alten Modellkennung gehört und nach dem Wechsel nicht mehr
-    /// fortsetzbar wäre. Erst danach werden Anbieter, Kennung und Coordinator ersetzt.
-    func applyKeyChange() async {
+    /// Coordinator frei. Beim Wechsel zwischen Demo und echtem Modell wird die offene Sitzung
+    /// mit gesichertem Entwurf geschlossen. Ein bloßer Schlüsselwechsel erhält die Sitzung,
+    /// erneuert aber den Adapter, damit der bisher geladene Schlüssel verworfen wird.
+    func applyKeyChange(keyWasReplaced: Bool = false) async {
         let hasKey = OpenRouterKey.lookup(service: modelSettings.keychainService) != nil
         let plan = ProviderChange.make(hasKey: hasKey, usesDemoResponses: usesDemoResponses,
-                                       busy: busy, hasSession: session != nil)
+                                       busy: busy, hasSession: session != nil, keyWasReplaced: keyWasReplaced)
         guard let demo = plan.switchesToDemo else { return }
         if plan.cancelsRunningOperation { await cancel() }
         if plan.closesOpenSession { close() }
@@ -244,9 +248,34 @@ enum FeedbackGate {
         pendingFeedback = nil
         task = Task {
             do {
-                let created = try await coordinator.create(content: .init(scenario: scenario, codingGuide: catalog.codingGuide, tips: catalog.tips), contentHash: contentHash)
+                let created = try await coordinator.create(content: .init(scenario: scenario, codingGuide: catalog.codingGuide, tips: catalog.tips), contentHash: contentHash, openingLine: "Hallo.")
                 guard operation == token else { refresh(); return }
                 session = created; input = ""; showReview = false
+            } catch { if operation == token { failure(error) } }
+            if operation == token { busy = false; task = nil; operation = nil; refresh() }
+        }
+    }
+    var mayStartFollowUp: Bool {
+        guard let session, session.status == .completed else { return false }
+        return session.identity.model == modelIdentity && session.identity.rulesVersion == ConversationCoordinator.rulesVersion
+    }
+    func prepareFollowUp() {
+        guard mayStartFollowUp, !busy, let session else { return }
+        do {
+            if let next = session.followUpSessionID { open(next); return }
+            preparation = try VisitBuilder.preparation(after: session)
+            errorMessage = nil
+        } catch { failure(error) }
+    }
+    func startFollowUp() {
+        guard preparation != nil, let previous = session, mayStartFollowUp, !busy else { return }
+        let token = UUID(); operation = token; busy = true; errorMessage = nil
+        task = Task {
+            do {
+                let next = try await coordinator.createFollowUp(after: previous.id)
+                guard operation == token else { refresh(); return }
+                session = next; preparation = nil; input = ""; pendingFeedback = nil
+                showReview = next.status == .completed
             } catch { if operation == token { failure(error) } }
             if operation == token { busy = false; task = nil; operation = nil; refresh() }
         }
@@ -256,7 +285,7 @@ enum FeedbackGate {
         do {
             let loaded = try repository.load(id: id)
             let pending = try repository.loadPending(sessionID: id)
-            session = loaded; input = pending?.input ?? ""
+            session = loaded; preparation = nil; input = pending?.input ?? ""
             errorMessage = nil; maySkipAnalysis = false; pendingFeedback = nil
             showReview = loaded.status == .completed
             // Gespeicherte Sitzungen tragen die Modellkennung in ihrer Identität. Nach einem
@@ -307,6 +336,7 @@ enum FeedbackGate {
                                                        skipAnalysis: skipAnalysis, onFeedback: sink)
                 guard operation == token else { return }
                 self.session = saved; input = ""; pendingFeedback = nil
+                showReview = saved.status == .completed
             } catch { if operation == token { failure(error) } }
             if operation == token { busy = false; task = nil; operation = nil; refresh() }
         }
@@ -347,7 +377,7 @@ enum FeedbackGate {
     }
     func close() {
         guard saveDraft() else { return }
-        session = nil; input = ""; showReview = false; pendingFeedback = nil; refresh()
+        session = nil; preparation = nil; input = ""; showReview = false; pendingFeedback = nil; refresh()
     }
     func requestFinish() {
         guard !busy, let session, session.status == .active else { return }

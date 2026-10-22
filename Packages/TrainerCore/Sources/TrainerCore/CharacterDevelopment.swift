@@ -59,8 +59,11 @@ public struct CharacterObservation: Codable, Sendable, Equatable {
 /// Sitzungsrelative dauerhafte Herkunft; nil-Turn bezeichnet ausschließlich die Eröffnungszeile.
 public struct MessageOrigin: Codable, Sendable, Equatable {
     public var turnID: UUID?
+    public var sessionID: UUID?
     public var speaker: Speaker
-    public init(turnID: UUID?, speaker: Speaker) { self.turnID = turnID; self.speaker = speaker }
+    public init(turnID: UUID?, speaker: Speaker, sessionID: UUID? = nil) {
+        self.turnID = turnID; self.speaker = speaker; self.sessionID = sessionID
+    }
 }
 
 public struct CharacterEvidence: Codable, Sendable, Equatable {
@@ -100,7 +103,7 @@ public enum CharacterTracker {
     /// dürfen weder die Einordnung verwerfen noch den bisherigen Verlauf verändern.
     public static func acceptingIndependentMemory(_ candidate: TurnAnalysis, before: CharacterDevelopment?,
         input: String, context: [DialogueMessage], session: SessionSnapshot, turnID: UUID
-    ) throws -> (analysis: TurnAnalysis, development: CharacterDevelopment?) {
+    ) throws -> (analysis: TurnAnalysis, development: CharacterDevelopment?, narrative: NarrativeMemory?) {
         var counselorOnly = candidate
         counselorOnly.discardMemory()
         try OutputValidator.validateAnalysis(counselorOnly, input: input, context: context)
@@ -108,9 +111,11 @@ public enum CharacterTracker {
             let development = try advance(before, analysis: candidate, input: input,
                                           context: context, session: session, turnID: turnID)
             try validate(development, session: session, currentTurnID: turnID)
-            return (candidate, development)
+            let narrative = try NarrativeTracker.advance(session.state.narrative, observations: candidate.narrativeObservations,
+                input: input, context: context, session: session, turnID: turnID)
+            return (candidate, development, narrative)
         } catch TrainerFailure.invalidAnalysis {
-            return (counselorOnly, before)
+            return (counselorOnly, before, session.state.narrative)
         }
     }
 
@@ -163,11 +168,8 @@ public enum CharacterTracker {
         func check(_ record: CharacterRecord?, dimension: CharacterDimension, goal: CharacterEvidence? = nil) throws {
             guard let record else { return }
             guard record.evidence.origin.speaker == .client, record.assessment.belongs(to: dimension) else { throw TrainerFailure.invalidAnalysis }
-            let latestAvailableMessage: Int
-            if record.observedInTurnID == currentTurnID { latestAvailableMessage = session.turns.count }
-            else if let index = session.turns.firstIndex(where: { $0.id == record.observedInTurnID }) {
-                latestAvailableMessage = index
-            } else { throw TrainerFailure.invalidAnalysis }
+            let latestAvailableMessage = try ContextBuilder.observedPosition(record.observedInTurnID,
+                currentTurnID: currentTurnID, session: session)
             guard try position(record.evidence, session: session).message <= latestAvailableMessage else {
                 throw TrainerFailure.invalidAnalysis
             }
@@ -217,13 +219,23 @@ public enum CharacterTracker {
     }
 
     static func source(_ origin: MessageOrigin, session: SessionSnapshot) throws -> (text: String, position: Int) {
+        var offset = 0
+        for prior in session.continuity?.priorSessions ?? [] {
+            if origin.turnID == nil, origin.sessionID == prior.id, origin.speaker == .client {
+                return (prior.opening, offset)
+            }
+            if let index = prior.turns.firstIndex(where: { $0.id == origin.turnID }) {
+                return (origin.speaker == .client ? prior.turns[index].reply : prior.turns[index].input, offset + index + 1)
+            }
+            offset += prior.turns.count + 1
+        }
         guard let id = origin.turnID else {
-            guard origin.speaker == .client else { throw TrainerFailure.invalidAnalysis }
-            return (session.content.scenario.openingLine, 0)
+            guard origin.speaker == .client, origin.sessionID == nil else { throw TrainerFailure.invalidAnalysis }
+            return (session.openingLine, offset)
         }
         guard let index = session.turns.firstIndex(where: { $0.id == id }) else { throw TrainerFailure.invalidAnalysis }
         return (origin.speaker == .client ? session.turns[index].reply.text : session.turns[index].input,
-                index + 1)
+                offset + index + 1)
     }
 
     static func position(_ evidence: CharacterEvidence, session: SessionSnapshot) throws -> (message: Int, offset: Int) {

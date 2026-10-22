@@ -148,6 +148,8 @@ public struct AnalysisMemory: Sendable {
     public var messages: [DialogueMessage]
     public var goals: [KnownGoal]
     public var omittedGoalCount: Int
+    public var plans: [KnownPlan] = []
+    public var omittedNarrativeCount: Int = 0
 }
 
 extension ContextBuilder {
@@ -155,14 +157,21 @@ extension ContextBuilder {
     /// aus höchstens drei Zielgruppen. Gruppen werden vollständig übernommen oder ausgelassen.
     /// Das Zeichenlimit ist eine technische Schranke, keine gemessene Tokenzählung.
     public static func analysisMemory(_ session: SessionSnapshot) throws -> AnalysisMemory {
+        let allMessages = evidenceMessages(session)
         var selected = Set(session.turns.suffix(6).map(\.id))
+        // Zu Beginn höchstens zwei letzte Runden des vorherigen Termins, innerhalb
+        // desselben Grundfensters. Keine ganze Fallakte im Prompt.
+        if session.turns.count < 6, let prior = session.continuity?.priorSessions.last {
+            selected.formUnion(prior.turns.suffix(min(2, 6 - session.turns.count)).map(\.id))
+        }
+        var selectedOpenings: Set<UUID> = []
         let original = selected
         var chosen: [GoalDevelopment] = []
         let development = session.state.development
         let ranked = (development?.goals ?? []).enumerated().sorted { left, right in
             func recency(_ goal: GoalDevelopment) -> Int {
                 let ids = [goal.goal.origin.turnID, goal.memory?.lastEvent?.observedInTurnID, goal.readiness?.observedInTurnID, goal.confidence?.observedInTurnID]
-                return ids.compactMap { id in session.turns.firstIndex { $0.id == id } }.max() ?? -1
+                return ids.compactMap { id in allMessages.firstIndex { $0.origin?.turnID == id && id != nil } }.max() ?? -1
             }
             let l = recency(left.element), r = recency(right.element)
             return l == r ? left.offset > right.offset : l > r
@@ -184,9 +193,27 @@ extension ContextBuilder {
             let required = Set(refs.compactMap { $0.origin.turnID })
             let candidate = selected.union(required)
             let extra = candidate.subtracting(original)
-            let characters = session.turns.filter { extra.contains($0.id) }.reduce(0) { $0 + $1.input.count + $1.reply.text.count }
-            guard extra.count <= 6, characters <= 10_000 else { continue }
-            selected = candidate; chosen.append(goal)
+            let openings = selectedOpenings.union(refs.compactMap { $0.origin.turnID == nil ? $0.origin.sessionID : nil })
+            let characters = allMessages.filter {
+                $0.origin?.turnID.map { extra.contains($0) } ?? $0.origin?.sessionID.map { openings.contains($0) } ?? false
+            }.reduce(0) { $0 + $1.text.count }
+            guard extra.count + openings.count <= 6, characters <= 10_000 else { continue }
+            selected = candidate; selectedOpenings = openings; chosen.append(goal)
+        }
+        var chosenNarrative: [NarrativeRecord] = []
+        let records = session.state.narrative?.records ?? []
+        for record in records.reversed() {
+            guard chosenNarrative.count < 3 else { break }
+            let refs = [record.evidence, record.goal, record.plan].compactMap { $0 }
+            for ref in refs { _ = try CharacterTracker.position(ref, session: session) }
+            let candidate = selected.union(refs.compactMap { $0.origin.turnID })
+            let openings = selectedOpenings.union(refs.compactMap { $0.origin.turnID == nil ? $0.origin.sessionID : nil })
+            let extra = candidate.subtracting(original)
+            let characters = allMessages.filter {
+                $0.origin?.turnID.map { extra.contains($0) } ?? $0.origin?.sessionID.map { openings.contains($0) } ?? false
+            }.reduce(0) { $0 + $1.text.count }
+            guard extra.count + openings.count <= 6, characters <= 10_000 else { continue }
+            selected = candidate; selectedOpenings = openings; chosenNarrative.append(record)
         }
         // Der Erlaubnisverlauf ist klein (höchstens Frage, Antwort und verbrauchender Rat)
         // und wird nur als Originaltext zurückgeholt. Eine offene Zustimmung wird nie
@@ -197,12 +224,11 @@ extension ContextBuilder {
                 if let turnID = evidence.origin.turnID { selected.insert(turnID) }
             }
         }
-        let transcript: [DialogueMessage] = [.init(speaker: .client, text: session.content.scenario.openingLine,
-                                                 origin: .init(turnID: nil, speaker: .client))]
-            + session.turns.filter { selected.contains($0.id) }.flatMap {
-                [.init(speaker: .counselor, text: $0.input, origin: .init(turnID: $0.id, speaker: .counselor)),
-                 .init(speaker: .client, text: $0.reply.text, origin: .init(turnID: $0.id, speaker: .client))]
-            }
+        let transcript = allMessages.filter { message in
+            guard let origin = message.origin else { return false }
+            if let turnID = origin.turnID { return selected.contains(turnID) }
+            return origin.sessionID.map { selectedOpenings.contains($0) } ?? true
+        }
         func reference(_ value: CharacterEvidence) throws -> EvidenceReference {
             guard let index = transcript.firstIndex(where: { $0.origin == value.origin }) else { throw TrainerFailure.invalidAnalysis }
             let ref = EvidenceReference(source: .contextMessage, speaker: value.origin.speaker, messageIndex: index,
@@ -216,7 +242,16 @@ extension ContextBuilder {
                       lastEventEvidence: try goal.memory?.lastEvent.map { try reference($0.evidence) },
                       isUncertain: goal.memory?.lastEvent?.isUncertain ?? false)
         }
-        return .init(messages: transcript, goals: goals, omittedGoalCount: (development?.goals.count ?? 0) - chosen.count)
+        var planEvidence: [CharacterEvidence] = []
+        for record in chosenNarrative {
+            let plan = record.kind == .planned ? record.evidence : record.plan
+            if let plan, !planEvidence.contains(plan) { planEvidence.append(plan) }
+        }
+        let plans = try planEvidence.map { plan in
+            KnownPlan(evidence: try reference(plan), isUncertain: records.first { $0.evidence == plan }?.isUncertain ?? true)
+        }
+        return .init(messages: transcript, goals: goals, omittedGoalCount: (development?.goals.count ?? 0) - chosen.count,
+                     plans: plans, omittedNarrativeCount: records.count - chosenNarrative.count)
     }
 
     private static func references(_ goal: GoalDevelopment) -> [CharacterEvidence] {
@@ -280,11 +315,7 @@ extension GoalTracker {
     static func validate(_ development: CharacterDevelopment, session: SessionSnapshot, currentTurnID: UUID) throws {
         let events = development.goalEvents ?? []
         guard events.count <= 60 else { throw TrainerFailure.invalidAnalysis }
-        let transcript: [DialogueMessage] = [.init(speaker: .client, text: session.content.scenario.openingLine,
-            origin: .init(turnID: nil, speaker: .client))] + session.turns.flatMap { turn in
-                [.init(speaker: .counselor, text: turn.input, origin: .init(turnID: turn.id, speaker: .counselor)),
-                 .init(speaker: .client, text: turn.reply.text, origin: .init(turnID: turn.id, speaker: .client))]
-            }
+        let transcript = ContextBuilder.evidenceMessages(session)
         func reference(_ value: CharacterEvidence) throws -> EvidenceReference {
             _ = try CharacterTracker.position(value, session: session)
             guard let index = transcript.firstIndex(where: { $0.origin == value.origin }) else { throw TrainerFailure.invalidAnalysis }
@@ -302,10 +333,8 @@ extension GoalTracker {
         }
         var lastObserved = -1
         for event in events {
-            let observed: Int
-            if event.observedInTurnID == currentTurnID { observed = session.turns.count }
-            else if let index = session.turns.firstIndex(where: { $0.id == event.observedInTurnID }) { observed = index }
-            else { throw TrainerFailure.invalidAnalysis }
+            let observed = try ContextBuilder.observedPosition(event.observedInTurnID,
+                currentTurnID: currentTurnID, session: session)
             guard observed >= lastObserved else { throw TrainerFailure.invalidAnalysis }
             lastObserved = observed
             for ref in [event.previousGoal, event.currentGoal, event.evidence, event.proposal].compactMap({ $0 }) {

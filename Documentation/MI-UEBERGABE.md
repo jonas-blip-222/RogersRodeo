@@ -667,7 +667,8 @@ Die folgende Reihenfolge konkretisiert den nächsten Schritt; sie ist kein Auftr
 #### Verbindlicher Sitzungsrahmen — von Jonas am 29.09.2026 festgelegt
 
 Diese Festlegungen ergänzen MI-04; sie beschreiben beschlossenes Produktverhalten,
-**noch keine implementierte Funktion**. Quelle ist Jonas’ Entscheidung im Arbeitsgespräch.
+**damals noch keine implementierte Funktion**. MI-04a ist seit dem 13.10.2026 umgesetzt.
+Quelle ist Jonas’ Entscheidung im Arbeitsgespräch.
 
 - **Typischer Einstieg:** Begrüßung, danach eine offene Einstiegsfrage der beratenden Person.
   Die Figur soll dafür Raum lassen. Dies ist der vorgesehene Standardablauf, keine starre
@@ -692,7 +693,7 @@ Diese Festlegungen ergänzen MI-04; sie beschreiben beschlossenes Produktverhalt
   stehen nicht vorab in der Vorbereitungsnotiz. Lukas berichtet darüber im nächsten Gespräch.
   Die spätere Ausgestaltung dieser Erfahrungen gehört zu einem eigenen Entwicklungsschritt.
 
-#### MI-04a — erster abgegrenzter Umsetzungsschritt (Plan, noch offen)
+#### MI-04a — erster abgegrenzter Umsetzungsschritt (umgesetzt am 13.10.2026)
 
 **Ablauf:** Sitzung 1 abschließen → kurze Dokumentation lesen → Sitzung 2 desselben Falls
 beginnen. Zunächst keine automatisch erfundenen Ereignisse in der Zwischenwoche.
@@ -702,8 +703,11 @@ Vorbereitungsnotiz aus bereits belegten Gesprächsinhalten erzeugen und vor dem 
 zeigen; Einstieg mit Begrüßung/offener Frage ermöglichen. Bestehende Einzelsitzungen müssen
 kompatibel lesbar bleiben. Das vorhandene Zielgedächtnis für sitzungsübergreifende Herkunft
 und Erinnerung prüfen; nicht unbesehen den ganzen Fall in jeden Modellaufruf übernehmen.
-Die konkrete technische Erzeugung der Notiz ist noch zu bestimmen — ein zusätzlicher
-Modellaufruf ist durch diese Produktentscheidung nicht automatisch beschlossen.
+Die Notiz entsteht seit dem 13.10.2026 deterministisch aus Originalzitaten und gespeicherten
+Zielbelegen. Jonas hat vorzeitige Abschlüsse mit Folgetermin nach einer fiktionalen Woche
+ausdrücklich bestätigt. Es gibt keinen zusätzlichen Modellaufruf für Notiz oder Termin.
+Historische Belege erhalten Sitzungsherkunft; Fortschritte und Wochenereignisse werden nicht erzeugt.
+Technische Nachweise und Grenzen stehen im neuesten Eintrag in `STATUS.md`.
 
 **Prüfbare Abnahme:**
 
@@ -720,6 +724,29 @@ Modellaufruf ist durch diese Produktentscheidung nicht automatisch beschlossen.
    Zwischen den Sitzungen wird kein automatischer Fortschritt oder Maintenance gesetzt.
 6. Ältere Sitzungen bleiben lesbar; Speicherung, Abbruch und Wiederaufnahme bleiben atomar.
 
+#### MI-04b — Vorhaben und kuratierte Erfahrungsvarianten (13.10.2026)
+
+Jonas hat die vorgeschlagene Umsetzung bestätigt: Erfahrungen zu einem ausdrücklich selbst
+gewählten Versuch können gelingen, teilweise gelingen oder noch nicht umgesetzt sein. Die
+Variante wird einmal festgelegt und gespeichert. Ohne sicher belegten Versuch entsteht kein
+Erfolg oder Rückschritt. Die Varianten sind fachliche Entwürfe, keine Prognosen.
+
+Die vorhandene optionale Zielanalyse erfasst jetzt auch Ideen, Pläne und Selbstberichte
+über Versuche, einmalige/teilweise Umsetzung, Nichtumsetzung, Schwierigkeiten und Widerruf.
+Originalbeleg, Herkunft, Unsicherheit und Bezug zum früheren Vorhaben bleiben erhalten.
+Eine Idee ist kein Plan und eine Absicht keine Ausführung. Offenheit erzeugt keine dieser
+Beobachtungen. Es gibt keinen Maintenance-Code und keine automatische Abschlusswertung.
+
+Ein sicherer Versuch aus dem abgeschlossenen Termin kann eine kuratierte Erfahrung für den
+Folgetermin tragen. Die Verteilung hängt vom Fall und Originalbeleg ab, nicht von Offenheit,
+Beratungscodes oder Gerätezeit. Inhalt, ID und Variante bleiben gespeichert. Bei einem erst
+in der letzten Antwort geäußerten Vorhaben kann die erste reguläre Analyse im neuen Termin
+den Beleg prüfen; die daraus gewählte Erfahrung wird dann atomar mit dem ersten Turn gesichert.
+Kein zusätzlicher Modellaufruf für Notiz oder Zwischenverlauf. Die Vorbereitung enthält nur
+bereits erzählte Aussagen. Nur der Rollenaufruf erhält die kuratierte Episode; die Einordnung
+kennt sie erst aus dem tatsächlich gesprochenen Originaltext. Rückblick und nächste Notiz
+zeigen später die berichtete Erfahrung mit Beleg, niemals ein vorausgesetztes Erfolgsergebnis.
+
 **Später innerhalb MI-04:** kuratierte Zwischenereignisse, berichtete Erfahrungen,
 Fortschritte/Rückbewegungen und fachlich begründete Kriterien für einen möglichen Abschluss.
 Die offenen MI-03-Bausteine bleiben eigenständige Aufgaben und gelten damit nicht als erledigt.
@@ -735,7 +762,7 @@ Spracheingabe/-ausgabe, PDF-Export, ältere Geräte und weitere Figuren bleiben 
 | Unterbrechung/Überarbeitung bei Warnung | Beschlossen ist unmittelbares Feedback. Kein verpflichtender Modal-Dialog, kein Sendeblock und kein automatisches Umschreiben beauftragt. |
 | Fiktionale Dauer und Termine | Beschlossen: 20 Runden entsprechen 60 fiktionalen Minuten; eine fiktionale Woche zwischen Sitzungen; Vorbereitungsnotiz vor Folgeterminen. Siehe MI-04. |
 | Vorzeitiger manueller Sitzungsabschluss | Bestehende Möglichkeit nicht beiläufig entfernen. Umgang mit der fiktionalen Dauer bei weniger als 20 Runden vor Umsetzung festlegen. |
-| Zwischenereignisse und Maintenance-Kriterien | Noch festzulegen. Eine vergangene Woche oder ein Sitzungsabschluss erzeugt keine Veränderung; längerfristig stabiles Verhalten braucht eigene Belege. |
+| Zwischenereignisse und Maintenance-Kriterien | MI-04b ergänzt bestätigte Entwurfsvarianten zu sicheren Vorhaben. Fachliche Abnahme und Maintenance-Kriterien bleiben offen; längerfristig stabiles Verhalten braucht eigene Belege. |
 | Neue Ziel-, Beziehungs- oder SOC-Anzeigen | Keine neuen sichtbaren Punkteskalen beschlossen. Vorläufig sprachliche, belegte Rückmeldung; keine numerischen Erfolgsbalken. |
 | Fachliche Referenzlabels und Grenzwerte | Produktabnahme und fachliche Validierung auseinanderhalten. Vor Release dokumentiert prüfen; bis dahin Entwurf. |
 | Tatsächliche Runtime und Modell | Integrationsversuch erforderlich; keine aus dem alten Plan ungeprüft übernommenen API-Annahmen oder Pins. |

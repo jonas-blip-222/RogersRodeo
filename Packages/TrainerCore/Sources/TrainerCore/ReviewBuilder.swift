@@ -37,10 +37,26 @@ public enum ReviewBuilder {
             "Modellartefakt: \(session.identity.model.artifactRevision) · Laufzeit: \(session.identity.model.runtimeRevision)",
             "Prompt: \(session.identity.promptVersion) · Inhalt: \(session.identity.contentHash)",
             "Status: \(session.status == .completed ? "Abgeschlossen" : "Begonnen")",
+            session.visitLabel, "20 vollständige Runden entsprechen 60 fiktionalen Minuten.",
             "Automatische Einordnungen können fehlerhaft sein. Dies ist keine standardisierte Kompetenzbewertung.", "",
-            "**\(session.content.scenario.name)**", escaped(session.content.scenario.openingLine), ""]
+            "**\(session.content.scenario.name)**", escaped(session.openingLine), ""]
         if session.identity.model.id == DemoModelProvider.identity.id {
             lines.insert("Demo mit festen Antworten. Keine KI und keine fachliche Bewertung.", at: 2)
+        }
+        if let records = session.state.narrative?.records, !records.isEmpty {
+            lines += ["Vorhaben und berichtete Erfahrungen (automatische Einordnung):"]
+            for record in records {
+                let source = try? VisitBuilder.sourceEntry(record.evidence, in: session, heading: record.kind.label)
+                lines += ["- \(record.kind.label)\(record.isUncertain ? " · unsicher" : ""): „\(escaped(record.evidence.quote))“ (\(source?.sourceLabel ?? "Herkunft nicht verfügbar"))"]
+            }
+            lines += ["Eine Absicht ist keine Umsetzung; einzelne Erfahrungen belegen keine langfristige Stabilität.", ""]
+        }
+        if let continuity = session.continuity {
+            lines += ["Vorbereitungsnotiz:"]
+            for entry in continuity.preparation.entries {
+                lines += ["- \(entry.heading): „\(escaped(entry.quote))“ (\(entry.sourceLabel))"]
+            }
+            lines += ["Keine berichteten Zwischenereignisse vorausgesetzt.", ""]
         }
         for turn in session.turns {
             lines += ["Runde abgeschlossen: \(iso.string(from: turn.completedAt))", "", "**Beratung**", escaped(turn.input), ""]
@@ -101,7 +117,8 @@ extension TrainerFailure: LocalizedError {
         case .operationInProgress: "Eine Antwort wird bereits vorbereitet."
         case .invalidAnalysis: "Deine Äußerung konnte nicht zuverlässig eingeordnet werden. Du kannst es erneut versuchen oder ohne Einordnung fortsetzen."
         case .invalidReply, .modelRefusal: "Lukas konnte gerade keine passende Antwort geben. Bitte versuche es erneut."
-        case .modelUnavailable: "Das Sprachmodell ist gerade nicht erreichbar. Prüfe deine Internetverbindung."
+        case .modelUnavailable: "Das Sprachmodell ist gerade nicht verfügbar. Bitte versuche es erneut oder prüfe den Modellzugang in den Einstellungen."
+        case .modelPaymentRequired: "Für diesen Modellaufruf fehlt Guthaben oder das Ausgabenlimit ist erreicht. Prüfe das Guthaben und die Limits beim Modelldienst sowie den hinterlegten Zugangsschlüssel. Deine Eingabe bleibt erhalten."
         case .artifactInvalid: "Eine benötigte Datei ist beschädigt oder unvollständig."
         case .contextLimit: "Der Gesprächskontext ist zu groß. Bitte kürze deine Eingabe."
         case .revisionConflict: "Die Sitzung wurde inzwischen verändert. Bitte lade sie erneut."

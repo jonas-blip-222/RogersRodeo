@@ -3,6 +3,159 @@
 Neueste Prüfungen zuerst. Ältere Abschnitte bleiben als Verlauf erhalten und werden nicht
 rückwirkend umgeschrieben.
 
+## 22. Oktober 2026 · Sicherung des bisherigen Entwicklungsstands
+
+Die bisher uncommitteten Verbindungsfixes sowie MI-04a/04b werden auf dem vorhandenen
+Branch `codex/analyse-ausfaelle` zusammengeführt. Der lokale `main` stand bei `75f830d`,
+17 Commits vor dem frisch abgefragten GitHub-`main` (`12776cb`). Diese neueren Arbeiten
+waren damit noch nicht im GitHub-`main` enthalten. Kein Merge im Rahmen dieser Sicherung.
+
+Erneut geprüft: **121 Core-Tests, 8 Storage-Tests und Mac-App-Build bestanden**.
+Logs: `/private/tmp/rr-save-{core,storage,build}-20261022.log`.
+Keine erneuten Live-Modellaufrufe, App-Tests, iOS-Builds oder Geräte-/VoiceOver-Prüfungen;
+deren bisheriger Prüfstand bleibt in den folgenden Abschnitten dokumentiert.
+Gesprächsprotokolle, lokale Speicher, Zugangsschlüssel und Modelldateien gehören nicht
+zur Git-Sicherung.
+
+
+## 13. Oktober 2026 · MI-04b: selbst gewählte Versuche und berichtete Erfahrungen
+
+Jonas hat den Vorschlag für kuratierte Zwischenverläufe bestätigt: ein sicherer, konkret
+selbst gewählter Versuch kann einmal gelingen, teilweise gelingen oder noch nicht umgesetzt
+sein. Die Variante bleibt einmalig gespeichert; ohne Planbeleg gibt es keinen Ausgang.
+E10 dokumentiert diese Festlegung. Katalog `0.1-draft` ist fachlicher Entwurf, keine Prognose.
+
+Prompt 1.4 ergänzt im vorhandenen optionalen Erinnerungsaufruf `narrativeObservations`.
+Idee, Absicht, Versuch, einmalige/teilweise Umsetzung, Nichtumsetzung, Schwierigkeit und
+Widerruf sind getrennt. Klientenzitat, Herkunft, Unsicherheit und ein bereits bekannter
+Planbeleg bleiben gespeichert. Ein Beratersatz, eine Idee, Offenheit oder Gerätezeit
+begründet keine Umsetzung. Ein gelungener Einzelversuch begründet keinen Maintenance-Code.
+Fehler im optionalen Erfahrungsbeleg verwerfen nur die neue Erinnerung, nicht die gültige
+Beratungseinordnung. Feedbackregeln bleiben 0.8; Rollen- und Analyseschema bleiben getrennt.
+
+Der Folgetermin speichert Originalplan, Variante und eingefrorenen Episodentext. Nur die
+Rolle erhält diesen noch nicht erzählten Zwischenverlauf. Vorbereitung, Analyse und Markdown
+verraten keinen unberichteten Ausgang. Die spätere Erinnerung entsteht aus Lukas’ wirklich
+gesprochenem Bericht. Ein in der letzten Figurenantwort geäußertes Vorhaben kann durch die
+erste reguläre Analyse des Folgetermins erkannt werden; die Episode wird dann mit dem ersten
+vollständigen Turn atomar gespeichert. Antwortfehler/Abbruch erzeugen keine halbe Episode;
+Wiederholungen erhalten den reproduzierbaren Ausgang. Keine zusätzlichen Modellaufrufe.
+Rückblick und nächste Vorbereitungsnotiz zeigen berichtete Vorhaben/Erfahrungen mit Quellen.
+
+Nachweise: **121 Core-Tests, 8 Storage-Tests, 92 reguläre App-Tests bestanden**.
+Sechs Schlüsselbundtests gezielt ausgenommen; acht Opt-in-Livetests im regulären Lauf deaktiviert.
+Die Speichertests prüfen zwei Varianten: schon vor Abschluss analysierter Plan und Plan erst in
+der letzten Antwort. Beide bleiben mit identischer Episode und Beleg nach Speicherneustart erhalten.
+Zusätzlich geprüft: Ideen/Unsicherheit ohne Episode, von Offenheit/Uhrzeit unabhängige Auswahl,
+Belegwiederholung ohne Duplikat, Weitergabe bis Sitzung 3, fehlende/falsche neue Schemafelder,
+Antwortfehler vor Episodencommit und idempotente Speicherung. Frühere Tests bleiben erhalten.
+
+Echte Sonnet-Prüfung mit ausdrücklich angelegten fiktiven Daten: drei Runden in zwei Sitzungen,
+Plan → kuratierte teilweise Umsetzung → belegter Erfahrungsbericht. **9/9 HTTP 200**, abschließend
+speichert die Erinnerung `planned` und `partial` mit dem Originalplanbezug. Erster Lauf
+0,140186 USD; Schlusslauf **0,133634 USD**, zusammen 0,273820 USD gemeldete Kosten.
+Die beiden Läufe wählen die teilweise Variante; andere Ausgänge sind hier nur offline geprüft.
+Die Stichprobe belegt keine fachliche Trefferquote. Liveordner außerhalb von Git:
+`/private/tmp/rr-mi04b-live-qba5a3tc/` und `/private/tmp/rr-mi04b-final-live-mvsuvtcf/`.
+Keine bestehenden Gespräche für die Prüfungen verändert.
+
+Mac-App-Build und iOS-Simulator-Build ohne Codesignierung bestanden; `git diff --check` sauber.
+Logs unter `/private/tmp/rr-mi04b-*.log`. Keine neue Sichtprüfung der Oberfläche, keine
+Simulator-Bedienung, keine iPhone-/VoiceOver-Prüfung. Ein früher neuer Test hatte falsche
+Typ-/Makroargumente, danach bestanden die vollständigen Läufe. Fachliche Abnahme des
+Variantenkatalogs und längerfristige Maintenance-/Abschlusskriterien bleiben offen. Die
+bestehenden Fall-/Kontextgrenzen werden nicht aufgehoben. Kein Push oder Merge.
+
+
+## 13. Oktober 2026 · MI-04a: verknüpfte Termine und belegte Vorbereitung
+
+Jonas’ letzter fiktiver Testlauf wurde gelesen; er bewertet den aktuellen Gesprächsablauf
+positiv und hat die Weiterarbeit an MI-04 beauftragt. Den abgegrenzten MI-04a-Ablauf hat er
+bestätigt: auch nach vorzeitigem Abschluss ein Folgetermin eine fiktionale Woche später;
+Vorbereitung aus belegten Zitaten und gespeicherten Zielen ohne zusätzlichen Modellaufruf.
+
+Umgesetzt: 20 Runden schließen die Sitzung atomar ab (60 fiktionale Minuten). Der Rückblick
+führt zur Vorbereitungsnotiz und anschließend zu einem neuen Termin im selben Fall mit eigener
+Rundenzählung. Neue App-Sitzungen beginnen mit einer Begrüßung. Ein Elternverweis und das neue
+Kind werden gemeinsam gespeichert; erneutes Öffnen/Starten erzeugt keine zusätzlichen Termine.
+Die Notiz zeigt wörtliche letzte Aussagen und bis zu drei Zielgruppen einschließlich Herkunft,
+Status und Unsicherheit. Fehlende Vereinbarungen oder Wochenereignisse werden nicht ergänzt.
+Prompt 1.3 kennzeichnet alte und aktuelle Termine. Regeln bleiben 0.8. Ein abgeschlossener
+kompatibler Alttermin kann ausdrücklich in einen neuen Termin übergehen; alte aktive Termine
+bleiben wegen der Promptbindung lesbar/exportierbar, ohne stillen Modell-/Promptwechsel.
+
+Zielbelege und Ereignisse bleiben über die Sitzung hinaus prüfbar; frühere Eröffnungen sind
+an ihre ursprüngliche Sitzungs-ID gebunden. Die Rolle erhält einen begrenzten Originalkontext.
+Offenheit, Ziele, Zuversicht, Rapport und bereits erzählte Fakten werden nicht durch den
+Wochenabstand verändert. Alte Ratserlaubnis gilt nicht im neuen Termin. Das Löschen benennt und
+entfernt den gesamten verknüpften Fall einschließlich Archivkopien.
+
+Nachweise: **114 Core-Tests, 7 Storage-Tests und 89 reguläre App-Tests bestanden**.
+Sechs bekannte Schlüsselbundtests gezielt ausgenommen; sechs bisherige Opt-in-Livetests im
+regulären Lauf deaktiviert. Der neue Folgetermin-Livetest wurde separat ausgeführt:
+**zwei echte Sonnet-Runden in zwei verknüpften Sitzungen, 6/6 HTTP 200**, gespeicherte Notiz,
+Zielanalyse im Folgetermin verfügbar, Wiederöffnen ohne Duplikat. Gemeldete Kosten dieses Laufs
+**0,073120 USD**. Neuer isolierter Teststore; kein bestehendes Gespräch wurde für den Test verändert.
+Mac-App-Build und iOS-Simulator-Build ohne Codesignierung bestanden. `git diff --check` sauber.
+
+Prüfungen umfassen vorzeitigen Abschluss, 20-Runden-Grenze, paralleles wiederholtes Starten,
+Speicherneustart, zwei schon lesende SwiftData-Kontexte, Abbruch/Rollback, Entwurferhalt,
+Zielwiderruf bis Sitzung 3, begrenzte Originalbelege und Abweisung alter Ratserlaubnis.
+Ein erster neuer Core-Test kompilierte wegen Swift-6-Isolationsprüfung nicht; nach einem
+unveränderlichen Abschluss-Snapshot für die parallelen Aufrufe bestand der gesamte Testlauf.
+
+Logs: `/private/tmp/rr-mi04-*.log`. Livebericht und Modellmessspur außerhalb von Git:
+`/private/tmp/rr-mi04-live-60mdfb3v/`. Keine neue Sichtprüfung der Oberfläche, kein echter
+Simulator-Bedienlauf, keine iPhone-/VoiceOver-Abnahme. Die begrenzten Livefälle belegen keine
+fachliche Trefferquote. Kuratierte Zwischenereignisse, Rückbewegungen und Abschlusskriterien
+bleiben nächste MI-04-Schritte. Archivduplikation und unveränderte Zielgrenzen stehen in
+`ARCHITEKTUR.md`; kein Nachweis für unbegrenzt lange Fallserien. Kein Push oder Merge.
+
+## 12. Oktober 2026 · Neuer Schlüssel und Sonnet-Aufrufe repariert
+
+Der neu hinterlegte Zugang gehört zum Konto mit rund 18,20 USD Restguthaben; die
+vorherige Null-Guthaben-Diagnose bezog sich ausschließlich auf den alten Schlüssel.
+`saveKey` erneuerte den Adapter bisher nur beim Wechsel zwischen Demo und echtem Modell.
+Nach einem Schlüsselersatz konnte deshalb der alte Schlüssel im Adapter geladen bleiben.
+Jetzt wird der Adapter auch bei diesem Ersatz erneuert; eine laufende Operation wird
+abgebrochen und abgewartet, die kompatible Sitzung samt Eingabe bleibt offen.
+
+Mit neuem Zugang zeigte der vollständige AppModel-Livetest zunächst HTTP 404. Begrenzte
+neutrale Gegenproben grenzten `temperature` als Ursache ein: ohne `usage` weiterhin 404,
+ohne `temperature` 200 samt Kostenangabe. Der Adapter lässt die Temperatur für Sonnet 5.5
+in allen Stufen und in der Messspur weg. E09 enthält den Kompatibilitätsnachtrag und die
+Herstellerquelle. Die allgemeine Verfügbarkeitsmeldung unterstellt keine fehlende
+Internetverbindung mehr.
+
+Abschließend bestanden: 109 Core-Tests, 22 gezielte App-/Messspurtests, Mac-App-Build
+und ein vollständiger AppModel-Livetest mit neuem isoliertem Teststore. Drei abgeschlossene
+Runden, neun Aufrufe mit HTTP 200, persistierte Rückmeldungen für offene Frage, einfache
+Reflexion und Zusammenfassung; gemeldete Kosten dieses Schlusslaufs 0,138350 USD.
+Rohdaten liegen außerhalb von Git unter `/private/tmp/rr-key-routing-live-zjlsezn8/`;
+der vorherige fehlgeschlagene Lauf unter `/private/tmp/rr-key-refresh-live-x_urqzn_/`.
+Keine neue Sichtprüfung der Oberfläche, kein Simulator- oder iPhone-Gerätetest.
+Die Tests ersetzen keine fachliche Qualitätsabnahme des geänderten Sampling-Verhaltens.
+
+## 12. Oktober 2026 · Fehlendes Modellguthaben verständlich melden
+
+Die laufende Mac-App zeigte bei einer abgewiesenen Anfrage eine Aufforderung zur
+Internetprüfung. Zugang und Netzwerk waren jedoch verfügbar: Die kostenlose
+Schlüsselprüfung lieferte HTTP 200, der Guthaben-Endpunkt meldete null Guthaben.
+Ein einzelner Diagnoseaufruf mit neutralem Prüftext und höchstens 16 Ausgabetoken
+bestätigte HTTP 402 wegen fehlenden Guthabens. Keine Gesprächsinhalte wurden gesendet.
+
+Der Adapter bildet HTTP 402 nun auf `modelPaymentRequired` ab. Die Oberfläche nennt
+Guthaben, Ausgabenlimit und den hinterlegten Zugangsschlüssel; die Messspur hält den
+eigenen Fehlercode fest. Der optionale Zielgedächtnisaufruf darf weiterhin ausfallen,
+ohne eine gültige Beratungseinordnung zu verwerfen.
+
+Geprüft: 109 Core-Tests, 18 gezielte Adapter-/Messspurtests sowie die separate
+HTTP-Fehlerabbildung; Mac-App-Build. Der Integrationstest belegt: keine automatische
+Wiederholung nach HTTP 402, keine halbe Runde, erhaltener Eingabeentwurf und erfolgreiches
+erneutes Senden in derselben Sitzung nach Beheben des Fehlers (kontrollierter Transport).
+Keine erfolgreiche Live-Modellantwort, keine neue sichtbare UI-, Simulator- oder
+iPhone-Geräteprüfung. Das fehlende Kontoguthaben wird durch die Codeänderung nicht behoben.
+
 ## 1. Oktober 2026 · Kernfertigkeiten erhalten belegte Rückmeldung
 
 Die freie Prüfung zeigte, dass Sonnet klare offene Fragen, einfache und komplexe Reflexionen

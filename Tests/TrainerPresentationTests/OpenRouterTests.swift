@@ -24,6 +24,27 @@ private func object(_ data: Data) throws -> [String: Any] {
 
 // MARK: - Schema
 
+@Test func sonnet55LaesstNichtUnterstuetzteTemperaturWeg() throws {
+    for model in ["anthropic/claude-sonnet-5.5", "anthropic/claude-sonnet-4.6", "qwen/qwen3.8-27b"] {
+        var configuration = OpenRouterConfiguration()
+        configuration.model = model
+        for temperature in [0.0, 0.8] {
+            let body = try object(try OpenRouterSchema.body(configuration: configuration,
+                system: "S", user: "U",
+                responseFormat: OpenRouterSchema.responseFormat(name: "ClientReply", schema: OpenRouterSchema.reply),
+                temperature: temperature, maxTokens: 2000).serialized())
+            if model == "anthropic/claude-sonnet-5.5" {
+                #expect(body["temperature"] == nil)
+            } else {
+                #expect(body["temperature"] as? Double == temperature)
+            }
+            let provider = try #require(body["provider"] as? [String: Any])
+            #expect(provider["require_parameters"] as? Bool == true)
+            #expect(provider["data_collection"] as? String == "deny")
+        }
+    }
+}
+
 @Test func einordnungsschemaEnthaeltBelegteDoppelseitigeReflexion() throws {
     let schema = try object(try OpenRouterSchema.analysis.serialized())
     #expect(schema["additionalProperties"] as? Bool == false)
@@ -206,7 +227,10 @@ private func envelope(content: String?, finish: String?, refusal: String? = nil,
     #expect(throws: TrainerFailure.modelUnavailable) {
         try OpenRouterResponse.evaluate(status: 400, data: Data(#"{"error":{"message":"bad request"}}"#.utf8), duration: 1)
     }
-    for status in [401, 402, 429, 500, 503] {
+    #expect(throws: TrainerFailure.modelPaymentRequired) {
+        try OpenRouterResponse.evaluate(status: 402, data: Data("{}".utf8), duration: 1)
+    }
+    for status in [401, 429, 500, 503] {
         #expect(throws: TrainerFailure.modelUnavailable) {
             try OpenRouterResponse.evaluate(status: status, data: Data("{}".utf8), duration: 1)
         }
@@ -379,13 +403,13 @@ private func envelope(content: String?, finish: String?, refusal: String? = nil,
                                   currentInput: "NOCH_UNBEANTWORTETER_VORSCHLAG")
     #expect(!OpenRouterSchema.memoryPrompt(request).contains("NOCH_UNBEANTWORTETER_VORSCHLAG"))
     #expect(OpenRouterSchema.analysisPrompt(request).contains("NOCH_UNBEANTWORTETER_VORSCHLAG"))
-    for (schema, expected) in [(OpenRouterSchema.memoryAnalysis, Set(["goalUpdates", "characterObservations"])),
+    for (schema, expected) in [(OpenRouterSchema.memoryAnalysis, Set(["goalUpdates", "characterObservations", "narrativeObservations"])),
                                 (OpenRouterSchema.counselorAnalysis, Set(["segments", "doubleSidedReflection", "permissions"]))] {
         let root = try object(schema.serialized())
         #expect(Set(try #require(root["required"] as? [String])) == expected)
         #expect(Set(try #require(root["properties"] as? [String: Any]).keys) == expected)
     }
-    let valid = Data(#"{"goalUpdates":[],"characterObservations":[]}"#.utf8)
+    let valid = Data(#"{"goalUpdates":[],"characterObservations":[],"narrativeObservations":[]}"#.utf8)
     #expect(try OpenRouterResponse.decodeMemory(valid, context: []).goalUpdates == [])
     for text in [#"{"goalUpdates":[],"characterObservations":[],"segments":[]}"#,
                  #"{"goalUpdates":null,"characterObservations":[]}"#,
@@ -465,7 +489,7 @@ private func modelAnswer(_ content: String, finish: String = "stop") -> Data {
 }
 
 private let gueltigeAntwort = #"{"text":"Hm, na ja.","primaryTag":null,"disclosedFactIDs":[]}"#
-private let leereZielstufe = #"{"goalUpdates":[],"characterObservations":[]}"#
+private let leereZielstufe = #"{"goalUpdates":[],"characterObservations":[],"narrativeObservations":[]}"#
 
 private func stubProvider(_ stub: StubTransport) -> OpenRouterModelProvider {
     var configuration = OpenRouterConfiguration()
@@ -700,7 +724,7 @@ private let erteilteErlaubnis = """
         .init(dimension: .readiness, assessment: .willing, goal: wrongSpeaker, evidence: goodEvidence, isUncertain: false)]
     for observation in cases {
         let data = try JSONEncoder().encode(TurnAnalysis(segments: [], characterObservations: [observation], goalUpdates: []))
-        var body = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any]); body.removeValue(forKey: "segments")
+        var body = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any]); body.removeValue(forKey: "segments"); body["narrativeObservations"] = []
         let memory = String(decoding: try JSONSerialization.data(withJSONObject: body), as: UTF8.self)
         let counselor = #"{"segments":[{"quote":"Hör auf zu saufen.","code":"konfrontation","isUncertain":false}],"permissions":[]}"#
         let stub = StubTransport([modelAnswer(counselor)], memory: [modelAnswer(memory)])
