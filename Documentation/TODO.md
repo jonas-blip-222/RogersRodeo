@@ -42,8 +42,13 @@ Prozessmechaniken vor MI-04.
       erzählen lassen; einmalige Speicherung und keine Vorab-Spoiler in der Notiz.
 - [ ] Die kuratierten Entwurfsvarianten und die semantische Plan-/Erfahrungserkennung
       fachlich prüfen. Technische/Livetests sind keine Goldreferenz.
-- [ ] **MI-04c:** längerfristigen Verlauf und fachlich begründete Maintenance-/Abschlusskriterien
-      festlegen; keine automatische Entwicklung allein durch Wochenabstand oder Offenheit.
+- [x] **MI-04c-Rahmen festgelegt (23.10.2026, E11):** wachsende vereinbarte Abstände nach belegter
+      Umsetzung, Maintenance nur über Belege über rund drei fiktionale Monate samt bewältigter
+      Schwierigkeit, kuratierter Verlauf unabhängig von der Beratungsqualität, manuelles Beenden jederzeit.
+- [ ] **MI-04c-Details klären:** Erkennen des vereinbarten Abstands, genaue Zahl der Berichte,
+      Varianten für spätere Termine und Rückbewegungen, Ende eines manuell beendeten Falls.
+- [ ] **MI-04c umsetzen:** längerfristigen Verlauf und Maintenance-Abschluss nach E11 bauen;
+      keine automatische Entwicklung allein durch Wochenabstand oder Offenheit.
 
 MI-03 bleibt teilweise offen. MI-04a ist technisch umgesetzt und live geprüft;
 MI-04b ergänzt erste kuratierte Erfahrungen und ihre belegte Erinnerung. Fachliche Abnahme,

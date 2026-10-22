@@ -747,6 +747,18 @@ bereits erzählte Aussagen. Nur der Rollenaufruf erhält die kuratierte Episode;
 kennt sie erst aus dem tatsächlich gesprochenen Originaltext. Rückblick und nächste Notiz
 zeigen später die berichtete Erfahrung mit Beleg, niemals ein vorausgesetztes Erfolgsergebnis.
 
+#### MI-04c — längerer Verlauf und Abschluss (Rahmen festgelegt am 23.10.2026)
+
+Jonas hat den Rahmen in E11 festgelegt, umgesetzt ist er noch nicht. Nach einer belegten
+Umsetzung können die fiktionalen Abstände wachsen (etwa zwei Wochen, ein Monat, drei
+Monate); den Abstand vereinbart die beratende Person im Gespräch mit Lukas. Maintenance
+setzt Berichte über eine fortgesetzte Umsetzung in mehreren aufeinanderfolgenden Terminen
+über mindestens rund drei fiktionale Monate voraus, dazu den belegten Umgang mit mindestens
+einer schwierigen Situation oder einem Ausrutscher. Die Verläufe bleiben kuratiert und
+unabhängig von der Beratungsqualität. Ohne Maintenance gibt es kein festes Ende; die übende
+Person kann den Fall jederzeit manuell beenden, ohne dass daraus ein Erfolg wird.
+Offene Detailfragen stehen in E11.
+
 **Später innerhalb MI-04:** kuratierte Zwischenereignisse, berichtete Erfahrungen,
 Fortschritte/Rückbewegungen und fachlich begründete Kriterien für einen möglichen Abschluss.
 Die offenen MI-03-Bausteine bleiben eigenständige Aufgaben und gelten damit nicht als erledigt.
@@ -761,8 +773,8 @@ Spracheingabe/-ausgabe, PDF-Export, ältere Geräte und weitere Figuren bleiben 
 | Direkte Bitte „Welchen Vorschlag haben Sie?“ als Erlaubnis | Jonas fordert ausdrücklich vorherige Erlaubnis. Ob zusätzliche Rückversicherung auch bei klarer direkter Bitte obligatorisch sein soll, ist nicht eigens entschieden. Solche Bitten im Modell erkennen; nicht als „unaufgefordert“ beschuldigen. Fachliche Erlaubnislage und strengere Übungsabläufe getrennt halten und vor endgültiger Warnregel klären. |
 | Unterbrechung/Überarbeitung bei Warnung | Beschlossen ist unmittelbares Feedback. Kein verpflichtender Modal-Dialog, kein Sendeblock und kein automatisches Umschreiben beauftragt. |
 | Fiktionale Dauer und Termine | Beschlossen: 20 Runden entsprechen 60 fiktionalen Minuten; eine fiktionale Woche zwischen Sitzungen; Vorbereitungsnotiz vor Folgeterminen. Siehe MI-04. |
-| Vorzeitiger manueller Sitzungsabschluss | Bestehende Möglichkeit nicht beiläufig entfernen. Umgang mit der fiktionalen Dauer bei weniger als 20 Runden vor Umsetzung festlegen. |
-| Zwischenereignisse und Maintenance-Kriterien | MI-04b ergänzt bestätigte Entwurfsvarianten zu sicheren Vorhaben. Fachliche Abnahme und Maintenance-Kriterien bleiben offen; längerfristig stabiles Verhalten braucht eigene Belege. |
+| Vorzeitiger manueller Sitzungsabschluss | Entschieden mit MI-04a: auch dann folgt der nächste Termin nach einer fiktionalen Woche. Ein Fall kann außerdem jederzeit manuell beendet werden (E11). |
+| Zwischenereignisse und Maintenance-Kriterien | MI-04b ergänzt bestätigte Entwurfsvarianten zu sicheren Vorhaben. Rahmen für Abstände und Maintenance entschieden in E11 (23.10.2026); Detailfragen und fachliche Abnahme der Varianten bleiben offen. |
 | Neue Ziel-, Beziehungs- oder SOC-Anzeigen | Keine neuen sichtbaren Punkteskalen beschlossen. Vorläufig sprachliche, belegte Rückmeldung; keine numerischen Erfolgsbalken. |
 | Fachliche Referenzlabels und Grenzwerte | Produktabnahme und fachliche Validierung auseinanderhalten. Vor Release dokumentiert prüfen; bis dahin Entwurf. |
 | Tatsächliche Runtime und Modell | Integrationsversuch erforderlich; keine aus dem alten Plan ungeprüft übernommenen API-Annahmen oder Pins. |

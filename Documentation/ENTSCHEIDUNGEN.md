@@ -382,3 +382,34 @@ Vorhaben und Erfahrungen, ohne zusätzlichen Modellaufruf. Eine spät in der let
 geäußerte Absicht kann im ersten regulären Aufruf des Folgetermins berücksichtigt werden.
 Eine einzelne Umsetzung begründet keinen automatischen Erfolgsschluss oder Maintenance.
 Fachliche Abnahme der Varianten und langfristige Abschlusskriterien bleiben offen.
+
+## E11 · Längerer Fallverlauf und Abschluss bei Maintenance (MI-04c)
+
+**23.10.2026, Jonas entscheidet die vier vorgelegten MI-04c-Fragen im Arbeitsgespräch.**
+Festgelegt ist das Produktverhalten; umgesetzt ist davon noch nichts.
+
+1. **Wachsende Abstände.** Zunächst bleibt es bei einer fiktionalen Woche zwischen den
+   Terminen. Nach einer belegt berichteten Umsetzung können die Abstände wachsen, etwa auf
+   zwei Wochen, einen Monat und drei Monate als Auffrischungstermin. Den Abstand vereinbart
+   die beratende Person im Gespräch mit Lukas; er entsteht nicht automatisch durch Zeitablauf.
+2. **Maintenance nur über Belege im Verlauf.** Der Abschluss der Geschichte setzt voraus,
+   dass Lukas in mehreren aufeinanderfolgenden Terminen über eine fortgesetzte Umsetzung
+   berichtet. Diese Termine liegen über mindestens rund drei fiktionale Monate verteilt.
+   Außerdem berichtet er von mindestens einer schwierigen Situation oder einem Ausrutscher,
+   mit dem er umgegangen ist. Jede dieser Angaben braucht einen Originalbeleg. Eine Zusage,
+   ein Plan, Offenheit, die Zahl der Termine oder Gerätezeit genügen nicht.
+3. **Kuratierter Verlauf bleibt unabhängig von der Beratungsqualität.** Wie in E10 bestimmen
+   Fall und Originalbeleg die Zwischenverläufe, auch für spätere Erfahrungen und
+   Rückbewegungen. Gute Beratung zeigt sich im Gespräch und im Feedback, nicht im Ausgang
+   der Woche. Daraus entsteht keine Kompetenznote.
+4. **Kein festes Ende ohne Maintenance.** Die übende Person kann einen Fall jederzeit
+   manuell beenden. Rückbewegungen führen zurück zu Erkundung und Planung. Eine feste
+   Obergrenze für die Zahl der Termine gibt es nicht. Ein manuell beendeter Fall ist kein
+   Maintenance-Abschluss.
+
+**Vor der Umsetzung noch zu klären:** wie ein vereinbarter Abstand im Gespräch erkannt und
+belegt wird und was ohne eindeutige Vereinbarung gilt; wie viele aufeinanderfolgende
+Berichte „mehrere“ genau sind; die kuratierten Varianten für spätere Termine und
+Rückbewegungen; die Gestaltung des Endes eines manuell beendeten Falls. Für lange
+Fallserien fehlt ein geprüftes Erinnerungskonzept (siehe ARCHITEKTUR.md); bis dahin bleiben
+die bestehenden Kontextgrenzen gültig.
