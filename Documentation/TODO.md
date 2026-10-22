@@ -45,8 +45,11 @@ Prozessmechaniken vor MI-04.
 - [x] **MI-04c-Rahmen festgelegt (23.10.2026, E11):** wachsende vereinbarte Abstände nach belegter
       Umsetzung, Maintenance nur über Belege über rund drei fiktionale Monate samt bewältigter
       Schwierigkeit, kuratierter Verlauf unabhängig von der Beratungsqualität, manuelles Beenden jederzeit.
-- [ ] **MI-04c-Details klären:** Erkennen des vereinbarten Abstands, genaue Zahl der Berichte,
-      Varianten für spätere Termine und Rückbewegungen, Ende eines manuell beendeten Falls.
+- [x] **MI-04c-Details geklärt (23.10.2026, Nachtrag E11):** Abstand im Gespräch ausgehandelt,
+      drei Berichte über mindestens drei Monate, Variantenentwurf mit Abnahme, Fallrückblick.
+- [ ] Variantenkatalog für spätere Termine, Rückbewegungen und Lukas’ Abstandswünsche entwerfen
+      und von Jonas abnehmen lassen.
+- [ ] Entscheiden: Bestätigung erkannter Abstände im Rückblick; Feedback zur Aushandlung.
 - [ ] **MI-04c umsetzen:** längerfristigen Verlauf und Maintenance-Abschluss nach E11 bauen;
       keine automatische Entwicklung allein durch Wochenabstand oder Offenheit.
 

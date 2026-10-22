@@ -407,9 +407,33 @@ Festgelegt ist das Produktverhalten; umgesetzt ist davon noch nichts.
    Obergrenze für die Zahl der Termine gibt es nicht. Ein manuell beendeter Fall ist kein
    Maintenance-Abschluss.
 
-**Vor der Umsetzung noch zu klären:** wie ein vereinbarter Abstand im Gespräch erkannt und
-belegt wird und was ohne eindeutige Vereinbarung gilt; wie viele aufeinanderfolgende
-Berichte „mehrere“ genau sind; die kuratierten Varianten für spätere Termine und
-Rückbewegungen; die Gestaltung des Endes eines manuell beendeten Falls. Für lange
-Fallserien fehlt ein geprüftes Erinnerungskonzept (siehe ARCHITEKTUR.md); bis dahin bleiben
-die bestehenden Kontextgrenzen gültig.
+Für lange Fallserien fehlt ein geprüftes Erinnerungskonzept (siehe ARCHITEKTUR.md); bis
+dahin bleiben die bestehenden Kontextgrenzen gültig.
+
+**Nachtrag 23.10.2026: Detailfragen, von Jonas entschieden.**
+
+- **Abstand wird im Gespräch ausgehandelt.** Die beratende Person bespricht mit Lukas, was
+  er sich wünscht, und wägt die eigenen Zeitressourcen ab. Die Entscheidung soll idealerweise
+  zu Lukas’ Situation passen. Die oben genannten Abstände sind Orientierung, keine starre
+  Stufenfolge. Maßgeblich ist die im Gespräch belegte Vereinbarung.
+- **Drei Berichte über mindestens drei Monate.** Maintenance setzt drei aufeinanderfolgende
+  Folgetermine mit belegtem Bericht über fortgesetzte Umsetzung voraus; zwischen dem ersten
+  und dem letzten liegen mindestens drei fiktionale Monate. Ein Ausrutscher, nach dem Lukas
+  weitermacht, unterbricht die Kette nicht und erfüllt zugleich die Bedingung der bewältigten
+  Schwierigkeit. Gibt Lukas das Vorhaben auf oder widerruft es, beginnt die Zählung neu.
+- **Varianten: Claude entwirft, Jonas nimmt ab.** Entwurfskatalog mit Status `draft`:
+  Lukas macht weiter, Ausrutscher mit Rückkehr, Ausrutscher mit offenem Ausgang, Vorhaben
+  aufgegeben. Jeder Verlauf bis Maintenance enthält mindestens eine schwierige Situation.
+  Die Variante ergibt sich fest aus Fall und Originalbeleg (E10). Fachliche Abnahme durch Jonas.
+- **Fallrückblick am Ende.** Bei Maintenance wie bei manuellem Beenden entsteht ein
+  Rückblick über alle Termine: Ziele, Vorhaben, Erfahrungen und Rückbewegungen mit Belegen.
+  Er ist als „mit Maintenance abgeschlossen“ oder „beendet ohne Maintenance“ gekennzeichnet,
+  ohne Wertung oder Note. Danach bleibt der Fall lesbar und exportierbar, aber nicht fortsetzbar.
+
+**Noch offen, Vorschläge für die Umsetzung:** Lukas braucht für die Aushandlung eigene
+Wünsche zum Abstand, die zu seiner jeweiligen Lage passen; sie gehören wie die Varianten in
+den kuratierten Katalog. Die Analyse erkennt die Vereinbarung mit Zitat im vorhandenen
+Aufruf, ohne zusätzlichen Modellaufruf. Ohne erkennbare Vereinbarung gilt weiter eine Woche.
+Ob der Rückblick eine erkannte Vereinbarung zur Bestätigung oder Korrektur anzeigt und ob
+die Aushandlung selbst Feedback erhält (Lukas’ Wunsch erfragt, Entscheidung begründet),
+ist noch nicht entschieden.

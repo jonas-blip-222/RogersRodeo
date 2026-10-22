@@ -757,7 +757,9 @@ setzt Berichte über eine fortgesetzte Umsetzung in mehreren aufeinanderfolgende
 einer schwierigen Situation oder einem Ausrutscher. Die Verläufe bleiben kuratiert und
 unabhängig von der Beratungsqualität. Ohne Maintenance gibt es kein festes Ende; die übende
 Person kann den Fall jederzeit manuell beenden, ohne dass daraus ein Erfolg wird.
-Offene Detailfragen stehen in E11.
+Die Detailfragen sind im Nachtrag zu E11 entschieden: Abstand im Gespräch ausgehandelt,
+drei Berichte über mindestens drei Monate, Variantenentwurf mit Abnahme durch Jonas,
+Fallrückblick am Ende. Verbleibende Umsetzungsfragen stehen ebenfalls dort.
 
 **Später innerhalb MI-04:** kuratierte Zwischenereignisse, berichtete Erfahrungen,
 Fortschritte/Rückbewegungen und fachlich begründete Kriterien für einen möglichen Abschluss.
