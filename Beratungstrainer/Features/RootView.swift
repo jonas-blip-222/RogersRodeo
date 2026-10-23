@@ -184,7 +184,10 @@ struct RootView: View {
                 }.padding(20).background(.white, in: RoundedRectangle(cornerRadius: 20))
                     .overlay(RoundedRectangle(cornerRadius: 20).stroke(Palette.line)).disabled(model.busy)
             }
-            Label("Nur auf diesem Gerät gespeichert", systemImage: "lock").font(.caption).foregroundStyle(.secondary)
+            // Der Verlauf liegt nur lokal; mit Schlüssel gehen die Texte aber zur Antwort an OpenRouter (E01).
+            Label(model.usesDemoResponses ? "Nur auf diesem Gerät gespeichert"
+                  : "Verlauf nur auf diesem Gerät gespeichert · Texte gehen für Antworten an OpenRouter",
+                  systemImage: "lock").font(.caption).foregroundStyle(.secondary)
         }
     }
 }

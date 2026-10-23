@@ -12,9 +12,13 @@ public struct PriorSession: Codable, Sendable, Equatable {
     public var number: Int
     public var opening: String
     public var turns: [Turn]
+    /// Fiktionale Woche seit Fallbeginn; ältere Archive ohne Angabe lagen wöchentlich.
+    public var fictionalWeek: Int?
+    public var week: Int { fictionalWeek ?? number - 1 }
     public init(_ session: SessionSnapshot) {
         id = session.id; number = session.sessionNumber; opening = session.openingLine
         turns = session.turns.map { .init(id: $0.id, input: $0.input, reply: $0.reply.text) }
+        fictionalWeek = session.fictionalWeek
     }
 }
 
@@ -44,12 +48,19 @@ public struct CaseContinuity: Codable, Sendable, Equatable {
     public var priorSessions: [PriorSession]
     public var preparation: VisitNote
     public var experience: BetweenVisitExperience?
+    /// MI-04c: vereinbarter Abstand zum vorherigen Termin und fiktionale Woche seit
+    /// Fallbeginn. Fehlt bei älteren Terminen; dort galt eine Woche.
+    public var intervalWeeks: Int?
+    public var fictionalWeek: Int?
+    /// Frühere Zwischenverläufe dieses Falls in Terminreihenfolge, für die Verlaufsmuster.
+    public var pastExperiences: [BetweenVisitExperience]?
 }
 
 extension SessionSnapshot {
     public var caseID: UUID { continuity?.caseID ?? id }
     public var sessionNumber: Int { continuity?.number ?? 1 }
-    public var fictionalWeek: Int { sessionNumber - 1 }
+    public var fictionalWeek: Int { continuity?.fictionalWeek ?? sessionNumber - 1 }
+    public var intervalWeeks: Int { continuity?.intervalWeeks ?? 1 }
     public var openingLine: String { openingMessage ?? content.scenario.openingLine }
     public var visitLabel: String { "Sitzung \(sessionNumber) · Woche \(fictionalWeek) (fiktional)" }
 }
@@ -112,8 +123,9 @@ public enum VisitBuilder {
     /// Nur in einer atomaren Repository-Operation aufrufen. Die Elternsitzung speichert
     /// die neue ID gleichzeitig mit dem Kind; erneutes Starten liefert dasselbe Kind.
     public static func followUp(after previous: SessionSnapshot, identity: BuildIdentity,
-                                at date: Date) throws -> SessionSnapshot {
-        guard previous.status == .completed else { throw TrainerFailure.sessionCompleted }
+                                at date: Date, intervalWeeks: Int = 1) throws -> SessionSnapshot {
+        guard previous.status == .completed, previous.caseClosure == nil else { throw TrainerFailure.sessionCompleted }
+        guard VisitInterval.allowed(after: previous).contains(intervalWeeks) else { throw TrainerFailure.invalidInput }
         try validateIdentity(previous.identity, new: identity)
         let note = try preparation(after: previous)
         var state = previous.state
@@ -126,9 +138,14 @@ public enum VisitBuilder {
         next.continuity = .init(caseID: previous.caseID, previousSessionID: previous.id,
             number: previous.sessionNumber + 1,
             priorSessions: (previous.continuity?.priorSessions ?? []) + [PriorSession(previous)], preparation: note)
+        next.continuity?.intervalWeeks = intervalWeeks
+        next.continuity?.fictionalWeek = previous.fictionalWeek + intervalWeeks
+        let past = (previous.continuity?.pastExperiences ?? []) + [previous.continuity?.experience].compactMap { $0 }
+        next.continuity?.pastExperiences = past.isEmpty ? nil : past
         try CharacterTracker.validate(state.development, session: next, currentTurnID: UUID())
         try NarrativeTracker.validate(state.narrative, session: next, currentTurnID: UUID())
-        next.continuity?.experience = try ExperienceSelector.select(after: previous)
+        let experience = try ExperienceSelector.select(after: previous, into: next)
+        next.continuity?.experience = experience
         return next
     }
 
@@ -206,7 +223,7 @@ extension ContextBuilder {
 
     public static func visitContext(_ session: SessionSnapshot) -> String? {
         guard session.continuity != nil else { return nil }
-        return "\(session.visitLabel). Seit dem vorherigen Termin liegt eine fiktionale Woche. Frühere Aussagen sind historische Belege, keine Ereignisse dieser Woche. Ergänze keine zwischenzeitlichen Erlebnisse oder Fortschritte, die nicht ausdrücklich in der Szenariovorgabe stehen. Alte Ratserlaubnis gilt nicht im neuen Termin. Lass nach der Begrüßung Raum für eine offene Einstiegsfrage; andere Einstiege sind erlaubt."
+        return "\(session.visitLabel). Abstand zum vorherigen Termin: fiktional \(VisitInterval.label(session.intervalWeeks)). Frühere Aussagen sind historische Belege, keine Ereignisse der Zwischenzeit. Ergänze keine zwischenzeitlichen Erlebnisse oder Fortschritte, die nicht ausdrücklich in der Szenariovorgabe stehen. Alte Ratserlaubnis gilt nicht im neuen Termin. Lass nach der Begrüßung Raum für eine offene Einstiegsfrage; andere Einstiege sind erlaubt."
     }
 
     public static func sourceLabel(_ message: DialogueMessage, session: SessionSnapshot) -> String {

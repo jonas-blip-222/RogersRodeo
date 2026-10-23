@@ -196,3 +196,29 @@ Konsummengen, neue Abstinenzpflicht oder erfundene Stabilitätsdauer. Erst ihr t
 Selbstbericht kann zur nächsten belegten Erfahrungsbeobachtung werden. Dadurch beeinflusst eine
 noch ungesprochene Rollenreaktion nicht die Rückmeldung zum Beraterbeitrag. Einmalige Umsetzung
 ist kein Maintenance-Status. Die Varianten und die Modellklassifikation bleiben fachliche Entwürfe.
+
+## MI-04c · Längerer Verlauf und Fallende (24.10.2026)
+
+Grundlage: E11 samt Nachträgen und `MI-04c-Verlaufskatalog.md`. Code in
+`CaseProgression.swift` und `BetweenVisitExperience.swift`.
+
+- **Abstand:** `CaseContinuity` speichert `intervalWeeks` und `fictionalWeek` seit Fallbeginn;
+  `PriorSession` behält seine Woche. Vor einer belegt berichteten Umsetzung ist nur eine Woche
+  erlaubt, danach 1, 2, 3, 4, 6, 8 oder 13 Wochen. `IntervalSuggestion` sucht in den letzten
+  drei Runden wörtliche Angaben („in vier Wochen“, „in einem Monat“) als Vorschlag; die übende
+  Person bestätigt in der Vorbereitung. Ältere Termine ohne Angabe gelten als wöchentlich.
+- **Fortsetzungsverläufe:** Nach einer sicheren Umsetzung seit dem letzten Bruch wählt der
+  Selektor aus vier festen Mustern (Katalog 0.2-draft), gebunden an Fall-ID und Zahl der Brüche,
+  nie an Offenheit oder Beratungsqualität. Bezug ist das jüngste nicht zurückgenommene
+  Vorhaben, auch ein verändertes. Frühere Episoden stehen in `pastExperiences`.
+- **Kette bis Maintenance:** `MaintenanceProgress` wertet nur sichere Einordnungen nach dem
+  Termin aus, in dem Lukas sie gesagt hat: `continued` zählt, `withdrawn` und `notAttempted`
+  setzen zurück, ein `setback` ohne Weitermachen lässt die Kette ruhen und gilt als bewältigt,
+  sobald Lukas weitermacht. Erfüllt bei drei Berichten über mindestens 13 Wochen mit Schwierigkeit.
+- **Fallende:** `closeCase` setzt `caseClosure` am letzten abgeschlossenen Termin; das Ergebnis
+  folgt allein aus der Kette. Danach keine Folgetermine. `CaseReview` baut den Fallrückblick aus
+  dem letzten Termin, der alle früheren Originaltexte enthält.
+- **Rolle:** Lukas erhält seinen Abstandswunsch und darf den Abschluss selbst ansprechen.
+  Analyse, Vorbereitung und Rückblick kennen beides nicht.
+- **Grenzen:** Jeder Termin kopiert weiterhin alle früheren Originaltexte. Für sehr lange
+  Fallserien ist das nicht gemessen; die Kontextgrenzen der Analyse bleiben unverändert.

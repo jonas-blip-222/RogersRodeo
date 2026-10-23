@@ -3,6 +3,30 @@
 Neueste Prüfungen zuerst. Ältere Abschnitte bleiben als Verlauf erhalten und werden nicht
 rückwirkend umgeschrieben.
 
+## 24. Oktober 2026 · MI-04c: Abstände, Verlauf bis Maintenance und Fallende
+
+Umgesetzt nach E11 samt Nachträgen und dem von Jonas angenommenen Verlaufskatalog
+(`Documentation/MI-04c-Verlaufskatalog.md`, im Code `0.2-draft`). Prompt 1.5 mit neuer
+Einordnung `continued`; Feedbackregeln bleiben 0.8, Inhaltskatalog unverändert.
+
+- Vorbereitung: Abstand zum nächsten Termin wählbar, nach belegter Umsetzung 1 bis 13 Wochen,
+  davor eine Woche. Eine im Gespräch genannte Vereinbarung wird mit wörtlichem Satz vorgeschlagen.
+- Folgetermine nach einer berichteten Umsetzung erhalten einen kuratierten Fortsetzungsverlauf
+  aus vier festen Mustern. Lukas kennt seinen Abstandswunsch und darf den Abschluss ansprechen.
+- Kette bis Maintenance aus sicheren Belegen; „Fall beenden“ im Rückblick speichert „mit
+  Maintenance abgeschlossen“ oder „beendet ohne Maintenance“; danach Fallrückblick, kein Folgetermin.
+- Startseite: Mit Schlüssel steht dort, dass Texte für Antworten an OpenRouter gehen.
+
+Nachweise: **129 Core-Tests, 9 Storage-Tests und 87 App-Tests bestanden**; Mac-Build
+(`swift build`) und iOS-Simulator-Build ohne Codesignierung bestanden. Die App-Tests liefen
+mit `--skip "chluessel"`, also ohne alle Tests mit „Schluessel“ im Namen (Schlüsselbund-
+dialoge vermeiden); Livetests sind im regulären Lauf deaktiviert. Ein bestehender Test wurde
+angepasst: Nach einer berichteten Umsetzung gibt es jetzt einen Fortsetzungsverlauf statt keiner
+Episode. **Kein Livelauf mit echtem Modell**, keine Sichtprüfung der neuen Ansichten, kein
+Simulator-Bedienlauf, keine iPhone-/VoiceOver-Prüfung. Ob Sonnet `continued`/`setback`
+zuverlässig einordnet und die Verläufe passend erzählt, ist offen.
+
+
 ## 22. Oktober 2026 · Sicherung des bisherigen Entwicklungsstands
 
 Die bisher uncommitteten Verbindungsfixes sowie MI-04a/04b werden auf dem vorhandenen

@@ -376,6 +376,8 @@ public struct SessionSnapshot: Codable, Sendable, Equatable {
     public var openingMessage: String?
     public var continuity: CaseContinuity?
     public var followUpSessionID: UUID?
+    /// Nur am letzten Termin eines beendeten Falls gesetzt (E11).
+    public var caseClosure: CaseClosure?
     public init(schemaVersion: Int, id: UUID, revision: Int, approachID: String,
                 identity: BuildIdentity, content: SessionContent, state: SimulationState,
                 turns: [CompletedTurn], status: SessionStatus, startedAt: Date, endedAt: Date? = nil) {
@@ -401,7 +403,9 @@ public struct SessionSummary: Codable, Sendable, Equatable {
 public protocol SessionRepository: Sendable {
     func create(_ snapshot: SessionSnapshot) async throws
     func load(id: UUID) async throws -> SessionSnapshot
-    func createFollowUp(after id: UUID, identity: BuildIdentity, at date: Date) async throws -> SessionSnapshot
+    func createFollowUp(after id: UUID, identity: BuildIdentity, at date: Date, intervalWeeks: Int) async throws -> SessionSnapshot
+    /// Beendet den Fall am letzten abgeschlossenen Termin; wiederholbar ohne Änderung.
+    func closeCase(sessionID: UUID, at date: Date) async throws -> SessionSnapshot
     func list() async throws -> [SessionSummary]
     func savePending(_ pending: PendingTurn) async throws
     func loadPending(sessionID: UUID) async throws -> PendingTurn?

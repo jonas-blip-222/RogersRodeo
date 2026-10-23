@@ -3,7 +3,7 @@ import Foundation
 /// Gesprächsbeobachtungen zu konkreten Vorhaben und Erfahrungen. Keine SOC-Stufen,
 /// keine aus Offenheit abgeleitete Entwicklung und keine geschätzte Stabilitätsdauer.
 public enum NarrativeKind: String, Codable, Sendable, CaseIterable {
-    case idea, planned, attempted, completed, partial, notAttempted, setback, withdrawn
+    case idea, planned, attempted, completed, partial, continued, notAttempted, setback, withdrawn
     public var label: String {
         switch self {
         case .idea: "Genannte Möglichkeit"
@@ -11,6 +11,7 @@ public enum NarrativeKind: String, Codable, Sendable, CaseIterable {
         case .attempted: "Versuch berichtet"
         case .completed: "Einmalige Umsetzung berichtet"
         case .partial: "Teilweise Umsetzung berichtet"
+        case .continued: "Fortgesetzte Umsetzung berichtet"
         case .notAttempted: "Nicht umgesetzt berichtet"
         case .setback: "Schwierigkeit oder Rückbewegung berichtet"
         case .withdrawn: "Vorhaben zurückgenommen"

@@ -57,7 +57,7 @@ public enum RoundDeadline {
 
 public actor ConversationCoordinator {
     /// 1.4: Belegte Vorhaben und Erfahrungen sowie kuratierte Rollenepisoden getrennt führen.
-    public static let promptVersion = "1.4"
+    public static let promptVersion = "1.5"
     /// 0.7: Zusammenfassungen verlangen mindestens zwei getrennte Klientenbelege.
     public static let rulesVersion = "0.8"
     private let repository: any SessionRepository
@@ -92,7 +92,7 @@ public actor ConversationCoordinator {
         return snapshot
     }
 
-    public func createFollowUp(after id: UUID) async throws -> SessionSnapshot {
+    public func createFollowUp(after id: UUID, intervalWeeks: Int = 1) async throws -> SessionSnapshot {
         guard generation == nil else { throw TrainerFailure.operationInProgress }
         let token = UUID(); generation = token
         defer { if generation == token { generation = nil } }
@@ -101,7 +101,13 @@ public actor ConversationCoordinator {
         let identity = BuildIdentity(contentHash: previous.identity.contentHash, rulesVersion: Self.rulesVersion,
                                      promptVersion: Self.promptVersion, model: descriptor)
         try await provider.prepare(); try check(token)
-        return try await repository.createFollowUp(after: id, identity: identity, at: Date())
+        return try await repository.createFollowUp(after: id, identity: identity, at: Date(), intervalWeeks: intervalWeeks)
+    }
+
+    /// Beendet den Fall; das Ergebnis (mit/ohne Maintenance) folgt allein aus den Belegen.
+    public func closeCase(sessionID: UUID) async throws -> SessionSnapshot {
+        guard generation == nil else { throw TrainerFailure.operationInProgress }
+        return try await repository.closeCase(sessionID: sessionID, at: Date())
     }
 
     public func send(sessionID: UUID, input: String, skipAnalysis: Bool = false,

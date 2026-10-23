@@ -78,11 +78,14 @@ import TrainerCore
         try save()
     }
     public func createFollowUp(after id: UUID, identity: BuildIdentity, at date: Date) throws -> SessionSnapshot {
+        try createFollowUp(after: id, identity: identity, at: date, intervalWeeks: 1)
+    }
+    public func createFollowUp(after id: UUID, identity: BuildIdentity, at date: Date, intervalWeeks: Int) throws -> SessionSnapshot {
         let parentRow = try required(id)
         var parent = try record(parentRow)
         try VisitBuilder.validateIdentity(parent.snapshot.identity, new: identity)
         if let nextID = parent.snapshot.followUpSessionID { return try load(id: nextID) }
-        let next = try VisitBuilder.followUp(after: parent.snapshot, identity: identity, at: date)
+        let next = try VisitBuilder.followUp(after: parent.snapshot, identity: identity, at: date, intervalWeeks: intervalWeeks)
         parent.snapshot.followUpSessionID = next.id
         let child = SessionRecord(snapshot: next)
         // Erst beide Payloads kodieren, dann eine einzige Transaktion für Elternverweis und Kind.
@@ -121,6 +124,9 @@ import TrainerCore
     }
     public func finish(sessionID: UUID, expectedRevision: Int, endedAt: Date) throws -> SessionSnapshot {
         try mutate(sessionID) { try RepositoryRules.finish(expectedRevision: expectedRevision, at: endedAt, in: &$0) }
+    }
+    public func closeCase(sessionID: UUID, at date: Date) throws -> SessionSnapshot {
+        try mutate(sessionID) { try RepositoryRules.closeCase(at: date, in: &$0) }
     }
     public func delete(id: UUID) throws {
         guard let row = try row(id) else { return }

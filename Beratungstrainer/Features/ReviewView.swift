@@ -58,12 +58,23 @@ struct ReviewView: View {
                 if session.status == .completed {
                     VStack(alignment: .leading, spacing: 12) {
                         Text(session.turns.count == 20 ? "60 fiktionale Minuten abgeschlossen." : "Vorzeitig abgeschlossen: \(session.turns.count) von 20 Runden.")
-                        Text("Der nächste Termin liegt eine fiktionale Woche später. Ein Sitzungsende bedeutet noch keine Zielerreichung.")
+                        Text("Den Abstand zum nächsten Termin bestätigst du in der Vorbereitung. Ein Sitzungsende bedeutet noch keine Zielerreichung.")
                             .font(.footnote).foregroundStyle(.secondary)
-                        if model.mayStartFollowUp {
+                        if let closure = session.caseClosure {
+                            Text("Fall beendet: \(closure.outcome.label).").font(.headline)
+                            Button("Fallrückblick ansehen") { model.showCaseReview = true }.buttonStyle(.borderedProminent)
+                        } else if model.mayStartFollowUp {
+                            if MaintenanceProgress.evaluate(session).isMet {
+                                Text("Die Kriterien für einen Abschluss mit Maintenance sind belegt. Du kannst den Fall abschließen oder weitere Termine vereinbaren.")
+                                    .font(.footnote)
+                            }
                             Button(session.followUpSessionID == nil ? "Nächsten Termin vorbereiten" : "Zum Folgetermin") {
                                 model.prepareFollowUp()
                             }.buttonStyle(.borderedProminent).disabled(model.busy)
+                            if model.mayCloseCase {
+                                Button("Fall beenden") { model.showCloseConfirmation = true }
+                                    .buttonStyle(.bordered).disabled(model.busy)
+                            }
                         } else {
                             Text("Dieser ältere Modell- oder Regelstand kann als Protokoll gelesen werden. Starte für weitere Übungen einen neuen Fall.")
                                 .font(.footnote).foregroundStyle(.secondary)
@@ -106,6 +117,15 @@ struct ReviewView: View {
         }
         .navigationTitle("Rückblick mit \(session.content.scenario.name)")
         .sheet(isPresented: $showingDiagnostics) { DiagnosticsView(session: session) }
+        .sheet(isPresented: $model.showCaseReview) { NavigationStack { CaseReviewView(review: CaseReview.build(session)) } }
+        .confirmationDialog("Fall beenden?", isPresented: $model.showCloseConfirmation, titleVisibility: .visible) {
+            Button("Fall beenden", role: .destructive) { model.closeCase() }
+            Button("Abbrechen", role: .cancel) {}
+        } message: {
+            Text(MaintenanceProgress.evaluate(session).isMet
+                 ? "Die Kriterien für Maintenance sind belegt. Der Fall wird als „mit Maintenance abgeschlossen“ gespeichert und danach nicht mehr fortgesetzt."
+                 : "Die Kriterien für Maintenance sind nicht belegt. Der Fall wird als „beendet ohne Maintenance“ gespeichert und danach nicht mehr fortgesetzt. Das ist keine Wertung.")
+        }
         .fileExporter(isPresented: $export, document: TranscriptDocument(text: ReviewBuilder.markdown(session)), contentType: .plainText,
                       defaultFilename: "Gespraech-\(session.content.scenario.name).md") { result in
             if case .failure = result { exportError = "Das Protokoll konnte nicht exportiert werden." }
@@ -122,8 +142,28 @@ struct VisitPreparationView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
                 Text("Vor dem nächsten Gespräch").font(.largeTitle.weight(.semibold))
-                Text("Sitzung \(previous.sessionNumber + 1) · eine fiktionale Woche später")
+                Text("Sitzung \(previous.sessionNumber + 1) · fiktional \(VisitInterval.label(model.followUpWeeks)) später")
                     .font(.headline)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Abstand zum nächsten Termin").font(.headline)
+                    if model.allowedIntervals.count > 1 {
+                        Picker("Abstand", selection: $model.followUpWeeks) {
+                            ForEach(model.allowedIntervals, id: \.self) { Text(VisitInterval.label($0)).tag($0) }
+                        }.disabled(model.busy)
+                        if let suggestion = model.intervalSuggestion {
+                            Text(verbatim: "Im Gespräch genannt: „\(suggestion.quote)“")
+                            Text("Runde \(suggestion.turnNumber) · \(suggestion.speaker == .client ? "Klient" : "Beratung") · automatisch erkannt, bitte prüfen")
+                                .font(.caption).foregroundStyle(.secondary)
+                        } else {
+                            Text("Keine Vereinbarung im Gespräch erkannt. Wähle den Abstand, den ihr besprochen habt; ohne Vereinbarung gilt eine Woche.")
+                                .font(.footnote).foregroundStyle(.secondary)
+                        }
+                    } else {
+                        Text("Eine Woche. Größere Abstände sind erst möglich, nachdem Lukas von einer Umsetzung berichtet hat.")
+                            .font(.footnote).foregroundStyle(.secondary)
+                    }
+                }.padding(18).frame(maxWidth: .infinity, alignment: .leading)
+                    .background(.white, in: RoundedRectangle(cornerRadius: 18))
                 Text("Kurze Dokumentation aus den bisherigen Gesprächen. Zitate sind wörtlich; automatische Zieleinordnungen können unsicher sein.")
                     .font(.subheadline).foregroundStyle(.secondary)
                 if note.entries.isEmpty { Text("Im letzten Termin wurden noch keine Gesprächsrunden abgeschlossen.") }
@@ -154,5 +194,62 @@ struct VisitPreparationView: View {
                 Button("Zurück zum Protokoll") { model.preparation = nil }.disabled(model.busy)
             }.padding(24).frame(maxWidth: 760).frame(maxWidth: .infinity)
         }.navigationTitle("Nächster Termin mit \(previous.content.scenario.name)")
+    }
+}
+
+/// Fallrückblick über alle Termine (E11). Belege statt Wertung; keine Punkteskala.
+struct CaseReviewView: View {
+    let review: CaseReview
+    @Environment(\.dismiss) private var dismiss
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                Text(review.outcomeText).font(.title2.weight(.semibold))
+                Text("Automatische Einordnungen können fehlerhaft sein. Dieser Rückblick ist keine Kompetenzbewertung.")
+                    .font(.footnote).foregroundStyle(.secondary)
+                section("Termine") {
+                    ForEach(review.visits, id: \.number) { visit in
+                        Text("Sitzung \(visit.number) · Woche \(visit.week) (fiktional) · \(visit.turns) Runden")
+                    }
+                }
+                section("Ziele") { entries(review.goals, empty: "Keine belegten Ziele.") }
+                section("Vorhaben, Erfahrungen und Rückbewegungen") { entries(review.narrative, empty: "Keine belegten Vorhaben.") }
+                section("Berichte über fortgesetzte Umsetzung") {
+                    if review.progress.reports.isEmpty { Text("Keine aufeinanderfolgenden Berichte belegt.") }
+                    ForEach(Array(review.progress.reports.enumerated()), id: \.offset) { _, report in
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(verbatim: "„\(report.evidence.quote)“")
+                            Text("Sitzung \(report.sessionNumber) · Woche \(report.week)").font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                    if let difficulty = review.progress.difficulty {
+                        Text(verbatim: "Bewältigte Schwierigkeit: „\(difficulty.quote)“")
+                    }
+                    Text("Maintenance verlangt drei aufeinanderfolgende Berichte über mindestens 13 fiktionale Wochen und eine bewältigte Schwierigkeit.")
+                        .font(.footnote).foregroundStyle(.secondary)
+                }
+                ShareLink(item: review.markdown) { Label("Fallrückblick teilen", systemImage: "square.and.arrow.up") }
+                    .buttonStyle(.bordered)
+            }.padding(24).frame(maxWidth: 760).frame(maxWidth: .infinity)
+        }
+        .navigationTitle("Fallrückblick mit \(review.scenarioName)")
+        .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Fertig") { dismiss() } } }
+    }
+    private func section<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(title).font(.headline)
+            content()
+        }.padding(20).frame(maxWidth: .infinity, alignment: .leading)
+            .background(.white, in: RoundedRectangle(cornerRadius: 20))
+    }
+    @ViewBuilder private func entries(_ values: [VisitNote.Entry], empty: String) -> some View {
+        if values.isEmpty { Text(empty) }
+        ForEach(Array(values.enumerated()), id: \.offset) { _, entry in
+            VStack(alignment: .leading, spacing: 4) {
+                Text(entry.heading).font(.subheadline.weight(.semibold))
+                Text(verbatim: "„\(entry.quote)“")
+                Text(entry.sourceLabel).font(.caption).foregroundStyle(.secondary)
+            }
+        }
     }
 }

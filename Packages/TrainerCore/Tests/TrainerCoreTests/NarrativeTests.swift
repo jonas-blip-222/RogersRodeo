@@ -79,7 +79,10 @@ private func planSession(kind: NarrativeKind = .planned, uncertain: Bool = false
     let third = try VisitBuilder.followUp(after: next, identity: next.identity, at: Date())
     #expect(third.state.narrative?.records.last?.kind == .completed)
     #expect(third.state.openness == first.state.openness)
-    #expect(third.continuity?.experience == nil) // Kein erneuter Ausgang für denselben alten Plan.
+    // MI-04c: Nach einer berichteten Umsetzung folgt ein Fortsetzungsverlauf, kein erneuter
+    // Erstversuch desselben Plans und kein Maintenance-Status.
+    #expect(third.continuity?.experience?.variant.isProgression == true)
+    #expect(!MaintenanceProgress.evaluate(third).isMet)
     #expect(third.continuity?.preparation.entries.contains { $0.quote == quote && $0.sessionID == next.id } == true)
     #expect(NarrativeKind.allCases.allSatisfy { $0.rawValue != "maintenance" })
     let decoded = try JSONDecoder().decode(SessionSnapshot.self, from: JSONEncoder().encode(third))

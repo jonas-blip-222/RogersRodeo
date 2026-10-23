@@ -63,8 +63,11 @@ actor FailingCommitRepository: SessionRepository {
     func finish(sessionID: UUID, expectedRevision: Int, endedAt: Date) async throws -> SessionSnapshot {
         try await base.finish(sessionID: sessionID, expectedRevision: expectedRevision, endedAt: endedAt)
     }
-    func createFollowUp(after id: UUID, identity: BuildIdentity, at date: Date) async throws -> SessionSnapshot {
-        try await base.createFollowUp(after: id, identity: identity, at: date)
+    func createFollowUp(after id: UUID, identity: BuildIdentity, at date: Date, intervalWeeks: Int) async throws -> SessionSnapshot {
+        try await base.createFollowUp(after: id, identity: identity, at: date, intervalWeeks: intervalWeeks)
+    }
+    func closeCase(sessionID: UUID, at date: Date) async throws -> SessionSnapshot {
+        try await base.closeCase(sessionID: sessionID, at: date)
     }
     func delete(id: UUID) async { await base.delete(id: id) }
 }

@@ -102,11 +102,14 @@ public actor MemorySessionRepository: SessionRepository {
         records[snapshot.id] = SessionRecord(snapshot: snapshot)
     }
     public func createFollowUp(after id: UUID, identity: BuildIdentity, at date: Date) throws -> SessionSnapshot {
+        try createFollowUp(after: id, identity: identity, at: date, intervalWeeks: 1)
+    }
+    public func createFollowUp(after id: UUID, identity: BuildIdentity, at date: Date, intervalWeeks: Int) throws -> SessionSnapshot {
         try Task.checkCancellation()
         var parent = try record(id)
         try VisitBuilder.validateIdentity(parent.snapshot.identity, new: identity)
         if let nextID = parent.snapshot.followUpSessionID { return try record(nextID).snapshot }
-        let next = try VisitBuilder.followUp(after: parent.snapshot, identity: identity, at: date)
+        let next = try VisitBuilder.followUp(after: parent.snapshot, identity: identity, at: date, intervalWeeks: intervalWeeks)
         parent.snapshot.followUpSessionID = next.id
         records[next.id] = SessionRecord(snapshot: next); records[id] = parent
         return next
@@ -136,6 +139,11 @@ public actor MemorySessionRepository: SessionRepository {
     public func finish(sessionID: UUID, expectedRevision: Int, endedAt: Date) throws -> SessionSnapshot {
         try Task.checkCancellation(); var value = try record(sessionID)
         try RepositoryRules.finish(expectedRevision: expectedRevision, at: endedAt, in: &value)
+        records[sessionID] = value; return value.snapshot
+    }
+    public func closeCase(sessionID: UUID, at date: Date) throws -> SessionSnapshot {
+        try Task.checkCancellation(); var value = try record(sessionID)
+        try RepositoryRules.closeCase(at: date, in: &value)
         records[sessionID] = value; return value.snapshot
     }
     public func delete(id: UUID) {

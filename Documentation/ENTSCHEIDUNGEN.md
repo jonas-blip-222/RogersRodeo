@@ -437,3 +437,15 @@ Aufruf, ohne zusätzlichen Modellaufruf. Ohne erkennbare Vereinbarung gilt weite
 Ob der Rückblick eine erkannte Vereinbarung zur Bestätigung oder Korrektur anzeigt und ob
 die Aushandlung selbst Feedback erhält (Lukas’ Wunsch erfragt, Entscheidung begründet),
 ist noch nicht entschieden.
+
+**Nachtrag 24.10.2026: Katalog angenommen, Umsetzung.** Jonas nimmt den Verlaufskatalog
+`Documentation/MI-04c-Verlaufskatalog.md` an. Lukas darf sein Vorhaben jederzeit verändern;
+die beratende Person muss das akzeptieren, und die Kette bis Maintenance läuft mit dem
+veränderten Vorhaben weiter. Lukas darf das Thema Abschluss jederzeit selbst ansprechen.
+
+Für die beiden zuletzt offenen Punkte gilt in der vorläufigen Endversion, bis Jonas anders
+entscheidet: Die Vorbereitung zeigt einen im Gespräch erkannten Abstand mit wörtlichem Satz
+als Vorschlag; die übende Person bestätigt oder wählt einen anderen erlaubten Abstand.
+Die Erkennung ist eine einfache Textsuche ohne Modellaufruf. Die Aushandlung selbst erhält
+kein eigenes Feedback; die Feedbackregeln bleiben 0.8. Die Analyse kennt eine neue
+Einordnung `continued` (fortgesetzte Umsetzung über mehrere Anlässe); Prompt 1.5.

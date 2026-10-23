@@ -47,11 +47,14 @@ Prozessmechaniken vor MI-04.
       Schwierigkeit, kuratierter Verlauf unabhängig von der Beratungsqualität, manuelles Beenden jederzeit.
 - [x] **MI-04c-Details geklärt (23.10.2026, Nachtrag E11):** Abstand im Gespräch ausgehandelt,
       drei Berichte über mindestens drei Monate, Variantenentwurf mit Abnahme, Fallrückblick.
-- [ ] Variantenkatalog für spätere Termine, Rückbewegungen und Lukas’ Abstandswünsche entwerfen
-      und von Jonas abnehmen lassen.
-- [ ] Entscheiden: Bestätigung erkannter Abstände im Rückblick; Feedback zur Aushandlung.
-- [ ] **MI-04c umsetzen:** längerfristigen Verlauf und Maintenance-Abschluss nach E11 bauen;
-      keine automatische Entwicklung allein durch Wochenabstand oder Offenheit.
+- [x] Variantenkatalog entworfen und von Jonas angenommen (24.10.2026).
+- [x] Vorläufig entschieden (Nachtrag E11, 24.10.2026): erkannter Abstand als Vorschlag in der
+      Vorbereitung, Bestätigung durch die übende Person; kein eigenes Feedback zur Aushandlung.
+- [x] **MI-04c technisch umgesetzt (24.10.2026):** Abstände, Fortsetzungsverläufe, Kette bis
+      Maintenance, Fallende und Fallrückblick. Offline-Tests bestanden; siehe STATUS.md.
+- [ ] MI-04c mit echtem Modell prüfen: Erkennt die Analyse `continued` und `setback` zuverlässig,
+      und erzählt Lukas die Verläufe passend? Bisher kein Livetest.
+- [ ] Neue Ansichten (Abstand, Fall beenden, Fallrückblick) in der laufenden App ansehen.
 
 MI-03 bleibt teilweise offen. MI-04a ist technisch umgesetzt und live geprüft;
 MI-04b ergänzt erste kuratierte Erfahrungen und ihre belegte Erinnerung. Fachliche Abnahme,
@@ -355,10 +358,13 @@ Die folgenden Punkte entfallen durch E01 und sind deshalb keine offenen Aufgaben
       werden, sonst bleibt die Tippfläche der Oberfläche ohne Funktion.
 - [ ] Simulatorlauf mit echtem Modell durchführen. Bisher wurde der Adapter nur außerhalb der App
       gegen die Schnittstelle geprüft, nicht im laufenden Gespräch.
-- [ ] `RootView` „Nur auf diesem Gerät gespeichert" prüfen: Die Aussage stimmt für die
+- [x] `RootView` „Nur auf diesem Gerät gespeichert" prüfen: Die Aussage stimmt für die
       Gesprächsdaten, kann aber neben dem neuen Hinweis zur Modellnutzung missverstanden werden.
-- [ ] Offline-Aussagen in README, `ARCHITEKTUR.md` und Oberfläche anpassen. Eine App, die Text an
+      Erledigt 24.10.2026: Mit Schlüssel steht dort, dass Texte für Antworten an OpenRouter gehen.
+- [x] Offline-Aussagen in README, `ARCHITEKTUR.md` und Oberfläche anpassen. Eine App, die Text an
       einen Dienst sendet, darf nicht weiter vollständig lokale Verarbeitung versprechen.
+      Geprüft 24.10.2026: README und ARCHITEKTUR.md kennzeichnen den lokalen Weg bereits als
+      abgelöst; die Oberfläche ist mit dem RootView-Hinweis angepasst.
 - [x] Deployment-Target neu bestimmen. Ohne MLX und ohne FoundationModels-Brücke gibt es keinen
       technischen Grund mehr für iOS 27, womit iPhone 14 und 15 leichter erreichbar werden.
       Erledigt in `957757e`: iOS 17.0.

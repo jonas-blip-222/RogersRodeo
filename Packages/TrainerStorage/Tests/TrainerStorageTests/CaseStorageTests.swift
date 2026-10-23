@@ -114,3 +114,27 @@ private actor PlanProvider: TrainerModelProvider {
     #expect(try ContextBuilder.analysisMemory(reloaded).plans.count == 1)
     #expect(!ReviewBuilder.markdown(reloaded).contains("Kuratierter fiktiver Zwischenverlauf"))
 }
+
+@Test @MainActor func fallendeUndAbstandUeberstehenNeustart() async throws {
+    let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+    defer { try? FileManager.default.removeItem(at: folder) }
+    let url = folder.appendingPathComponent("sessions.store")
+    let repo = try SwiftDataSessionRepository(storeURL: url)
+    let scenario = ScenarioDefinition(schemaVersion: 1, id: "test", version: "1", status: .draft,
+        name: "Lukas", age: 28, address: "Sie", approaches: ["mi"], opennessStart: 3,
+        openingLine: "Hallo.", publicProfile: "Fiktive Testfigur", facts: [])
+    let coordinator = ConversationCoordinator(repository: repo, provider: DemoModelProvider())
+    let first = try await coordinator.create(content: .init(scenario: scenario, codingGuide: "Test", tips: []), contentHash: "test")
+    _ = try repo.finish(sessionID: first.id, expectedRevision: 0, endedAt: Date())
+    #expect(throws: TrainerFailure.invalidInput) { try repo.createFollowUp(after: first.id, identity: first.identity, at: Date(), intervalWeeks: 4) }
+    let second = try repo.createFollowUp(after: first.id, identity: first.identity, at: Date(), intervalWeeks: 1)
+    let done = try repo.finish(sessionID: second.id, expectedRevision: 0, endedAt: Date())
+    let closed = try repo.closeCase(sessionID: done.id, at: Date())
+    #expect(closed.caseClosure?.outcome == .endedWithoutMaintenance)
+    let reopened = try SwiftDataSessionRepository(storeURL: url)
+    let loaded = try reopened.load(id: second.id)
+    #expect(loaded.caseClosure == closed.caseClosure && loaded.intervalWeeks == 1 && loaded.fictionalWeek == 1)
+    #expect(try reopened.closeCase(sessionID: second.id, at: .distantFuture) == loaded)
+    #expect(throws: TrainerFailure.sessionCompleted) { try reopened.createFollowUp(after: second.id, identity: second.identity, at: Date()) }
+    #expect(throws: TrainerFailure.sessionCompleted) { try reopened.closeCase(sessionID: first.id, at: Date()) }
+}

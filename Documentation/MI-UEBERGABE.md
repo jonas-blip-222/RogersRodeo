@@ -760,6 +760,7 @@ Person kann den Fall jederzeit manuell beenden, ohne dass daraus ein Erfolg wird
 Die Detailfragen sind im Nachtrag zu E11 entschieden: Abstand im Gespräch ausgehandelt,
 drei Berichte über mindestens drei Monate, Variantenentwurf mit Abnahme durch Jonas,
 Fallrückblick am Ende. Verbleibende Umsetzungsfragen stehen ebenfalls dort.
+Seit dem 24.10.2026 technisch umgesetzt (Katalog angenommen); siehe ARCHITEKTUR.md und STATUS.md.
 
 **Später innerhalb MI-04:** kuratierte Zwischenereignisse, berichtete Erfahrungen,
 Fortschritte/Rückbewegungen und fachlich begründete Kriterien für einen möglichen Abschluss.

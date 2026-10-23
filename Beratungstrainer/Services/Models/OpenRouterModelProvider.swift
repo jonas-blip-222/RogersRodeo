@@ -754,7 +754,11 @@ enum OpenRouterSchema {
         als ausgeführt behauptet wird. Eine Beraterempfehlung und ein bloßes Ja genügen nicht.
         attempted, completed, partial, notAttempted und setback verlangen einen tatsächlichen
         Selbstbericht über einen Versuch, eine einmalige Umsetzung, teilweise Umsetzung,
-        Nichtumsetzung oder Schwierigkeit/Rückbewegung. Keine dieser Angaben belegt Maintenance.
+        Nichtumsetzung oder Schwierigkeit/Rückbewegung. continued verlangt einen Selbstbericht,
+        dass Lukas ein Vorhaben seit dem letzten Termin bei mehreren Anlässen weiter umgesetzt
+        hat; ein einzelner Anlass ist completed oder partial. Ein Ausrutscher oder eine schwer
+        gewordene Situation ist setback, auch wenn Lukas danach weitergemacht hat; dann zusätzlich
+        continued. Ein verändertes Vorhaben ist ein neues planned. Keine dieser Angaben belegt Maintenance.
         withdrawn bezeichnet ausdrückliches Zurücknehmen eines früheren Vorhabens.
         goal ist nur ein belegter zielbezogener Klientenausschnitt oder null. plan ist nur eine
         mitgelieferte bekannte Planbeleg-Kennung oder ein in dieser Ausgabe zuvor eingeführter

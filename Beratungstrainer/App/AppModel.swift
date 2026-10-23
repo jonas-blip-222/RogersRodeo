@@ -85,6 +85,12 @@ enum FeedbackGate {
     /// einer anderen Sitzung oder einer bereits erhöhten Revision angezeigt wird.
     private(set) var pendingFeedback: PreliminaryFeedback?
     var preparation: VisitNote?
+    /// MI-04c: in der Vorbereitung bestätigter Abstand zum nächsten Termin (E11).
+    var followUpWeeks = 1
+    private(set) var allowedIntervals = [1]
+    private(set) var intervalSuggestion: IntervalSuggestion?
+    var showCloseConfirmation = false
+    var showCaseReview = false
     var showFinishConfirmation = false
     var homePortrait: HomePortrait
     /// Wahr, sobald die Aufklärung nach E07 in ihrer aktuellen Fassung bestätigt wurde.
@@ -264,6 +270,9 @@ enum FeedbackGate {
         do {
             if let next = session.followUpSessionID { open(next); return }
             preparation = try VisitBuilder.preparation(after: session)
+            allowedIntervals = VisitInterval.allowed(after: session)
+            intervalSuggestion = IntervalSuggestion.find(in: session)
+            followUpWeeks = intervalSuggestion?.weeks ?? 1
             errorMessage = nil
         } catch { failure(error) }
     }
@@ -272,10 +281,27 @@ enum FeedbackGate {
         let token = UUID(); operation = token; busy = true; errorMessage = nil
         task = Task {
             do {
-                let next = try await coordinator.createFollowUp(after: previous.id)
+                let next = try await coordinator.createFollowUp(after: previous.id, intervalWeeks: followUpWeeks)
                 guard operation == token else { refresh(); return }
                 session = next; preparation = nil; input = ""; pendingFeedback = nil
                 showReview = next.status == .completed
+            } catch { if operation == token { failure(error) } }
+            if operation == token { busy = false; task = nil; operation = nil; refresh() }
+        }
+    }
+    /// Nur der letzte abgeschlossene Termin eines noch offenen Falls kann ihn beenden.
+    var mayCloseCase: Bool {
+        guard let session else { return false }
+        return session.status == .completed && session.followUpSessionID == nil && session.caseClosure == nil
+    }
+    func closeCase() {
+        guard mayCloseCase, let current = session, !busy else { return }
+        let token = UUID(); operation = token; busy = true; errorMessage = nil
+        task = Task {
+            do {
+                let closed = try await coordinator.closeCase(sessionID: current.id)
+                guard operation == token else { refresh(); return }
+                session = closed; showCaseReview = true
             } catch { if operation == token { failure(error) } }
             if operation == token { busy = false; task = nil; operation = nil; refresh() }
         }

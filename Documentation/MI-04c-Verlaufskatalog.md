@@ -1,13 +1,19 @@
 ---
 id: lukas.verlauf
 version: "0.2-draft"
-status: draft
+status: draft (Inhalte von Jonas am 24.10.2026 angenommen)
 scope: MI-04c
 basis: E10, E11 samt Nachtrag vom 23.10.2026
 ---
 # Lukas · Verlaufskatalog für spätere Termine (Entwurf zur Abnahme)
 
-Dieser Katalog ist ein fachlicher Entwurf von Claude, nicht abgenommen und keine Prognose
+**24.10.2026:** Jonas hat Varianten, Muster, Abstandswünsche und Vorschläge unverändert
+angenommen (Fragen 1 bis 5). Zu Frage 6: Lukas darf sein Vorhaben jederzeit ändern, die
+beratende Person muss das akzeptieren; die Kette läuft weiter. Zu Frage 7: Lukas darf das
+Thema Abschluss jederzeit selbst ansprechen. Umgesetzt in `BetweenVisitExperience.swift`
+und `CaseProgression.swift`; im Code bleibt die Katalogkennung `0.2-draft`.
+
+Dieser Katalog ist ein fachlicher Entwurf von Claude und keine Prognose
 eines echten Veränderungsverlaufs. Er ergänzt den MI-04b-Katalog `0.1-draft` (erster Versuch:
 gelungen, teilweise, nicht umgesetzt) um die Zeit danach. Jonas prüft und korrigiert die Texte;
 erst danach werden sie in Code übernommen.
