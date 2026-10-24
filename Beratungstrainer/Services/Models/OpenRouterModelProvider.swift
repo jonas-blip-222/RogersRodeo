@@ -1101,23 +1101,20 @@ actor OpenRouterModelProvider: TrainerModelProvider {
         let start = ContinuousClock.now
         // Beide Aufgaben sehen denselben unveränderlichen Kontext. Ein Fehler der
         // ergänzenden Zielanalyse verhindert keinen Aufruf der Beratungseinordnung.
-        async let memoryTask = optionalMemory(request)
-        let (counselor, metrics) = try await call(stage: .counselorAnalysis,
-            system: OpenRouterSchema.analysisSystemPrompt(request.codingGuide),
-            user: OpenRouterSchema.analysisPrompt(request),
-            responseFormat: OpenRouterSchema.responseFormat(name: "CounselorAnalysis", schema: OpenRouterSchema.counselorAnalysis),
-            temperature: configuration.analysisTemperature,
-            reasoning: configuration.analysisModel == nil ? configuration.analysisReasoning : configuration.analysisModelReasoning,
-            budget: configuration.analysisModel == nil ? configuration.analysisTokens : configuration.analysisModelTokens,
-            retryBudget: configuration.analysisModel == nil ? configuration.analysisTokensRetry : configuration.analysisModelTokensRetry,
-            unusableFailure: .invalidAnalysis) { data in
-                let analysis = try OutputValidator.decodeAnalysis(OpenRouterResponse.analysisPayload(data), input: request.currentInput,
-                                                                  context: request.recentMessages)
-                guard analysis.goalUpdates == nil, analysis.characterObservations == nil, analysis.narrativeObservations == nil,
-                      analysis.permissions != nil else { throw TrainerFailure.invalidAnalysis }
-                return analysis
-            }
-        let memory = try await memoryTask
+        // Kein `async let`: Swift 6.1 (Xcode 16.4, CI) bricht beim impliziten Abwarten nach
+        // einem Fehler mit „freed pointer was not the last allocation“ ab. Der Task erbt die
+        // Messspur-Kontexte; Abbruch und Abwarten bleiben ausdrücklich strukturiert.
+        let memoryTask = Task { try await self.optionalMemory(request) }
+        let counselor: TurnAnalysis, metrics: ModelCallMetrics
+        do {
+            (counselor, metrics) = try await withTaskCancellationHandler {
+                try await counselorAnalysis(request)
+            } onCancel: { memoryTask.cancel() }
+        } catch {
+            memoryTask.cancel(); _ = try? await memoryTask.value
+            throw error
+        }
+        let memory = try await withTaskCancellationHandler { try await memoryTask.value } onCancel: { memoryTask.cancel() }
         try Task.checkCancellation()
         var analysis = counselor
         if let memory {
@@ -1133,6 +1130,24 @@ actor OpenRouterModelProvider: TrainerModelProvider {
             inputTokens: sum(memory?.1.inputTokens, metrics.inputTokens),
             outputTokens: sum(memory?.1.outputTokens, metrics.outputTokens))
         return .init(value: analysis, metrics: combined, contextMessagesUsed: request.recentMessages)
+    }
+
+    private func counselorAnalysis(_ request: AnalysisRequest) async throws -> (TurnAnalysis, ModelCallMetrics) {
+        try await call(stage: .counselorAnalysis,
+            system: OpenRouterSchema.analysisSystemPrompt(request.codingGuide),
+            user: OpenRouterSchema.analysisPrompt(request),
+            responseFormat: OpenRouterSchema.responseFormat(name: "CounselorAnalysis", schema: OpenRouterSchema.counselorAnalysis),
+            temperature: configuration.analysisTemperature,
+            reasoning: configuration.analysisModel == nil ? configuration.analysisReasoning : configuration.analysisModelReasoning,
+            budget: configuration.analysisModel == nil ? configuration.analysisTokens : configuration.analysisModelTokens,
+            retryBudget: configuration.analysisModel == nil ? configuration.analysisTokensRetry : configuration.analysisModelTokensRetry,
+            unusableFailure: .invalidAnalysis) { data in
+                let analysis = try OutputValidator.decodeAnalysis(OpenRouterResponse.analysisPayload(data), input: request.currentInput,
+                                                                  context: request.recentMessages)
+                guard analysis.goalUpdates == nil, analysis.characterObservations == nil, analysis.narrativeObservations == nil,
+                      analysis.permissions != nil else { throw TrainerFailure.invalidAnalysis }
+                return analysis
+            }
     }
 
     private func optionalMemory(_ request: AnalysisRequest) async throws -> (TurnAnalysis, ModelCallMetrics)? {
